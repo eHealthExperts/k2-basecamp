@@ -53,7 +53,7 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     let pn = MAP.lock().unwrap().remove(&ctn).unwrap();
 
     let ctn_string = ctn.to_string();
-    let path = "ct_close/".to_string() + &ctn_string;
+    let path = "ct_close/".to_string() + &ctn_string + "/" + &pn.to_string();
 
     let response = post_query(&path, vec![]);
 
