@@ -31,9 +31,10 @@ describe('CT_close func', () => {
             response.send('0');
         });
 
-        app.post("/k2/ctapi/ct_close/:ctn", (request, response) => {
+        app.post("/k2/ctapi/ct_close/:ctn/:pn", (request, response) => {
             params = _.assign({}, {
-                ctn: encodeURIComponent(request.params.ctn)
+                ctn: encodeURIComponent(request.params.ctn),
+                pn: encodeURIComponent(request.params.pn)
             });
 
             response.send('0');
@@ -53,7 +54,7 @@ describe('CT_close func', () => {
 
     it('should not call REST path but return with -1', done => {
 
-        CT_close(1).then(result => {
+        CT_close(1, 1).then(result => {
             __.assertThat(result, __.is(-1));
             __.assertThat(params, __.is(__.not(__.defined())));
 
@@ -66,10 +67,11 @@ describe('CT_close func', () => {
         CT_init(1, 1).then(result => {
             __.assertThat(result, __.is(0));
 
-            CT_close(1).then(result => {
+            CT_close(1, 1).then(result => {
                 __.assertThat(result, __.is(0));
                 __.assertThat(params, __.hasProperties({
                     ctn: '1',
+                    pn: '1'
                 }));
 
                 done();
