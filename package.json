@@ -1,0 +1,27 @@
+{
+  "name": "k2-basecamp",
+  "version": "0.0.1",
+  "description": "CTAPI to HTTP mapper",
+  "license": "UNLICENSED",
+  "private": true,
+  "author": "Christian Fochler <fochler@ehealthexperts.de>",
+  "repository": {
+    "type": "git",
+    "url": "http://stash.ehex.de/scm/k2/k2-basecamp-rust.git"
+  },
+  "scripts": {
+    "build": "cargo build --release",
+    "test": "npm run build && mocha",
+    "version": "gulp update-version && git add Cargo.toml"
+  },
+  "devDependencies": {
+    "express": "4.15.2",
+    "fastcall": "0.2.4",
+    "gulp": "3.9.1",
+    "gulp-replace": "0.5.4",
+    "hamjest": "2.13.0",
+    "lodash": "4.17.4",
+    "mocha": "3.2.0",
+    "sinon": "2.1.0"
+  }
+}
