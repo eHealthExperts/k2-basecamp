@@ -17,7 +17,9 @@ lazy_static! {
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
-    if REGISTER.lock().unwrap().iter().any(| &x| x == ctn) {
+    let index = REGISTER.lock().unwrap().iter().position(|&x| x == ctn);
+
+    if index != None {
         return -1
     } else {
         REGISTER.lock().unwrap().push(ctn);
@@ -45,8 +47,23 @@ pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: u16, command: u8, lenr: 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_close(ctn: u16) -> i8 {
+    let index = REGISTER.lock().unwrap().iter().position(|&x| x == ctn);
 
-    1
+    if index != None {
+        REGISTER.lock().unwrap().retain(|&x| x == ctn);
+    } else {
+        return -1
+    }
+
+    let ctn_string = ctn.to_string();
+    let path = "ct_close/".to_string() + &ctn_string;
+
+    let response = post_query(&path, vec![]);
+
+    match response {
+        Ok(v) => v.parse::<i8>().unwrap(),
+        Err(_) => -1
+    }
 }
 
 fn env_or_default(var_name: &str, default: &str) -> String {
