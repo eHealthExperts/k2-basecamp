@@ -5,24 +5,23 @@ extern crate url;
 extern crate lazy_static;
 
 use hyper::Client;
+use std::collections::HashMap;
 use std::env::var;
 use std::io::Read;
 use std::sync::Mutex;
 use url::form_urlencoded;
 
 lazy_static! {
-    static ref REGISTER: Mutex<Vec<u16>> = Mutex::new(vec![]);
+    static ref MAP: Mutex<HashMap<u16, u16>> = Mutex::new(HashMap::new());
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
-    let index = REGISTER.lock().unwrap().iter().position(|&x| x == ctn);
-
-    if index != None {
+    if MAP.lock().unwrap().contains_key(&ctn) {
         return -1
     } else {
-        REGISTER.lock().unwrap().push(ctn);
+        MAP.lock().unwrap().insert(ctn, pn);
     }
 
     let ctn_string = ctn.to_string();
@@ -47,13 +46,11 @@ pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: u16, command: u8, lenr: 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_close(ctn: u16) -> i8 {
-    let index = REGISTER.lock().unwrap().iter().position(|&x| x == ctn);
-
-    if index != None {
-        REGISTER.lock().unwrap().retain(|&x| x == ctn);
-    } else {
+    if !MAP.lock().unwrap().contains_key(&ctn) {
         return -1
     }
+
+    let pn = MAP.lock().unwrap().remove(&ctn).unwrap();
 
     let ctn_string = ctn.to_string();
     let path = "ct_close/".to_string() + &ctn_string;
