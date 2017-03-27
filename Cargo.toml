@@ -1,0 +1,14 @@
+[package]
+name = "k2_basecamp"
+version = "0.0.1"
+authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
+publish = false
+
+[dependencies]
+hyper = "0.10"
+lazy_static = "0.2.5"
+url = "1.4.0"
+
+[lib]
+name = "k2_basecamp"
+crate-type = ["cdylib"]
