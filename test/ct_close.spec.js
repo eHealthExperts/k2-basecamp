@@ -16,6 +16,8 @@ describe('CT_close func', () => {
     var params;
     var server;
 
+    var result;
+
     beforeEach(done => {
         var location = path.join(__dirname, '../target/release/libk2_basecamp') + EXT;
         library = new Library(location)
@@ -31,13 +33,15 @@ describe('CT_close func', () => {
             response.send('0');
         });
 
+        result = "0"; // valid per default
+
         app.post("/k2/ctapi/ct_close/:ctn/:pn", (request, response) => {
             params = _.assign({}, {
                 ctn: encodeURIComponent(request.params.ctn),
                 pn: encodeURIComponent(request.params.pn)
             });
 
-            response.send('0');
+            response.send(result);
         });
 
         server = app.listen(8080, done);
@@ -54,7 +58,7 @@ describe('CT_close func', () => {
 
     it('should not call REST path but return with -1', done => {
 
-        CT_close(1, 1).then(result => {
+        CT_close(1).then(result => {
             __.assertThat(result, __.is(-1));
             __.assertThat(params, __.is(__.not(__.defined())));
 
@@ -62,19 +66,52 @@ describe('CT_close func', () => {
         });
     });
 
+    it('should return server response on valid call', done => {
+
+        var expectedResponse = -1;
+        result = expectedResponse.toString();
+
+        CT_init(1, 1).then(r1 => {
+            __.assertThat(r1, __.is(0));
+
+            CT_close(1).then(r2 => {
+                __.assertThat(r2, __.is(expectedResponse));
+
+                done();
+            });
+        });
+    });
+
     it('should call equivalent REST path with ctn parameter when CT_init was called before', done => {
 
-        CT_init(1, 1).then(result => {
-            __.assertThat(result, __.is(0));
+        CT_init(1, 1).then(r1 => {
+            __.assertThat(r1, __.is(0));
 
-            CT_close(1, 1).then(result => {
-                __.assertThat(result, __.is(0));
+            CT_close(1).then(r2 => {
+                __.assertThat(r2, __.is(0));
                 __.assertThat(params, __.hasProperties({
                     ctn: '1',
                     pn: '1'
                 }));
 
                 done();
+            });
+        });
+    });
+
+    it('should return -1 on consecutive close', done => {
+
+        CT_init(1, 1).then(r1 => {
+            __.assertThat(r1, __.is(0));
+
+            CT_close(1, 1).then(r2 => {
+                __.assertThat(r2, __.is(0));
+
+                CT_close(1, 1).then(r3 => {
+                    __.assertThat(r3, __.is(-1));
+
+                    done();
+                });
             });
         });
     });
