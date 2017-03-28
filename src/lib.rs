@@ -65,19 +65,30 @@ pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: u16, command: u8, lenr: 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_close(ctn: u16) -> i8 {
+    // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
     }
 
-    let pn = MAP.lock().unwrap().remove(&ctn).unwrap();
+    // Build the request URL
+    let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
+    let endpoint = "ct_close".to_string();
+    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let ctn_string = ctn.to_string();
-    let path = "ct_close/".to_string() + &ctn_string + "/" + &pn.to_string();
-
+    // Perform the request
     let response = post_query!(&path);
 
     match response {
-        Ok(v) => v.parse::<i8>().unwrap(),
+        Ok(v) => {
+            // Cast server response
+            let response = v.parse::<i8>().unwrap();
+            if response == OK {
+                // Remove CTN
+                MAP.lock().unwrap().remove(&ctn);
+            }
+
+            response
+        },
         Err(_) => ERR_INVALID
     }
 }
