@@ -87,7 +87,6 @@ describe('CT_init func', () => {
                 done();
             });
         });
-
     })
 
     it('should not allow consecutive CT_init calls', done => {
