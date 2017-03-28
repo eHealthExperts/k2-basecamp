@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 publish = false
 
