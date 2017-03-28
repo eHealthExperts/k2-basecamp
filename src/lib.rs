@@ -23,6 +23,8 @@ macro_rules! post_query {
     ($path:expr, $query:expr) => (post_query($path, $query));
 }
 
+type Query<'a> = Vec<(&'a str, &'a str)>;
+
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
@@ -86,8 +88,6 @@ fn env_or_default(var_name: &str, default: &str) -> String {
         Err(_) => default.into(),
     }
 }
-
-type Query<'a> = Vec<(&'a str, &'a str)>;
 
 fn post_query(path: &str, query: Query) -> hyper::Result<String> {
     // untested
