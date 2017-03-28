@@ -15,24 +15,41 @@ lazy_static! {
     static ref MAP: Mutex<HashMap<u16, u16>> = Mutex::new(HashMap::new());
 }
 
+static OK: i8 = 0;
+static ERR_INVALID: i8 = -1;
+
+macro_rules! post_query {
+    ($path:expr) => (post_query($path, Vec::new()));
+    ($path:expr, $query:expr) => (post_query($path, $query));
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
+    // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
-        return -1
-    } else {
-        MAP.lock().unwrap().insert(ctn, pn);
+        return ERR_INVALID
     }
 
-    let ctn_string = ctn.to_string();
-    let pn_string = pn.to_string();
-    let path = "ct_init/".to_string() + &ctn_string + "/" + &pn_string;
+    // Build the request URL
+    let endpoint = "ct_init".to_string();
+    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let response = post_query(&path, vec![]);
+    // Perform the request
+    let response = post_query!(&path);
 
     match response {
-        Ok(v) => v.parse::<i8>().unwrap(),
-        Err(_) => -1
+        Ok(v) => {
+            // Cast server response
+            let response = v.parse::<i8>().unwrap();
+            if response == OK {
+                // Store CTN
+                MAP.lock().unwrap().insert(ctn, pn);
+            }
+
+            response
+        },
+        Err(_) => ERR_INVALID
     }
 }
 
@@ -47,7 +64,7 @@ pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: u16, command: u8, lenr: 
 #[allow(non_snake_case)]
 pub extern fn CT_close(ctn: u16) -> i8 {
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        return -1
+        return ERR_INVALID
     }
 
     let pn = MAP.lock().unwrap().remove(&ctn).unwrap();
@@ -55,11 +72,11 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     let ctn_string = ctn.to_string();
     let path = "ct_close/".to_string() + &ctn_string + "/" + &pn.to_string();
 
-    let response = post_query(&path, vec![]);
+    let response = post_query!(&path);
 
     match response {
         Ok(v) => v.parse::<i8>().unwrap(),
-        Err(_) => -1
+        Err(_) => ERR_INVALID
     }
 }
 
@@ -73,7 +90,8 @@ fn env_or_default(var_name: &str, default: &str) -> String {
 type Query<'a> = Vec<(&'a str, &'a str)>;
 
 fn post_query(path: &str, query: Query) -> hyper::Result<String> {
-    let base_url = env_or_default("BASE_URL", "http://localhost:8080/k2/ctapi/");
+    // untested
+    let base_url = env_or_default("K2_BASE_URL", "http://localhost:8080/k2/ctapi/");
     let url = base_url + path;
 
     let client = Client::new();
