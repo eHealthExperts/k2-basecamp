@@ -5,9 +5,10 @@ authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 publish = false
 
 [dependencies]
-hyper = "0.10"
+hyper = "0.10.5"
 lazy_static = "0.2.5"
-url = "1.4.0"
+libc = "0.2.21"
+rustc-serialize = "0.3.23"
 
 [lib]
 name = "k2_basecamp"
