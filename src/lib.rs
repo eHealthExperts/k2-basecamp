@@ -1,15 +1,22 @@
 extern crate hyper;
 extern crate libc;
-extern crate rustc_serialize;
+extern crate serde;
+
+#[macro_use]
+extern crate serde_derive;
+
+extern crate serde_json;
 
 #[macro_use]
 extern crate lazy_static;
 
 use hyper::Client;
+use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
+use hyper::status::StatusCode;
 use libc::{uint8_t, size_t};
-use rustc_serialize::{Encodable, json};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::env::var;
 use std::io::Read;
@@ -22,9 +29,9 @@ lazy_static! {
 
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
-static ERR_HOST: i8 = 127;
+static ERR_HOST: i8 = -127;
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(Serialize)]
 struct Empty();
 
 macro_rules! post_request {
@@ -45,25 +52,28 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let response = post_request!(&path);
+    let mut response = post_request!(&path);
 
-    match response {
-        Ok(v) => {
+    match response.status {
+        StatusCode::Ok => {
             // Cast server response
-            let response = v.parse::<i8>().unwrap();
-            if response == OK {
+            let mut body = String::new();
+            response.read_to_string(&mut body).unwrap();
+
+            let status = body.parse::<i8>().unwrap();
+            if status == OK {
                 // Store CTN
                 MAP.lock().unwrap().insert(ctn, pn);
             }
 
-            response
+            status
         },
-        Err(_) => ERR_HOST
+        _ => ERR_HOST
     }
 }
 
-#[derive(RustcDecodable, RustcEncodable)]
-struct Data {
+#[derive(Serialize)]
+struct RequestData {
     ctn: u16,
     dad: u8,
     sad: u8,
@@ -72,30 +82,40 @@ struct Data {
     lenr: usize
 }
 
+#[allow(non_snake_case)]
+#[derive(Deserialize)]
+struct ResponseData {
+    dad: u8,
+    sad: u8,
+    lenr: usize,
+    response: Vec<u8>,
+    responseCode: i8
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: size_t, command: *const uint8_t, lenr: size_t, response: *const uint8_t) -> i8 {
+pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
     if !MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
     }
 
-    let commands = unsafe {
-        assert!(!command.is_null());
-        slice::from_raw_parts(command, lenc as usize)
-    };
+    let dad: &mut u8 = unsafe { &mut *dad };
 
-    let responses = unsafe {
-        assert!(!response.is_null());
-        slice::from_raw_parts(response, lenr as usize)
-    };
+    let sad: &mut u8 = unsafe { &mut *sad };
 
-    let data = Data {
+    let lenr: &mut size_t = unsafe { &mut *lenr };
+
+    let command = unsafe { slice::from_raw_parts(command, lenc as usize) };
+
+    let response = unsafe { slice::from_raw_parts_mut(response, *lenr) };
+
+    let requestData = RequestData {
         ctn: ctn,
-        dad: dad,
-        sad: sad,
+        dad: *dad,
+        sad: *sad,
         lenc: lenc,
-        command: commands.to_vec(),
-        lenr: lenr
+        command: command.to_vec(),
+        lenr: *lenr
     };
 
     let pn = MAP.lock().unwrap();
@@ -103,14 +123,28 @@ pub extern fn CT_data(ctn: u16, dad: u8, sad: u8, lenc: size_t, command: *const 
     let endpoint = "ct_data".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let post_response = post_request(&path, &data);
+    let mut http_response = post_request(&path, &requestData);
 
-    // fill responses
-    // adjust lenr
+    match http_response.status {
+        StatusCode::Ok => {
+            // decode server response
+            let mut body = String::new();
+            http_response.read_to_string(&mut body).unwrap();
+            let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
-    match post_response {
-        Ok(v) => v.parse::<i8>().unwrap(),
-        Err(_) => ERR_HOST
+            if responseData.responseCode == OK {
+
+                *dad = responseData.dad;
+                *sad = responseData.sad;
+                *lenr = responseData.lenr;
+
+                for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
+                    *place = *element;
+                }
+            }
+            return responseData.responseCode;
+        },
+        _ => ERR_HOST
     }
 }
 
@@ -128,20 +162,23 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let response = post_request!(&path);
+    let mut response = post_request!(&path);
 
-    match response {
-        Ok(v) => {
+    match response.status {
+        StatusCode::Ok => {
             // Cast server response
-            let response = v.parse::<i8>().unwrap();
-            if response == OK {
+            let mut body = String::new();
+            response.read_to_string(&mut body).unwrap();
+
+            let status = body.parse::<i8>().unwrap();
+            if status == OK {
                 // Remove CTN
                 MAP.lock().unwrap().remove(&ctn);
             }
 
-            response
+            status
         },
-        Err(_) => ERR_HOST
+        _ => ERR_HOST
     }
 }
 
@@ -152,8 +189,8 @@ fn env_or_default(var_name: &str, default: &str) -> String {
     }
 }
 
-fn post_request<T>(path: &str, payload: &T) -> hyper::Result<String>
-    where T: Encodable
+fn post_request<T>(path: &str, payload: &T) -> Response
+    where T: Serialize
 {
     // untested
     let base_url = env_or_default("K2_BASE_URL", "http://localhost:8080/k2/ctapi/");
@@ -166,15 +203,11 @@ fn post_request<T>(path: &str, payload: &T) -> hyper::Result<String>
         ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![]))
     );
 
-    let body = json::encode(payload).unwrap();
+    let body = serde_json::to_string(&payload).unwrap();
 
-    let mut response = client.post(&url)
+    return client.post(&url)
         .headers(headers)
         .body(&body[..])
-        .send()?;
-
-    let mut buf = String::new();
-    response.read_to_string(&mut buf)?;
-
-    Ok(buf)
+        .send()
+        .unwrap();
 }
