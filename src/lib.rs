@@ -1,14 +1,16 @@
+#[cfg(target_os = "windows")]
+extern crate kernel32;
+#[cfg(target_os = "windows")]
+extern crate winapi;
+
 extern crate hyper;
 extern crate libc;
-extern crate serde;
-
-#[macro_use]
-extern crate serde_derive;
-
-extern crate serde_json;
-
 #[macro_use]
 extern crate lazy_static;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 
 use hyper::Client;
 use hyper::client::response::Response;
@@ -41,7 +43,7 @@ macro_rules! post_request {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
+pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
@@ -94,63 +96,65 @@ struct ResponseData {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
-    if !MAP.lock().unwrap().contains_key(&ctn) {
-        return ERR_INVALID
-    }
+pub extern "C" fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
+    unsafe {
+        if !MAP.lock().unwrap().contains_key(&ctn) {
+            return ERR_INVALID
+        }
 
-    let dad: &mut u8 = unsafe { &mut *dad };
+        let dad: &mut u8 = &mut *dad;
 
-    let sad: &mut u8 = unsafe { &mut *sad };
+        let sad: &mut u8 = &mut *sad;
 
-    let lenr: &mut size_t = unsafe { &mut *lenr };
+        let lenr: &mut size_t = &mut *lenr;
 
-    let command = unsafe { slice::from_raw_parts(command, lenc as usize) };
+        let command = slice::from_raw_parts(command, lenc as usize);
 
-    let response = unsafe { slice::from_raw_parts_mut(response, *lenr) };
+        let response = slice::from_raw_parts_mut(response, *lenr);
 
-    let requestData = RequestData {
-        ctn: ctn,
-        dad: *dad,
-        sad: *sad,
-        lenc: lenc,
-        command: command.to_vec(),
-        lenr: *lenr
-    };
+        let requestData = RequestData {
+            ctn: ctn,
+            dad: *dad,
+            sad: *sad,
+            lenc: lenc,
+            command: command.to_vec(),
+            lenr: *lenr
+        };
 
-    let pn = MAP.lock().unwrap();
-    let pn = pn.get(&ctn).unwrap();
-    let endpoint = "ct_data".to_string();
-    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
+        let pn = MAP.lock().unwrap();
+        let pn = pn.get(&ctn).unwrap();
+        let endpoint = "ct_data".to_string();
+        let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let mut http_response = post_request(&path, &requestData);
+        let mut http_response = post_request(&path, &requestData);
 
-    match http_response.status {
-        StatusCode::Ok => {
-            // decode server response
-            let mut body = String::new();
-            http_response.read_to_string(&mut body).unwrap();
-            let responseData: ResponseData = serde_json::from_str(&body).unwrap();
+        match http_response.status {
+            StatusCode::Ok => {
+                // decode server response
+                let mut body = String::new();
+                http_response.read_to_string(&mut body).unwrap();
+                let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
-            if responseData.responseCode == OK {
+                if responseData.responseCode == OK {
 
-                *dad = responseData.dad;
-                *sad = responseData.sad;
-                *lenr = responseData.lenr;
+                    *dad = responseData.dad;
+                    *sad = responseData.sad;
+                    *lenr = responseData.lenr;
 
-                for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
-                    *place = *element;
+                    for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
+                        *place = *element;
+                    }
                 }
-            }
-            return responseData.responseCode;
-        },
-        _ => ERR_HOST
+                return responseData.responseCode;
+            },
+            _ => ERR_HOST
+        }
     }
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn CT_close(ctn: u16) -> i8 {
+pub extern "C" fn CT_close(ctn: u16) -> i8 {
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
