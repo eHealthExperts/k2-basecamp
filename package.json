@@ -15,6 +15,7 @@
     "version": "gulp update-version && git add Cargo.toml"
   },
   "devDependencies": {
+    "body-parser": "^1.17.1",
     "express": "4.15.2",
     "fastcall": "0.2.4",
     "gulp": "3.9.1",
