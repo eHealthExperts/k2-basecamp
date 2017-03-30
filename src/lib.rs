@@ -38,7 +38,7 @@ macro_rules! post_request {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
+pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
@@ -91,7 +91,7 @@ struct ResponseData {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
+pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
     unsafe {
         if !MAP.lock().unwrap().contains_key(&ctn) {
             return ERR_INVALID
@@ -149,7 +149,7 @@ pub extern "C" fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: 
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_close(ctn: u16) -> i8 {
+pub extern fn CT_close(ctn: u16) -> i8 {
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
