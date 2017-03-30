@@ -10,7 +10,7 @@
     "url": "http://stash.ehex.de/scm/k2/k2-basecamp-rust.git"
   },
   "scripts": {
-    "build": "cargo build --release",
+    "build": "cargo build",
     "test": "npm run build && mocha",
     "version": "gulp update-version && git add Cargo.toml"
   },
