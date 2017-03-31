@@ -74,7 +74,6 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
 
 #[derive(Serialize)]
 struct RequestData {
-    ctn: u16,
     dad: u8,
     sad: u8,
     lenc: usize,
