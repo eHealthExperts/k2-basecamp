@@ -179,7 +179,7 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
                     let decoded = responseData.response.from_base64().unwrap();
                     debug!("decoded response {:?}", decoded);
 
-                    debug!("write to given pointer", decoded);
+                    debug!("write to given pointer");
                     for (place, element) in response.iter_mut().zip(decoded.iter()) {
                         debug!("[{}] {}", place, element);
                         *place = *element;
