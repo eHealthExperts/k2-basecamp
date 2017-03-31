@@ -135,7 +135,6 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
         let response = slice::from_raw_parts_mut(response, *lenr);
 
         let requestData = RequestData {
-            ctn: ctn,
             dad: *dad,
             sad: *sad,
             lenc: lenc,
