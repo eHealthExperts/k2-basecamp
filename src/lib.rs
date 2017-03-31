@@ -106,7 +106,7 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
             status
         },
         _ => {
-            error!("Response not OK!");
+            error!("Response not OK! Returning {}", ERR_HOST);
             debug!("Response: {:?}", response);
             ERR_HOST
         }
@@ -116,6 +116,9 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size_t, command: *const uint8_t, lenr: *mut size_t, response: *mut uint8_t) -> i8 {
+    init_logging();
+
+    debug!("CT_data for ctn: {}", ctn);
     unsafe {
         if !MAP.lock().unwrap().contains_key(&ctn) {
             return ERR_INVALID
@@ -140,15 +143,21 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
             lenr: *lenr
         };
 
+        debug!("Additonal request parameter: dad: {}, sad: {}, lenc: {}, command: {:?}, lenr: {}, response.len(): {}", dad, sad, lenc, command, lenr, response.len());
+
         let pn = MAP.lock().unwrap();
         let pn = pn.get(&ctn).unwrap();
         let endpoint = "ct_data".to_string();
         let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
+        debug!("Request path: {}", path);
+
         let mut http_response = post_request(&path, &requestData);
 
         match http_response.status {
             StatusCode::Ok => {
+                debug!("Response received!");
+
                 // decode server response
                 let mut body = String::new();
                 http_response.read_to_string(&mut body).unwrap();
@@ -156,17 +165,26 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
 
                 if responseData.responseCode == OK {
 
+                    debug!("Body data from response: dad: {}, sad: {}, lenr: {}", responseData.dad, responseData.sad, responseData.lenr);
+
                     *dad = responseData.dad;
                     *sad = responseData.sad;
                     *lenr = responseData.lenr;
 
+                    debug!("Content of response array");
                     for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
+                        debug!("[{}] {}", place, element);
                         *place = *element;
                     }
                 }
+                debug!("Return status: {}", responseData.responseCode);
                 return responseData.responseCode;
             },
-            _ => ERR_HOST
+            _ => {
+                error!("Response not OK! Returning {}", ERR_HOST);
+                debug!("Response: {:?}", response);
+                ERR_HOST
+            }
         }
     }
 }
@@ -174,6 +192,10 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern fn CT_close(ctn: u16) -> i8 {
+    init_logging();
+
+    debug!("CT_close( ctn: {} )", ctn);
+
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
@@ -184,11 +206,15 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     let endpoint = "ct_close".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
+    debug!("Request path: {}", path);
+
     // Perform the request
     let mut response = post_request!(&path);
 
     match response.status {
         StatusCode::Ok => {
+            debug!("Response received!");
+
             // Cast server response
             let mut body = String::new();
             response.read_to_string(&mut body).unwrap();
@@ -199,9 +225,14 @@ pub extern fn CT_close(ctn: u16) -> i8 {
                 MAP.lock().unwrap().remove(&ctn);
             }
 
+            debug!("Return status: {}", status);
             status
         },
-        _ => ERR_HOST
+        _ => {
+            error!("Response not OK! Returning {}", ERR_HOST);
+            debug!("Response: {:?}", response);
+            ERR_HOST
+        }
     }
 }
 
@@ -225,7 +256,7 @@ fn init_logging() {
                     .appender(Appender::builder().build("file", Box::new(file)))
                     .logger(Logger::builder()
                         .appender("file")
-                        .additive(true)
+                        .additive(false)
                         .build("k2_basecamp", LogLevelFilter::Debug))
                     .build(Root::builder().appender("file").build(LogLevelFilter::Error))
                     .unwrap();
