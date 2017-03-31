@@ -166,7 +166,7 @@ describe('CT_data func', () => {
                     dad: dad.readUInt8(0),
                     sad: sad.readUInt8(0),
                     lenc,
-                    command: commands,
+                    command: "AQIDBAU=",
                     lenr: lenr.readUInt16LE(0)
                 }))
 
@@ -182,7 +182,7 @@ describe('CT_data func', () => {
                 dad: request.body.sad,
                 sad: request.body.dad,
                 lenr: 1,
-                response: new UInt8Array([5]),
+                response: 'kAA=',
                 responseCode: 0
             }));
         }
@@ -205,7 +205,8 @@ describe('CT_data func', () => {
                 __.assertThat(dad.readUInt8(0), __.is(2));
                 __.assertThat(sad.readUInt8(0), __.is(3));
                 __.assertThat(lenr.readUInt16LE(0), __.is(1));
-                __.assertThat(response.get(0), __.is(5));
+                __.assertThat(response.get(0), __.is(144));
+                __.assertThat(response.get(1), __.is(0));
 
                 done();
             });

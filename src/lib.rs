@@ -1,5 +1,7 @@
+extern crate base64;
 extern crate hyper;
 extern crate libc;
+extern crate rustc_serialize as serialize;
 extern crate serde;
 
 #[macro_use]
@@ -16,6 +18,7 @@ use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use hyper::status::StatusCode;
 use libc::{uint8_t, size_t};
+use serialize::base64::{FromBase64, ToBase64, STANDARD};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::env::var;
@@ -77,7 +80,7 @@ struct RequestData {
     dad: u8,
     sad: u8,
     lenc: usize,
-    command: Vec<u8>,
+    command: String,
     lenr: usize
 }
 
@@ -87,7 +90,7 @@ struct ResponseData {
     dad: u8,
     sad: u8,
     lenr: usize,
-    response: Vec<u8>,
+    response: String,
     responseCode: i8
 }
 
@@ -112,7 +115,7 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
         dad: *dad,
         sad: *sad,
         lenc: lenc,
-        command: command.to_vec(),
+        command: command.to_vec().to_base64(STANDARD),
         lenr: *lenr
     };
 
@@ -136,7 +139,9 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
                 *sad = responseData.sad;
                 *lenr = responseData.lenr;
 
-                for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
+                let decoded = responseData.response.from_base64().unwrap();
+
+                for (place, element) in response.iter_mut().zip(decoded.iter()) {
                     *place = *element;
                 }
             }
