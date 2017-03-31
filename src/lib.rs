@@ -20,16 +20,38 @@ use std::io::Read;
 use std::slice;
 use std::sync::Mutex;
 
-lazy_static! {
-    static ref MAP: Mutex<HashMap<u16, u16>> = Mutex::new(HashMap::new());
-}
-
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
 static ERR_HOST: i8 = -127;
 
+const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
+
+lazy_static! {
+    static ref MAP: Mutex<HashMap<u16, u16>> = Mutex::new(HashMap::new());
+}
+
 #[derive(Serialize)]
 struct Empty();
+
+#[derive(Serialize)]
+struct RequestData {
+    ctn: u16,
+    dad: u8,
+    sad: u8,
+    lenc: usize,
+    command: Vec<u8>,
+    lenr: usize
+}
+
+#[allow(non_snake_case)]
+#[derive(Deserialize)]
+struct ResponseData {
+    dad: u8,
+    sad: u8,
+    lenr: usize,
+    response: Vec<u8>,
+    responseCode: i8
+}
 
 macro_rules! post_request {
     ($path:expr) => (post_request($path, &Empty{}));
@@ -67,26 +89,6 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
         },
         _ => ERR_HOST
     }
-}
-
-#[derive(Serialize)]
-struct RequestData {
-    ctn: u16,
-    dad: u8,
-    sad: u8,
-    lenc: usize,
-    command: Vec<u8>,
-    lenr: usize
-}
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-struct ResponseData {
-    dad: u8,
-    sad: u8,
-    lenr: usize,
-    response: Vec<u8>,
-    responseCode: i8
 }
 
 #[no_mangle]
@@ -192,7 +194,7 @@ fn post_request<T>(path: &str, payload: &T) -> Response
     where T: Serialize
 {
     // untested
-    let base_url = env_or_default("K2_BASE_URL", "http://localhost:8080/k2/ctapi/");
+    let base_url = env_or_default("K2_BASE_URL", BASE_URL);
     let url = base_url + path;
 
     let client = Client::new();
