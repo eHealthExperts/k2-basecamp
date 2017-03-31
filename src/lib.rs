@@ -182,7 +182,7 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
             },
             _ => {
                 error!("Response not OK! Returning {}", ERR_HOST);
-                debug!("Response: {:?}", response);
+                debug!("Response: {:?}", http_response);
                 ERR_HOST
             }
         }
