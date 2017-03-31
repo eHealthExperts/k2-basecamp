@@ -159,14 +159,18 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
                 // decode server response
                 let mut body = String::new();
                 http_response.read_to_string(&mut body).unwrap();
+                debug!("Reponse body: {}", body);
+
                 let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
                 if responseData.responseCode == OK {
-
-                    debug!("Body data from response: dad: {}, sad: {}, lenr: {}", responseData.dad, responseData.sad, responseData.lenr);
-
+                    debug!("dad: {}", responseData.dad);
                     *dad = responseData.dad;
+
+                    debug!("sad: {}", responseData.sad);
                     *sad = responseData.sad;
+
+                    debug!("lenr: {}", responseData.lenr);
                     *lenr = responseData.lenr;
 
                     debug!("Content of response array");
