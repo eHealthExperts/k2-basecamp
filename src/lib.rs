@@ -44,7 +44,6 @@ struct Empty();
 
 #[derive(Serialize)]
 struct RequestData {
-    ctn: u16,
     dad: u8,
     sad: u8,
     lenc: usize,
