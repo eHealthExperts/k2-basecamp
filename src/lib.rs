@@ -144,7 +144,7 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
             lenr: *lenr
         };
 
-        debug!("Additonal request parameter: dad: {}, sad: {}, lenc: {}, command: {:?}, lenr: {}, response.len(): {}", dad, sad, lenc, command, lenr, response.len());
+        debug!("Request parameter: dad: {}, sad: {}, lenc: {}, command: {:?}, lenr: {}, response.len(): {}", dad, sad, lenc, command, lenr, response.len());
 
         let pn = MAP.lock().unwrap();
         let pn = pn.get(&ctn).unwrap();
@@ -162,26 +162,19 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
                 // decode server response
                 let mut body = String::new();
                 http_response.read_to_string(&mut body).unwrap();
-                debug!("Reponse body: {}", body);
+                debug!("Response body: {}", body);
 
                 let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
                 if responseData.responseCode == OK {
-                    debug!("dad: {}", responseData.dad);
                     *dad = responseData.dad;
-
-                    debug!("sad: {}", responseData.sad);
                     *sad = responseData.sad;
-
-                    debug!("lenr: {}", responseData.lenr);
                     *lenr = responseData.lenr;
 
                     let decoded = responseData.response.from_base64().unwrap();
-                    debug!("decoded response {:?}", decoded);
+                    debug!("Decoded response field {:?}", decoded);
 
-                    debug!("write to given pointer");
                     for (place, element) in response.iter_mut().zip(decoded.iter()) {
-                        debug!("[{}] {}", place, element);
                         *place = *element;
                     }
                 }
