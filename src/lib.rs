@@ -1,24 +1,33 @@
+extern crate hostname;
 extern crate hyper;
 extern crate libc;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate syslog;
 
+use hostname::get_hostname;
 use hyper::Client;
 use hyper::client::response::Response;
-use hyper::header::{Headers, ContentType};
-use hyper::mime::{Mime, TopLevel, SubLevel};
+use hyper::header::{ Headers, ContentType };
+use hyper::mime::{ Mime, TopLevel, SubLevel };
 use hyper::status::StatusCode;
-use libc::{uint8_t, size_t};
+use libc::{ uint8_t, size_t };
+use log::LogLevelFilter::Debug;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::env::var;
 use std::io::Read;
 use std::slice;
 use std::sync::Mutex;
+use syslog::Facility;
+
+use std::net::TcpStream;
 
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
@@ -59,8 +68,10 @@ macro_rules! post_request {
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, unused_must_use)]
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
+    init_logging();
+
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
@@ -181,6 +192,19 @@ pub extern fn CT_close(ctn: u16) -> i8 {
         },
         _ => ERR_HOST
     }
+}
+
+fn init_logging() {
+    let hostname = get_hostname().unwrap_or("localhost".to_string());
+
+    match TcpStream::connect("192.168.189.101:541") {
+            Ok(s) => println!("ok"),
+            Err(e) => println!("{}", e),
+    }
+
+    syslog::init_tcp("192.168.189.101:541", hostname, Facility::LOG_USER, Debug);
+
+    debug!("Mr. Watson kommen sie herüber, ich brauche sie!");
 }
 
 fn env_or_default(var_name: &str, default: &str) -> String {
