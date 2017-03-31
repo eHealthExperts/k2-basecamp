@@ -1,15 +1,17 @@
 [package]
 name = "k2_basecamp"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 publish = false
 
 [dependencies]
+base64 = "0.4"
 hyper = "0.10"
 lazy_static = "0.2"
 libc = "0.2"
 log = "0.3"
 log4rs = "0.6"
+rustc-serialize="0.3"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"

@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate hyper;
 extern crate libc;
 #[macro_use]
@@ -5,6 +6,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
+extern crate rustc_serialize as serialize;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -20,6 +22,7 @@ use log::LogLevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{ Appender, Config, Logger, Root };
+use serialize::base64::{ FromBase64, ToBase64, STANDARD };
 use serde::Serialize;
 use std::collections::HashMap;
 use std::env::var;
@@ -47,7 +50,7 @@ struct RequestData {
     dad: u8,
     sad: u8,
     lenc: usize,
-    command: Vec<u8>,
+    command: String,
     lenr: usize
 }
 
@@ -57,7 +60,7 @@ struct ResponseData {
     dad: u8,
     sad: u8,
     lenr: usize,
-    response: Vec<u8>,
+    response: String,
     responseCode: i8
 }
 
@@ -137,7 +140,7 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
             dad: *dad,
             sad: *sad,
             lenc: lenc,
-            command: command.to_vec(),
+            command: command.to_vec().to_base64(STANDARD),
             lenr: *lenr
         };
 
@@ -173,8 +176,11 @@ pub extern fn CT_data(ctn: u16, dad: *mut uint8_t, sad: *mut uint8_t, lenc: size
                     debug!("lenr: {}", responseData.lenr);
                     *lenr = responseData.lenr;
 
-                    debug!("Content of response array");
-                    for (place, element) in response.iter_mut().zip(responseData.response.iter()) {
+                    let decoded = responseData.response.from_base64().unwrap();
+                    debug!("decoded response {:?}", decoded);
+
+                    debug!("write to given pointer", decoded);
+                    for (place, element) in response.iter_mut().zip(decoded.iter()) {
                         debug!("[{}] {}", place, element);
                         *place = *element;
                     }
