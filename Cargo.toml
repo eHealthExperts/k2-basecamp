@@ -5,15 +5,14 @@ authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 publish = false
 
 [dependencies]
-hostname = "0.1"
 hyper = "0.10"
 lazy_static = "0.2"
 libc = "0.2"
 log = "0.3"
+log4rs = "0.6"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
-syslog = "3.2"
 
 [lib]
 name = "k2_basecamp"

@@ -1,39 +1,39 @@
-extern crate hostname;
 extern crate hyper;
 extern crate libc;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate log4rs;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-extern crate syslog;
 
-use hostname::get_hostname;
 use hyper::Client;
 use hyper::client::response::Response;
 use hyper::header::{ Headers, ContentType };
 use hyper::mime::{ Mime, TopLevel, SubLevel };
 use hyper::status::StatusCode;
 use libc::{ uint8_t, size_t };
-use log::LogLevelFilter::Debug;
+use log::LogLevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::encode::pattern::PatternEncoder;
+use log4rs::config::{ Appender, Config, Logger, Root };
 use serde::Serialize;
 use std::collections::HashMap;
 use std::env::var;
 use std::io::Read;
 use std::slice;
-use std::sync::Mutex;
-use syslog::Facility;
+use std::sync::{ Once, ONCE_INIT, Mutex };
 
-use std::net::TcpStream;
+const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
 
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
 static ERR_HOST: i8 = -127;
 
-const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
+static INIT: Once = ONCE_INIT;
 
 lazy_static! {
     static ref MAP: Mutex<HashMap<u16, u16>> = Mutex::new(HashMap::new());
@@ -72,6 +72,8 @@ macro_rules! post_request {
 pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
     init_logging();
 
+    debug!("CT_init( ctn: {}; pn: {} )", ctn, pn);
+
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
         return ERR_INVALID
@@ -81,11 +83,15 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
     let endpoint = "ct_init".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
+    debug!("Request path: {}", path);
+
     // Perform the request
     let mut response = post_request!(&path);
 
     match response.status {
         StatusCode::Ok => {
+            debug!("Response received!");
+
             // Cast server response
             let mut body = String::new();
             response.read_to_string(&mut body).unwrap();
@@ -96,9 +102,14 @@ pub extern fn CT_init(ctn: u16, pn: u16) -> i8 {
                 MAP.lock().unwrap().insert(ctn, pn);
             }
 
+            debug!("Return status: {}", status);
             status
         },
-        _ => ERR_HOST
+        _ => {
+            error!("Response not OK!");
+            debug!("Response: {:?}", response);
+            ERR_HOST
+        }
     }
 }
 
@@ -194,23 +205,35 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     }
 }
 
-fn init_logging() {
-    let hostname = get_hostname().unwrap_or("localhost".to_string());
-
-    match TcpStream::connect("192.168.189.101:541") {
-            Ok(s) => println!("ok"),
-            Err(e) => println!("{}", e),
-    }
-
-    syslog::init_tcp("192.168.189.101:541", hostname, Facility::LOG_USER, Debug);
-
-    debug!("Mr. Watson kommen sie herüber, ich brauche sie!");
-}
-
 fn env_or_default(var_name: &str, default: &str) -> String {
     match var(var_name) {
         Ok(s) => s,
         Err(_) => default.into(),
+    }
+}
+
+fn init_logging() {
+   match var("K2_LOG_PATH") {
+        Ok(path) => {
+            INIT.call_once(|| {
+                let file = FileAppender::builder()
+                    .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
+                    .build(path + "/" + &"k2_basecamp.log".to_string())
+                    .unwrap();
+
+                let config = Config::builder()
+                    .appender(Appender::builder().build("file", Box::new(file)))
+                    .logger(Logger::builder()
+                        .appender("file")
+                        .additive(true)
+                        .build("k2_basecamp", LogLevelFilter::Debug))
+                    .build(Root::builder().appender("file").build(LogLevelFilter::Error))
+                    .unwrap();
+
+                log4rs::init_config(config).unwrap();
+            })
+        },
+        _ => ()
     }
 }
 
