@@ -18,7 +18,7 @@ describe('CT_init func', () => {
     var result;
 
     beforeEach(done => {
-        var location = path.join(__dirname, '../target/release/libk2_basecamp') + EXT;
+        var location = path.join(__dirname, '../target/debug/libk2_basecamp') + EXT;
         library = new Library(location).asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]});
 
         CT_init = library.interface.CT_init;
