@@ -236,13 +236,6 @@ pub extern fn CT_close(ctn: u16) -> i8 {
     }
 }
 
-fn env_or_default(var_name: &str, default: &str) -> String {
-    match var(var_name) {
-        Ok(s) => s,
-        Err(_) => default.into(),
-    }
-}
-
 fn init_logging() {
    match var("K2_LOG_PATH") {
         Ok(path) => {
@@ -271,8 +264,7 @@ fn init_logging() {
 fn post_request<T>(path: &str, payload: &T) -> Response
     where T: Serialize
 {
-    // untested
-    let base_url = env_or_default("K2_BASE_URL", BASE_URL);
+    let base_url = var("K2_BASE_URL").unwrap_or(BASE_URL.to_string());
     let url = base_url + path;
 
     let client = Client::new();
