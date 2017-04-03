@@ -73,10 +73,12 @@ macro_rules! post_request {
 pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
     init_logging();
 
-    debug!("CT_init( ctn: {}; pn: {} )", ctn, pn);
+    debug!("CT_init: Called (ctn {}, pn {})", ctn, pn);
 
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
+        debug!("CT_init: Card terminal has already been opened. Returning {}",
+               ERR_INVALID);
         return ERR_INVALID;
     }
 
@@ -84,15 +86,11 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
     let endpoint = "ct_init".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    debug!("Request path: {}", path);
-
     // Perform the request
     let mut response = post_request!(&path);
 
     match response.status {
         StatusCode::Ok => {
-            debug!("Response received!");
-
             // Cast server response
             let mut body = String::new();
             response.read_to_string(&mut body).unwrap();
@@ -101,14 +99,14 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
             if status == OK {
                 // Store CTN
                 MAP.lock().unwrap().insert(ctn, pn);
+                debug!("CT_init: Card terminal opened.");
             }
 
-            debug!("Return status: {}", status);
+            debug!("CT_init: Returning {}", status);
             status
         }
         _ => {
-            error!("Response not OK! Returning {}", ERR_HOST);
-            debug!("Response: {:?}", response);
+            error!("CT_init: Response not OK! Returning {}", ERR_HOST);
             ERR_HOST
         }
     }
@@ -126,12 +124,7 @@ pub extern "C" fn CT_data(ctn: u16,
                           -> i8 {
     init_logging();
 
-    debug!("CT_data for ctn: {}", ctn);
     unsafe {
-        if !MAP.lock().unwrap().contains_key(&ctn) {
-            return ERR_INVALID;
-        }
-
         let dad: &mut u8 = &mut *dad;
 
         let sad: &mut u8 = &mut *sad;
@@ -142,6 +135,22 @@ pub extern "C" fn CT_data(ctn: u16,
 
         let response = slice::from_raw_parts_mut(response, *lenr);
 
+        debug!("CT_data: Called (ctn {}, dad {}, sad {}, lenc {}, \
+               command {:?}, lenr {}), response.len() {})",
+               ctn,
+               dad,
+               sad,
+               lenc,
+               command,
+               lenr,
+               response.len());
+
+        if !MAP.lock().unwrap().contains_key(&ctn) {
+            debug!("CT_data: Card terminal has not been opened. Returning {}",
+                   ERR_INVALID);
+            return ERR_INVALID;
+        }
+
         let requestData = RequestData {
             dad: *dad,
             sad: *sad,
@@ -150,31 +159,19 @@ pub extern "C" fn CT_data(ctn: u16,
             lenr: *lenr,
         };
 
-        debug!("dad: {}, sad: {}, lenc: {}, command: {:?}, lenr: {}, response.len(): {}",
-               dad,
-               sad,
-               lenc,
-               command,
-               lenr,
-               response.len());
-
         let pn = MAP.lock().unwrap();
         let pn = pn.get(&ctn).unwrap();
         let endpoint = "ct_data".to_string();
         let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-        debug!("Request path: {}", path);
-
         let mut http_response = post_request(&path, &requestData);
 
         match http_response.status {
             StatusCode::Ok => {
-                debug!("Response received!");
-
                 // decode server response
                 let mut body = String::new();
                 http_response.read_to_string(&mut body).unwrap();
-                debug!("Response body: {}", body);
+                debug!("CT_data: Response body: {}", body);
 
                 let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
@@ -184,18 +181,17 @@ pub extern "C" fn CT_data(ctn: u16,
                     *lenr = responseData.lenr;
 
                     let decoded = decode(&responseData.response).unwrap();
-                    debug!("Decoded response field {:?}", decoded);
+                    debug!("CT_data: Decoded response field {:?}", decoded);
 
                     for (place, element) in response.iter_mut().zip(decoded.iter()) {
                         *place = *element;
                     }
                 }
-                debug!("Return status: {}", responseData.responseCode);
+                debug!("CT_data: Returning {}", responseData.responseCode);
                 return responseData.responseCode;
             }
             _ => {
-                error!("Response not OK! Returning {}", ERR_HOST);
-                debug!("Response: {:?}", http_response);
+                error!("CT_data: Response not OK! Returning {}", ERR_HOST);
                 ERR_HOST
             }
         }
@@ -207,10 +203,12 @@ pub extern "C" fn CT_data(ctn: u16,
 pub extern "C" fn CT_close(ctn: u16) -> i8 {
     init_logging();
 
-    debug!("CT_close( ctn: {} )", ctn);
+    debug!("CT_close: Called (ctn {})", ctn);
 
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
+        debug!("CT_close: Card terminal has not been opened. Returning {}",
+               ERR_INVALID);
         return ERR_INVALID;
     }
 
@@ -219,15 +217,11 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
     let endpoint = "ct_close".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    debug!("Request path: {}", path);
-
     // Perform the request
     let mut response = post_request!(&path);
 
     match response.status {
         StatusCode::Ok => {
-            debug!("Response received!");
-
             // Cast server response
             let mut body = String::new();
             response.read_to_string(&mut body).unwrap();
@@ -236,14 +230,14 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
             if status == OK {
                 // Remove CTN
                 MAP.lock().unwrap().remove(&ctn);
+                debug!("CT_close: Card terminal has been closed.");
             }
 
-            debug!("Return status: {}", status);
+            debug!("CT_close: Returning {}", status);
             status
         }
         _ => {
-            error!("Response not OK! Returning {}", ERR_HOST);
-            debug!("Response: {:?}", response);
+            error!("CT_close: Response not OK! Returning {}", ERR_HOST);
             ERR_HOST
         }
     }
@@ -289,10 +283,16 @@ fn post_request<T>(path: &str, payload: &T) -> Response
 
     let body = serde_json::to_string(&payload).unwrap();
 
-    return client
-               .post(&url)
-               .headers(headers)
-               .body(&body[..])
-               .send()
-               .unwrap();
+    debug!("HTTP POST URL: {}", url);
+    debug!("HTTP POST body: {:?}", body);
+
+    let response = client
+        .post(&url)
+        .headers(headers)
+        .body(&body[..])
+        .send()
+        .unwrap();
+
+    debug!("{:?}", response); // TODO enrich output
+    response
 }
