@@ -17,5 +17,5 @@ serde_derive = "0.9"
 serde_json = "0.9"
 
 [lib]
-name = "k2_basecamp"
+name = "ctehxk2"
 crate-type = ["cdylib"]
