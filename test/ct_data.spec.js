@@ -26,7 +26,7 @@ describe('CT_data func', () => {
     var handler;
 
     beforeEach(done => {
-        var location = path.join(__dirname, '../target/debug/libk2_basecamp') + EXT;
+        var location = path.join(__dirname, '../target/debug/libctehxk2') + EXT;
         library = new Library(location)
             .asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]})
             .asyncFunction({ CT_data: ['int8', ['uint16', 'pointer', 'pointer', 'uint16', UInt8Array, 'pointer', UInt8Array]]})

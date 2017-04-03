@@ -255,7 +255,7 @@ fn init_logging() {
             INIT.call_once(|| {
                 let file = FileAppender::builder()
                     .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
-                    .build(path + &"/k2_basecamp.log".to_string())
+                    .build(path + &"/ctehxk2.log".to_string())
                     .unwrap();
 
                 let config = Config::builder()
@@ -263,7 +263,7 @@ fn init_logging() {
                     .logger(Logger::builder()
                                 .appender("file")
                                 .additive(false)
-                                .build("k2_basecamp", LogLevelFilter::Debug))
+                                .build("ctehxk2", LogLevelFilter::Debug))
                     .build(Root::builder()
                                .appender("file")
                                .build(LogLevelFilter::Error))
