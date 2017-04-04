@@ -11,8 +11,9 @@
   },
   "scripts": {
     "build": "cargo build",
+    "lint": "cargo fmt -- --write-mode=diff",
     "release": "cargo build --release",
-    "test": "npm run build && mocha",
+    "test": "npm run lint && npm run build && mocha",
     "version": "gulp update-version && git add Cargo.toml"
   },
   "devDependencies": {
