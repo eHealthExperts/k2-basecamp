@@ -1,97 +1,52 @@
-# Assert CLI
+# K2 Basecamp
 
-> **Test CLI Applications** - This crate checks the output of a child process is as expected.
+> **K2-Adapter for CTAPI** - Connect CTAPI with K2.
 
-[![Build Status](https://travis-ci.org/killercup/assert_cli.svg)](https://travis-ci.org/killercup/assert_cli) [![Documentation](https://img.shields.io/badge/docs-master-blue.svg)][Documentation]
+[![Build Status](https://ci.ehex.de/buildStatus/icon?job=K2 Mountain Peak/k2-basecamp/master)](https://ci.ehex.de/job/K2 Mountain Peak/k2-basecamp/master) 
 
-## Install
 
-Just add it to your `Cargo.toml`:
 
-```toml
-[dependencies]
-assert_cli = "0.4"
-```
+#### _"Build a Microsoft Windows compatible library (DLL) from source code written in Rust and tested with NodeJS."_
 
-## Example
 
-Here's a trivial example:
 
-```rust
-extern crate assert_cli;
+## Requirements
 
-fn main() {
-    assert_cli::Assert::command(&["echo", "42"]).prints("42").unwrap();
-}
-```
+- [Rust](https://www.rust-lang.org)
 
-Or if you'd rather use the macro, to save you some writing:
+- [Cargo](https://crates.io/)
 
-```rust
-#[macro_use] extern crate assert_cli;
+- [NodeJS](https://nodejs.org)
 
-fn main() {
-    assert_cmd!(echo "42").prints("42").unwrap();
-}
-```
+   
 
-And here is one that will fail (which also shows `execute` which returns a
-`Result` and can be used instead of `unwrap`):
+## Build
 
-```rust
-#[macro_use] extern crate assert_cli;
+| Command           | Description                              |
+| ----------------- | ---------------------------------------- |
+| `npm run build`   | Creates a debug build of the library into the folder **target/debug** |
+| `npm run release` | A release build wil be located in the folder **target/release**. |
+| `npm run test`    | Creates a debug build and runs the Javascript tests angainst the library. |
 
-fn main() {
-    let test = assert_cmd!(ls "foo-bar-foo")
-        .fails()
-        .and()
-        .prints_error("foo-bar-foo")
-        .execute();
-    assert!(test.is_ok());
-}
-```
 
-If you want to match the program's output _exactly_, you can use
-`prints_exactly`:
 
-```rust,should_panic
-#[macro_use] extern crate assert_cli;
+### Howto create a *Windows DLL*
 
-fn main() {
-    assert_cmd!(wc "README.md")
-        .prints_exactly("1337 README.md")
-        .unwrap();
-}
-```
+1. Install *MSVC* through either of these:
 
-... which has the benefit to show a nice, colorful diff in your terminal,
-like this:
+   - [Microsoft Visual C++ Build Tools 2015](https://blogs.msdn.microsoft.com/vcblog/2016/03/31/announcing-the-official-release-of-the-visual-c-build-tools-2015/)
+   - [Visual Studio 2015](https://www.visualstudio.com/downloads)
 
-```diff
--1337
-+92
-```
+2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
 
-**Tip**: Enclose arguments in the `assert_cmd!` macro in quotes `"`,
-         if there are special characters, which the macro doesn't accept, e.g.
-         `assert_cmd!(cat "foo.txt")`.
+   > Ensure that the following environment variables are set: 
+   >
+   > DEP_OPENSSL_INCLUDE, OPENSSL_INCLUDE_DIR, OPENSSL_LIB_DIR, OPENSSL_LIBS
 
-More detailed information is available in the [documentation]. :-)
+3. Install [Rust](https://www.rust-lang.org).
 
-## License
+   > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
 
-Licensed under either of
+4. Install [Cargo](https://crates.io/).
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.
-
-[Documentation]: http://killercup.github.io/assert_cli/
+5. Run `cargo build —-release`  to create a file **ctehxk2.dll** in the folder **target/release**. 
