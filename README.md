@@ -2,7 +2,7 @@
 
 > **K2-Adapter for CTAPI** - Connect CTAPI with K2.
 
-[![Build Status](https://ci.ehex.de/buildStatus/icon?job=K2 Mountain Peak/k2-basecamp/master)](https://ci.ehex.de/job/K2 Mountain Peak/k2-basecamp/master) 
+[![Build Status](https://ci.ehex.de/buildStatus/icon?job=K2%20Mountain%20Peak/k2-basecamp/master)](https://ci.ehex.de/job/K2%20Mountain%20Peak/k2-basecamp/master) 
 
 
 
@@ -15,6 +15,8 @@
 - [Rust](https://www.rust-lang.org)
 
 - [Cargo](https://crates.io/)
+
+- [rustfmt](https://github.com/rust-lang-nursery/rustfmt)
 
 - [NodeJS](https://nodejs.org)
 
