@@ -3,7 +3,6 @@
   "version": "0.4.4",
   "description": "CTAPI to HTTP mapper",
   "license": "UNLICENSED",
-  "private": true,
   "author": "Christian Fochler <fochler@ehealthexperts.de>",
   "repository": {
     "type": "git",
