@@ -57,14 +57,17 @@ pipeline {
                 ]) {
                     script {
                         def currentBranch = sh(script: 'git name-rev --name-only HEAD', returnStdout: true).trim()
+                        echo "Branch: ${currentBranch}"
+
                         def publish = currentBranch.endsWith('master')
-                        def name = getName(readFile('package.json'))
                         def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
+                        echo "Latest tag: ${latestTag}"
+
+                        def name = getName(readFile('package.json'))
                         def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
+                        echo "Latest version: ${latestVersion}"
 
-                        publish = publish && isNewVersion(latestTag, latestVersion)
-
-                        if (publish) {
+                        if (publish && isNewVersion(latestTag, latestVersion)) {
                             sh 'npm publish'
                         }
                     }
