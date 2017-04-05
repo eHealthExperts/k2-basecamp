@@ -73,6 +73,10 @@ pipeline {
                         def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
                         echo "Latest tag: ${latestTag}"
 
+                        def headTag = sh(script: 'git tag -l --contains HEAD', returnStdout: true).trim()
+                        echo "Tag on head: ${headTag}"
+                        def publish && latestTag.endsWith(headTag)
+
                         def name = getName(readFile('package.json'))
                         def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
                         echo "Latest version: ${latestVersion}"
