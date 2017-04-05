@@ -10,6 +10,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr:'5'))
         disableConcurrentBuilds()
+        skipDefaultCheckout()
     }
 
     triggers {
@@ -17,6 +18,13 @@ pipeline {
     }
 
     stages {
+        stage("Checkout source") {
+            steps {
+                deleteDir()
+                checkout scm
+            }
+        }
+
         stage('Fetch dependencies') {
             steps {
                 configFileProvider([configFile(
