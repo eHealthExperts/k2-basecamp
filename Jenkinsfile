@@ -41,19 +41,7 @@ pipeline {
             }
         }
 
-        stage('Check linting') {
-            agent {
-                dockerfile {
-                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
-                }
-            }
-
-            steps {
-                sh 'npm run lint'
-            }
-        }
-
-        stage('Run integration tests') {
+        stage('Running tests') {
             agent {
                 dockerfile {
                     args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
