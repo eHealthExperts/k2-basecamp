@@ -21,9 +21,6 @@ RUN apt-get update && \
   curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs && \
-  # install rustfmt
-  cargo install rustfmt && \
-  mv /root/.cargo/bin/rustfmt /usr/local/bin && \
   # cleanup
   DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y curl && \
   DEBIAN_FRONTEND=noninteractive apt-get autoremove -y && \
@@ -37,3 +34,7 @@ RUN apt-get update && \
 # add jenkins user
 RUN useradd jenkins --shell /bin/bash --create-home
 USER jenkins
+
+# install rustfmt
+RUN cargo install rustfmt
+ENV PATH /home/jenkins/.cargo/bin:$PATH
