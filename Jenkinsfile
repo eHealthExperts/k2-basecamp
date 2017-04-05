@@ -77,7 +77,7 @@ pipeline {
                         def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
                         echo "Latest version: ${latestVersion}"
 
-                        if (publish && isNewVersion(latestTag, latestVersion)
+                        if (publish && isNewVersion(latestTag, latestVersion)) {
                             sh 'npm publish'
                         }
                     }
