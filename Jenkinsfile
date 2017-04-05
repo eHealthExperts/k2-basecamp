@@ -16,6 +16,7 @@ pipeline {
 
     stages {
         stage("Checkout source") {
+            agent any
             steps {
                 deleteDir()
                 checkout scm
