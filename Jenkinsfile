@@ -16,40 +16,38 @@ pipeline {
         pollSCM('')
     }
 
-
     stages {
         stage('Fetch dependencies') {
             steps {
-                configFileProvider([
-                    configFile(
-                        fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
-                        targetLocation: '.npmrc')
-                    ]) {
+                configFileProvider([configFile(
+                    fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
+                    targetLocation: '.npmrc')
+                ]) {
                     sh 'npm i'
                     sh 'cargo update'
                 }
             }
         }
+
         stage('Check linting') {
             steps {
                 sh 'npm run lint'
             }
         }
 
-        stage('Run ntegration test') {
+        stage('Run integration tests') {
             steps {
                 sh 'npm run test'
             }
         }
 
-        stage('Publish artifacts') {
+        stage('Publish artifact') {
             steps {
-                configFileProvider([
-                    configFile(
-                        fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
-                        targetLocation: '.npmrc')
-                    ]) {
-                    script{
+                configFileProvider([configFile(
+                    fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
+                    targetLocation: '.npmrc')
+                ]) {
+                    script {
                         def currentBranch = sh(script: 'git name-rev --name-only HEAD', returnStdout: true).trim()
                         def publish = currentBranch.endsWith('master')
                         def name = getName(readFile('package.json'))
