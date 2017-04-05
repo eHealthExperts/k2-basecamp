@@ -1,13 +1,12 @@
 {
   "name": "k2-basecamp",
   "version": "0.4.4",
-  "description": "CTAPI to HTTP mapper",
+  "description": "K2-Adapter for CTAPI",
   "license": "UNLICENSED",
-  "private": true,
   "author": "Christian Fochler <fochler@ehealthexperts.de>",
   "repository": {
     "type": "git",
-    "url": "http://stash.ehex.de/scm/k2/k2-basecamp-rust.git"
+    "url": "http://stash.ehex.de/scm/k2/k2-basecamp.git"
   },
   "scripts": {
     "build": "cargo build",
