@@ -26,7 +26,8 @@ RUN apt-get update && \
     rust-$RUST_VERSION-x86_64-unknown-linux-gnu.tar.gz \
     /var/lib/apt/lists/* \
     /tmp/* \
-    /var/tmp/*
+    /var/tmp/* && \
+  cargo install rustfmt
 
 # add jenkins user
 RUN useradd jenkins --shell /bin/bash --create-home
