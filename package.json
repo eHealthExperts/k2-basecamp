@@ -8,6 +8,9 @@
     "type": "git",
     "url": "http://stash.ehex.de/scm/k2/k2-basecamp.git"
   },
+  "publishConfig": {
+    "registry": "https://artifacts.ehex.de/repository/npm-internal/"
+  },
   "scripts": {
     "build": "cargo build",
     "lint": "cargo fmt -- --write-mode=diff",
