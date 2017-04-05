@@ -75,7 +75,7 @@ pipeline {
 
                         def headTag = sh(script: 'git tag -l --contains HEAD', returnStdout: true).trim()
                         echo "Tag on head: ${headTag}"
-                        def publish && latestTag.endsWith(headTag)
+                        publish && latestTag.endsWith(headTag)
 
                         def name = getName(readFile('package.json'))
                         def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
