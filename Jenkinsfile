@@ -1,11 +1,8 @@
 #!/usr/bin/env groovy
 
 pipeline {
-    agent {
-        dockerfile {
-            args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
-        }
-    }
+
+    agent none
 
     options {
         buildDiscarder(logRotator(numToKeepStr:'5'))
@@ -26,6 +23,12 @@ pipeline {
         }
 
         stage('Fetch dependencies') {
+            agent {
+                dockerfile {
+                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
+                }
+            }
+
             steps {
                 configFileProvider([configFile(
                     fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
@@ -38,38 +41,59 @@ pipeline {
         }
 
         stage('Check linting') {
+            agent {
+                dockerfile {
+                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
+                }
+            }
+
             steps {
                 sh 'npm run lint'
             }
         }
 
         stage('Run integration tests') {
+            agent {
+                dockerfile {
+                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
+                }
+            }
+
             steps {
                 sh 'npm run test'
             }
         }
 
         stage('Publish artifact') {
+            agent {
+                dockerfile {
+                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
+                }
+            }
+
+            when {
+                expression {
+                    def currentBranch = sh(script: 'git name-rev --name-only HEAD', returnStdout: true).trim()
+                    echo "Branch: ${currentBranch}"
+
+                    def publish = currentBranch.endsWith('master')
+                    def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
+                    echo "Latest tag: ${latestTag}"
+
+                    def name = getName(readFile('package.json'))
+                    def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
+                    echo "Latest version: ${latestVersion}"
+
+                    return publish && isNewVersion(latestTag, latestVersion)
+                }
+            }
             steps {
                 configFileProvider([configFile(
                     fileId: 'be5bdcbb-d40a-44ea-864a-dcc5d543319d',
                     targetLocation: '.npmrc')
                 ]) {
                     script {
-                        def currentBranch = sh(script: 'git name-rev --name-only HEAD', returnStdout: true).trim()
-                        echo "Branch: ${currentBranch}"
-
-                        def publish = currentBranch.endsWith('master')
-                        def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
-                        echo "Latest tag: ${latestTag}"
-
-                        def name = getName(readFile('package.json'))
-                        def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
-                        echo "Latest version: ${latestVersion}"
-
-                        if (publish && isNewVersion(latestTag, latestVersion)) {
-                            sh 'npm publish'
-                        }
+                        sh 'npm publish'
                     }
                 }
             }
