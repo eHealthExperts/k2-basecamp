@@ -4,6 +4,8 @@ version = "0.4.7"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 repository = "http://stash.ehex.de/scm/k2/k2-basecamp.git"
 publish = false
+build = "build.rs"
+
 [lib]
 name = "ctehxk2"
 crate-type = ["cdylib"]
