@@ -31,6 +31,10 @@ RUN apt-get update && \
     /tmp/* \
     /var/tmp/*
 
+# add ehex ca
+ADD http://public.ehex.de/static/EHEX-INTERN_INTERNAL.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 # add jenkins user
 RUN useradd jenkins --shell /bin/bash --create-home
 USER jenkins
