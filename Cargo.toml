@@ -4,6 +4,9 @@ version = "0.4.7"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 repository = "http://stash.ehex.de/scm/k2/k2-basecamp.git"
 publish = false
+[lib]
+name = "ctehxk2"
+crate-type = ["cdylib"]
 
 [dependencies]
 base64 = "0.4"
@@ -16,6 +19,5 @@ serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
 
-[lib]
-name = "ctehxk2"
-crate-type = ["cdylib"]
+[build-dependencies]
+rusty-cheddar = "0.3"
