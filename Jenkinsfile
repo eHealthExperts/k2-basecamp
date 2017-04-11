@@ -25,9 +25,7 @@ pipeline {
 
         stage('Fetch dependencies') {
             agent {
-                dockerfile {
-                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
-                }
+                dockerfile true
             }
 
             steps {
@@ -43,9 +41,7 @@ pipeline {
 
         stage('Running tests') {
             agent {
-                dockerfile {
-                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
-                }
+                dockerfile true
             }
 
             steps {
@@ -55,9 +51,7 @@ pipeline {
 
         stage('Publish artifact') {
             agent {
-                dockerfile {
-                    args "-v /etc/ssl/certs:/etc/ssl/certs:ro"
-                }
+                dockerfile true
             }
 
             steps {
