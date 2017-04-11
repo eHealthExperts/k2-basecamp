@@ -3,9 +3,6 @@ FROM debian:jessie
 ENV USER root
 ENV RUST_VERSION=1.16.0
 
-# add ehex ca
-ADD http://public.ehex.de/static/EHEX-INTERN_INTERNAL.crt /etc/ssl/certs/
-
 # install git, cmake, ...
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -33,6 +30,10 @@ RUN apt-get update && \
     /var/lib/apt/lists/* \
     /tmp/* \
     /var/tmp/*
+
+# add ehex ca
+ADD http://public.ehex.de/static/EHEX-INTERN_INTERNAL.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
 # add jenkins user
 RUN useradd jenkins --shell /bin/bash --create-home
