@@ -35,6 +35,7 @@ const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
 static ERR_HOST: i8 = -127;
+static ERR_HTSI: i8 = -128;
 
 static INIT: Once = ONCE_INIT;
 
@@ -88,27 +89,36 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let mut response = post_request!(&path);
+    match post_request!(&path) {
+        Ok(mut response) => {
+            debug!("{:?}", response); // TODO enrich output
 
-    match response.status {
-        StatusCode::Ok => {
-            // Cast server response
-            let mut body = String::new();
-            response.read_to_string(&mut body).unwrap();
+            match response.status {
+                StatusCode::Ok => {
+                    // Cast server response
+                    let mut body = String::new();
+                    response.read_to_string(&mut body).unwrap();
 
-            let status = body.parse::<i8>().unwrap();
-            if status == OK {
-                // Store CTN
-                MAP.lock().unwrap().insert(ctn, pn);
-                debug!("CT_init: Card terminal opened.");
+                    let status = body.parse::<i8>().unwrap();
+                    if status == OK {
+                        // Store CTN
+                        MAP.lock().unwrap().insert(ctn, pn);
+                        debug!("CT_init: Card terminal opened.");
+                    }
+
+                    debug!("CT_init: Returning {}", status);
+                    status
+                }
+                _ => {
+                    error!("CT_init: Response not OK! Returning {}", ERR_HOST);
+                    ERR_HOST
+                }
             }
-
-            debug!("CT_init: Returning {}", status);
-            status
         }
-        _ => {
-            error!("CT_init: Response not OK! Returning {}", ERR_HOST);
-            ERR_HOST
+        Err(error) => {
+            debug!("Error: {:?}", error);
+            error!("CT_data: Request failed! Returning {}", ERR_HTSI);
+            ERR_HTSI
         }
     }
 }
