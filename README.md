@@ -20,7 +20,6 @@
 
 - [NodeJS](https://nodejs.org)
 
-   
 
 ## Build
 
@@ -34,10 +33,13 @@
 
 ### Howto create a *Windows DLL*
 
-1. Install *MSVC* through either of these:
+1. Install *MSVC* and *Redistrubtable Pages*:
 
    - [Microsoft Visual C++ Build Tools 2015](https://blogs.msdn.microsoft.com/vcblog/2016/03/31/announcing-the-official-release-of-the-visual-c-build-tools-2015/)
-   - [Visual Studio 2015](https://www.visualstudio.com/downloads)
+
+   - [Visual C++ Redistributable Packages for Visual Studio 2013](https://www.microsoft.com/en-us/download/details.aspx?id=40784)
+
+     > Install both versions: x86 and (!) x64
 
 2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
 
@@ -49,6 +51,4 @@
 
    > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
 
-4. Install [Cargo](https://crates.io/).
-
-5. Run `cargo build —-release`  to create a file **ctehxk2.dll** in the folder **target/release**. 
+4. Run `cargo build —-release`  to create a file **ctehxk2.dll** in the folder **target/release**. 
