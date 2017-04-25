@@ -173,35 +173,44 @@ pub extern "C" fn CT_data(ctn: u16,
     let endpoint = "ct_data".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let mut http_response = post_request(&path, &requestData);
+    match post_request(&path, &requestData) {
+        Ok(mut http_response) => {
+            debug!("{:?}", http_response); // TODO enrich output
 
-    match http_response.status {
-        StatusCode::Ok => {
-            // decode server response
-            let mut body = String::new();
-            http_response.read_to_string(&mut body).unwrap();
-            debug!("CT_data: Response body: {}", body);
+            match http_response.status {
+                StatusCode::Ok => {
+                    // decode server response
+                    let mut body = String::new();
+                    http_response.read_to_string(&mut body).unwrap();
+                    debug!("CT_data: Response body: {}", body);
 
-            let responseData: ResponseData = serde_json::from_str(&body).unwrap();
+                    let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
-            if responseData.responseCode == OK {
-                *_dad = responseData.dad;
-                *_sad = responseData.sad;
-                *_lenr = responseData.lenr;
+                    if responseData.responseCode == OK {
+                        *_dad = responseData.dad;
+                        *_sad = responseData.sad;
+                        *_lenr = responseData.lenr;
 
-                let decoded = decode(&responseData.response).unwrap();
-                debug!("CT_data: Decoded response field {:?}", decoded);
+                        let decoded = decode(&responseData.response).unwrap();
+                        debug!("CT_data: Decoded response field {:?}", decoded);
 
-                for (place, element) in _response.iter_mut().zip(decoded.iter()) {
-                    *place = *element;
+                        for (place, element) in _response.iter_mut().zip(decoded.iter()) {
+                            *place = *element;
+                        }
+                    }
+                    debug!("CT_data: Returning {}", responseData.responseCode);
+                    return responseData.responseCode;
+                }
+                _ => {
+                    error!("CT_data: Response not OK! Returning {}", ERR_HOST);
+                    ERR_HOST
                 }
             }
-            debug!("CT_data: Returning {}", responseData.responseCode);
-            return responseData.responseCode;
         }
-        _ => {
-            error!("CT_data: Response not OK! Returning {}", ERR_HOST);
-            ERR_HOST
+        Err(error) => {
+            debug!("Error: {:?}", error);
+            error!("CT_data: Request failed! Returning {}", ERR_HTSI);
+            ERR_HTSI
         }
     }
 }
