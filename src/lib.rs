@@ -13,6 +13,7 @@ extern crate serde_json;
 
 use base64::{encode, decode};
 use hyper::Client;
+use hyper::Error;
 use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
@@ -267,7 +268,7 @@ fn init_logging() {
     }
 }
 
-fn post_request<T>(path: &str, payload: &T) -> Response
+fn post_request<T>(path: &str, payload: &T) -> Result<Response, Error>
     where T: Serialize
 {
     let base_url = var("K2_BASE_URL").unwrap_or(BASE_URL.to_string());
@@ -283,13 +284,8 @@ fn post_request<T>(path: &str, payload: &T) -> Response
     debug!("HTTP POST URL: {}", url);
     debug!("HTTP POST body: {:?}", body);
 
-    let response = client
-        .post(&url)
-        .headers(headers)
-        .body(&body[..])
-        .send()
-        .unwrap();
-
-    debug!("{:?}", response); // TODO enrich output
-    response
+    let mut builder = client.post(&url);
+    builder = builder.headers(headers);
+    builder = builder.body(&body[..]);
+    builder.send()
 }
