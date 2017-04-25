@@ -124,76 +124,73 @@ pub extern "C" fn CT_data(ctn: u16,
                           -> i8 {
     init_logging();
 
-    unsafe {
-        let dad: &mut u8 = &mut *dad;
+    debug!("CT_data: Called");
+    debug!(" ctn: {}", ctn);
 
-        let sad: &mut u8 = &mut *sad;
+    let _dad: &mut u8 = unsafe { &mut *dad };
+    debug!(" dad: {}", _dad);
 
-        let lenr: &mut size_t = &mut *lenr;
+    let _sad: &mut u8 = unsafe { &mut *sad };
+    debug!(" sad: {}", _sad);
+    debug!(" lenc: {}", lenc);
 
-        let command = slice::from_raw_parts(command, lenc as usize);
+    let _command = unsafe { slice::from_raw_parts(command, lenc as usize) };
+    debug!(" command: {:?}", _command);
 
-        let response = slice::from_raw_parts_mut(response, *lenr);
+    let _lenr: &mut size_t = unsafe { &mut *lenr };
+    debug!(" lenr: {}", _lenr);
 
-        debug!("CT_data: Called (ctn {}, dad {}, sad {}, lenc {}, \
-               command {:?}, lenr {}), response.len() {})",
-               ctn,
-               dad,
-               sad,
-               lenc,
-               command,
-               lenr,
-               response.len());
+    let _response = unsafe { slice::from_raw_parts_mut(response, *_lenr) };
+    debug!(" response.len(): {}", _response.len());
 
-        if !MAP.lock().unwrap().contains_key(&ctn) {
-            debug!("CT_data: Card terminal has not been opened. Returning {}",
-                   ERR_INVALID);
-            return ERR_INVALID;
-        }
+    if !MAP.lock().unwrap().contains_key(&ctn) {
+        debug!("CT_data: Card terminal has not been opened. Returning {}",
+               ERR_INVALID);
+        return ERR_INVALID;
+    }
 
-        let requestData = RequestData {
-            dad: *dad,
-            sad: *sad,
-            lenc: lenc,
-            command: encode(command),
-            lenr: *lenr,
-        };
+    let requestData = RequestData {
+        dad: *_dad,
+        sad: *_sad,
+        lenc: lenc,
+        command: encode(_command),
+        lenr: *_lenr,
+    };
 
-        let pn = MAP.lock().unwrap();
-        let pn = pn.get(&ctn).unwrap();
-        let endpoint = "ct_data".to_string();
-        let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
+    let pn = MAP.lock().unwrap();
+    let pn = pn.get(&ctn).unwrap();
+    let endpoint = "ct_data".to_string();
+    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-        let mut http_response = post_request(&path, &requestData);
+    let mut http_response = post_request(&path, &requestData);
 
-        match http_response.status {
-            StatusCode::Ok => {
-                // decode server response
-                let mut body = String::new();
-                http_response.read_to_string(&mut body).unwrap();
-                debug!("CT_data: Response body: {}", body);
+    match http_response.status {
+        StatusCode::Ok => {
+            // decode server response
+            let mut body = String::new();
+            http_response.read_to_string(&mut body).unwrap();
+            debug!("CT_data: Response body: {}", body);
 
-                let responseData: ResponseData = serde_json::from_str(&body).unwrap();
+            let responseData: ResponseData = serde_json::from_str(&body).unwrap();
 
-                if responseData.responseCode == OK {
-                    *dad = responseData.dad;
-                    *sad = responseData.sad;
-                    *lenr = responseData.lenr;
+            if responseData.responseCode == OK {
+                *_dad = responseData.dad;
+                *_sad = responseData.sad;
+                *_lenr = responseData.lenr;
 
-                    let decoded = decode(&responseData.response).unwrap();
-                    debug!("CT_data: Decoded response field {:?}", decoded);
+                let decoded = decode(&responseData.response).unwrap();
+                debug!("CT_data: Decoded response field {:?}", decoded);
 
-                    for (place, element) in response.iter_mut().zip(decoded.iter()) {
-                        *place = *element;
-                    }
+                for (place, element) in _response.iter_mut().zip(decoded.iter()) {
+                    *place = *element;
                 }
-                debug!("CT_data: Returning {}", responseData.responseCode);
-                return responseData.responseCode;
             }
-            _ => {
-                error!("CT_data: Response not OK! Returning {}", ERR_HOST);
-                ERR_HOST
-            }
+            debug!("CT_data: Returning {}", responseData.responseCode);
+            return responseData.responseCode;
+        }
+        _ => {
+            error!("CT_data: Response not OK! Returning {}", ERR_HOST);
+            ERR_HOST
         }
     }
 }
