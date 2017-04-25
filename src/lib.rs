@@ -235,27 +235,36 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let mut response = post_request!(&path);
+    match post_request!(&path) {
+        Ok(mut response) => {
+            debug!("{:?}", response); // TODO enrich output
 
-    match response.status {
-        StatusCode::Ok => {
-            // Cast server response
-            let mut body = String::new();
-            response.read_to_string(&mut body).unwrap();
+            match response.status {
+                StatusCode::Ok => {
+                    // Cast server response
+                    let mut body = String::new();
+                    response.read_to_string(&mut body).unwrap();
 
-            let status = body.parse::<i8>().unwrap();
-            if status == OK {
-                // Remove CTN
-                MAP.lock().unwrap().remove(&ctn);
-                debug!("CT_close: Card terminal has been closed.");
+                    let status = body.parse::<i8>().unwrap();
+                    if status == OK {
+                        // Remove CTN
+                        MAP.lock().unwrap().remove(&ctn);
+                        debug!("CT_close: Card terminal has been closed.");
+                    }
+
+                    debug!("CT_close: Returning {}", status);
+                    status
+                }
+                _ => {
+                    error!("CT_close: Response not OK! Returning {}", ERR_HOST);
+                    ERR_HOST
+                }
             }
-
-            debug!("CT_close: Returning {}", status);
-            status
         }
-        _ => {
-            error!("CT_close: Response not OK! Returning {}", ERR_HOST);
-            ERR_HOST
+        Err(error) => {
+            debug!("Error: {}", error);
+            error!("CT_close: Request failed! Returning {}", ERR_HTSI);
+            ERR_HTSI
         }
     }
 }
