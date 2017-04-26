@@ -20,6 +20,7 @@ use hyper::mime::{Mime, TopLevel, SubLevel};
 use hyper::status::StatusCode;
 use libc::{uint8_t, size_t};
 use log::LogLevelFilter;
+use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
@@ -270,30 +271,43 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
 }
 
 fn init_logging() {
-    match var("K2_LOG_PATH") {
-        Ok(path) => {
-            INIT.call_once(|| {
-                let file = FileAppender::builder()
-                    .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
-                    .build(path + &"/ctehxk2.log".to_string())
-                    .unwrap();
+    INIT.call_once(|| match var("K2_LOG_PATH") {
+                       Ok(path) => {
+        let file = FileAppender::builder()
+            .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
+            .build(path + &"/ctehxk2.log".to_string())
+            .unwrap();
 
-                let config = Config::builder()
-                    .appender(Appender::builder().build("file", Box::new(file)))
-                    .logger(Logger::builder()
-                                .appender("file")
-                                .additive(false)
-                                .build("ctehxk2", LogLevelFilter::Debug))
-                    .build(Root::builder()
-                               .appender("file")
-                               .build(LogLevelFilter::Error))
-                    .unwrap();
+        let config = Config::builder()
+            .appender(Appender::builder().build("file", Box::new(file)))
+            .logger(Logger::builder()
+                        .appender("file")
+                        .additive(false)
+                        .build("ctehxk2", LogLevelFilter::Debug))
+            .build(Root::builder()
+                       .appender("file")
+                       .build(LogLevelFilter::Error))
+            .unwrap();
 
-                log4rs::init_config(config).unwrap();
-            })
-        }
-        _ => (),
+        log4rs::init_config(config).unwrap();
     }
+                       _ => {
+        let stdout = ConsoleAppender::builder().build();
+
+        let config = Config::builder()
+            .appender(Appender::builder().build("stdout", Box::new(stdout)))
+            .logger(Logger::builder()
+                        .appender("stdout")
+                        .additive(false)
+                        .build("ctehxk2", LogLevelFilter::Debug))
+            .build(Root::builder()
+                       .appender("stdout")
+                       .build(LogLevelFilter::Error))
+            .unwrap();
+
+        log4rs::init_config(config).unwrap();
+    }
+                   })
 }
 
 fn post_request<T>(path: &str, payload: &T) -> Result<Response, Error>
