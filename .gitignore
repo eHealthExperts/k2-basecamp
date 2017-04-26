@@ -4,3 +4,5 @@ ctehxk2.log
 node_modules
 npm-debug.log*
 target
+
+.idea/
