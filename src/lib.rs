@@ -71,7 +71,7 @@ macro_rules! post_request {
 
 #[no_mangle]
 #[allow(non_snake_case, unused_must_use)]
-pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
+pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     init_logging();
 
     debug!("CT_init: Called (ctn {}, pn {})", ctn, pn);
@@ -124,14 +124,14 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_data(ctn: u16,
-                          dad: *mut u8,
-                          sad: *mut u8,
-                          lenc: usize,
-                          command: *const u8,
-                          lenr: *mut usize,
-                          response: *mut u8)
-                          -> i8 {
+pub extern "system" fn CT_data(ctn: u16,
+                               dad: *mut u8,
+                               sad: *mut u8,
+                               lenc: usize,
+                               command: *const u8,
+                               lenr: *mut usize,
+                               response: *mut u8)
+                               -> i8 {
     init_logging();
 
     debug!("CT_data: Called");
@@ -216,7 +216,7 @@ pub extern "C" fn CT_data(ctn: u16,
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_close(ctn: u16) -> i8 {
+pub extern "system" fn CT_close(ctn: u16) -> i8 {
     init_logging();
 
     debug!("CT_close: Called (ctn {})", ctn);
