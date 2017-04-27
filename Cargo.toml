@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.5.3"
+version = "0.5.4"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 repository = "http://stash.ehex.de/scm/k2/k2-basecamp.git"
 publish = false
