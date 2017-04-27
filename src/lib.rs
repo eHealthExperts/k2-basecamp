@@ -13,12 +13,14 @@ extern crate serde_json;
 
 use base64::{encode, decode};
 use hyper::Client;
+use hyper::Error;
 use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use hyper::status::StatusCode;
 use libc::{uint8_t, size_t};
 use log::LogLevelFilter;
+use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
@@ -34,6 +36,7 @@ const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
 static OK: i8 = 0;
 static ERR_INVALID: i8 = -1;
 static ERR_HOST: i8 = -127;
+static ERR_HTSI: i8 = -128;
 
 static INIT: Once = ONCE_INIT;
 
@@ -87,7 +90,16 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let mut response = post_request!(&path);
+    let mut response = match post_request!(&path) {
+        Ok(response) => response,
+        Err(error) => {
+            debug!("Error: {:?}", error);
+            error!("CT_data: Request failed! Returning {}", ERR_HTSI);
+            return ERR_HTSI;
+        }
+    };
+
+    debug!("{:?}", response); // TODO enrich output
 
     match response.status {
         StatusCode::Ok => {
@@ -162,7 +174,16 @@ pub extern "C" fn CT_data(ctn: u16,
     let endpoint = "ct_data".to_string();
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
-    let mut http_response = post_request(&path, &requestData);
+    let mut http_response = match post_request(&path, &requestData) {
+        Ok(http_response) => http_response,
+        Err(error) => {
+            debug!("Error: {:?}", error);
+            error!("CT_data: Request failed! Returning {}", ERR_HTSI);
+            return ERR_HTSI;
+        }
+    };
+
+    debug!("{:?}", http_response); // TODO enrich output
 
     match http_response.status {
         StatusCode::Ok => {
@@ -215,7 +236,16 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
     let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
 
     // Perform the request
-    let mut response = post_request!(&path);
+    let mut response = match post_request!(&path) {
+        Ok(response) => response,
+        Err(error) => {
+            debug!("Error: {:?}", error);
+            error!("CT_close: Request failed! Returning {}", ERR_HTSI);
+            return ERR_HTSI;
+        }
+    };
+
+    debug!("{:?}", response); // TODO enrich output
 
     match response.status {
         StatusCode::Ok => {
@@ -241,33 +271,46 @@ pub extern "C" fn CT_close(ctn: u16) -> i8 {
 }
 
 fn init_logging() {
-    match var("K2_LOG_PATH") {
-        Ok(path) => {
-            INIT.call_once(|| {
-                let file = FileAppender::builder()
-                    .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
-                    .build(path + &"/ctehxk2.log".to_string())
-                    .unwrap();
+    INIT.call_once(|| match var("K2_LOG_PATH") {
+                       Ok(path) => {
+        let file = FileAppender::builder()
+            .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
+            .build(path + &"/ctehxk2.log".to_string())
+            .unwrap();
 
-                let config = Config::builder()
-                    .appender(Appender::builder().build("file", Box::new(file)))
-                    .logger(Logger::builder()
-                                .appender("file")
-                                .additive(false)
-                                .build("ctehxk2", LogLevelFilter::Debug))
-                    .build(Root::builder()
-                               .appender("file")
-                               .build(LogLevelFilter::Error))
-                    .unwrap();
+        let config = Config::builder()
+            .appender(Appender::builder().build("file", Box::new(file)))
+            .logger(Logger::builder()
+                        .appender("file")
+                        .additive(false)
+                        .build("ctehxk2", LogLevelFilter::Debug))
+            .build(Root::builder()
+                       .appender("file")
+                       .build(LogLevelFilter::Error))
+            .unwrap();
 
-                log4rs::init_config(config).unwrap();
-            })
-        }
-        _ => (),
+        log4rs::init_config(config).unwrap();
     }
+                       _ => {
+        let stdout = ConsoleAppender::builder().build();
+
+        let config = Config::builder()
+            .appender(Appender::builder().build("stdout", Box::new(stdout)))
+            .logger(Logger::builder()
+                        .appender("stdout")
+                        .additive(false)
+                        .build("ctehxk2", LogLevelFilter::Debug))
+            .build(Root::builder()
+                       .appender("stdout")
+                       .build(LogLevelFilter::Error))
+            .unwrap();
+
+        log4rs::init_config(config).unwrap();
+    }
+                   })
 }
 
-fn post_request<T>(path: &str, payload: &T) -> Response
+fn post_request<T>(path: &str, payload: &T) -> Result<Response, Error>
     where T: Serialize
 {
     let base_url = var("K2_BASE_URL").unwrap_or(BASE_URL.to_string());
@@ -283,13 +326,8 @@ fn post_request<T>(path: &str, payload: &T) -> Response
     debug!("HTTP POST URL: {}", url);
     debug!("HTTP POST body: {:?}", body);
 
-    let response = client
-        .post(&url)
-        .headers(headers)
-        .body(&body[..])
-        .send()
-        .unwrap();
-
-    debug!("{:?}", response); // TODO enrich output
-    response
+    let mut builder = client.post(&url);
+    builder = builder.headers(headers);
+    builder = builder.body(&body[..]);
+    builder.send()
 }
