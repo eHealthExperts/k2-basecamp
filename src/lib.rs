@@ -1,6 +1,5 @@
 extern crate base64;
 extern crate hyper;
-extern crate libc;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -18,7 +17,6 @@ use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use hyper::status::StatusCode;
-use libc::{uint8_t, size_t};
 use log::LogLevelFilter;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -73,7 +71,7 @@ macro_rules! post_request {
 
 #[no_mangle]
 #[allow(non_snake_case, unused_must_use)]
-pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
+pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     init_logging();
 
     debug!("CT_init: Called (ctn {}, pn {})", ctn, pn);
@@ -126,14 +124,14 @@ pub extern "C" fn CT_init(ctn: u16, pn: u16) -> i8 {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_data(ctn: u16,
-                          dad: *mut uint8_t,
-                          sad: *mut uint8_t,
-                          lenc: size_t,
-                          command: *const uint8_t,
-                          lenr: *mut size_t,
-                          response: *mut uint8_t)
-                          -> i8 {
+pub extern "system" fn CT_data(ctn: u16,
+                               dad: *mut u8,
+                               sad: *mut u8,
+                               lenc: usize,
+                               command: *const u8,
+                               lenr: *mut usize,
+                               response: *mut u8)
+                               -> i8 {
     init_logging();
 
     debug!("CT_data: Called");
@@ -149,7 +147,7 @@ pub extern "C" fn CT_data(ctn: u16,
     let _command = unsafe { slice::from_raw_parts(command, lenc as usize) };
     debug!(" command: {:?}", _command);
 
-    let _lenr: &mut size_t = unsafe { &mut *lenr };
+    let _lenr: &mut usize = unsafe { &mut *lenr };
     debug!(" lenr: {}", _lenr);
 
     let _response = unsafe { slice::from_raw_parts_mut(response, *_lenr) };
@@ -218,7 +216,7 @@ pub extern "C" fn CT_data(ctn: u16,
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn CT_close(ctn: u16) -> i8 {
+pub extern "system" fn CT_close(ctn: u16) -> i8 {
     init_logging();
 
     debug!("CT_close: Called (ctn {})", ctn);
