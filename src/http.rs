@@ -16,11 +16,15 @@ const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
 #[derive(Serialize)]
 struct Empty();
 
-pub fn post<T>(path: &str, payload: &T) -> Result<Response, Error>
+pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
     where T: Serialize
 {
-    let base_url = var("K2_BASE_URL").unwrap_or(BASE_URL.to_string());
-    let url = base_url + path;
+    let mut url = var("K2_BASE_URL").unwrap_or(BASE_URL.to_string());
+    if !url.trim().ends_with("/") {
+        url.push_str("/");
+    }
+
+    url.push_str(&path);
 
     let client = Client::new();
 
@@ -38,6 +42,6 @@ pub fn post<T>(path: &str, payload: &T) -> Result<Response, Error>
     builder.send()
 }
 
-pub fn simple_post(path: &str) -> Result<Response, Error> {
+pub fn simple_post(path: String) -> Result<Response, Error> {
     post(path, &Empty {})
 }
