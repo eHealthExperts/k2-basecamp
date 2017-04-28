@@ -10,9 +10,9 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-pub mod logging;
-pub mod http;
 pub mod ctapi;
+pub mod http;
+pub mod logging;
 
 #[no_mangle]
 #[allow(non_snake_case, unused_must_use)]
