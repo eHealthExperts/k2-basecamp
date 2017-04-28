@@ -41,7 +41,6 @@ pub fn close(ctn: u16) -> i8 {
     }
 }
 
-
 fn get_request_path(ctn: u16) -> String {
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let mut path = String::from("ct_close");
