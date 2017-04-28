@@ -29,19 +29,23 @@ fn init_file_logger(mut path: String) -> Config {
         path.push_str("/");
     }
 
+    path.push_str("ctehxk2.log");
+
+    let appender_id = "file";
+
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
-        .build(path + &"ctehxk2.log".to_string())
+        .build(path)
         .unwrap();
 
     Config::builder()
-        .appender(Appender::builder().build("file", Box::new(file)))
+        .appender(Appender::builder().build(appender_id, Box::new(file)))
         .logger(Logger::builder()
-                    .appender("file")
+                    .appender(appender_id)
                     .additive(false)
                     .build("ctehxk2", LogLevelFilter::Debug))
         .build(Root::builder()
-                   .appender("file")
+                   .appender(appender_id)
                    .build(LogLevelFilter::Error))
         .unwrap()
 }
@@ -49,14 +53,16 @@ fn init_file_logger(mut path: String) -> Config {
 fn init_stdout_logger() -> Config {
     let stdout = ConsoleAppender::builder().build();
 
+    let appender_id = "stdout";
+
     Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
+        .appender(Appender::builder().build(appender_id, Box::new(stdout)))
         .logger(Logger::builder()
-                    .appender("stdout")
+                    .appender(appender_id)
                     .additive(false)
                     .build("ctehxk2", LogLevelFilter::Debug))
         .build(Root::builder()
-                   .appender("stdout")
+                   .appender(appender_id)
                    .build(LogLevelFilter::Error))
         .unwrap()
 }
