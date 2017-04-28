@@ -10,14 +10,15 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-pub mod ctapi;
 pub mod http;
 pub mod logging;
+
+mod ctapi;
 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
-    ctapi::init::init(ctn, pn)
+    ctapi::init(ctn, pn)
 }
 
 #[no_mangle]
@@ -30,11 +31,11 @@ pub extern "system" fn CT_data(ctn: u16,
                                lenr: *mut usize,
                                response: *mut u8)
                                -> i8 {
-    ctapi::data::data(ctn, dad, sad, lenc, command, lenr, response)
+    ctapi::data(ctn, dad, sad, lenc, command, lenr, response)
 }
 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn CT_close(ctn: u16) -> i8 {
-    ctapi::close::close(ctn)
+    ctapi::close(ctn)
 }
