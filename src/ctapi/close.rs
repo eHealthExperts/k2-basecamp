@@ -20,11 +20,14 @@ pub fn close(ctn: u16) -> i8 {
 
     // Build the request URL
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
-    let endpoint = "ct_close".to_string();
-    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
+    let mut path = String::from("ct_close");
+    path.push_str("/");
+    path.push_str(&ctn.to_string());
+    path.push_str("/");
+    path.push_str(&pn.to_string());
 
     // Perform the request
-    let mut response = match http::simple_post(&path) {
+    let mut response = match http::simple_post(path) {
         Ok(response) => response,
         Err(error) => {
             debug!("Error: {:?}", error);

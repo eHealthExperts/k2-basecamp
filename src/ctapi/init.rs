@@ -19,11 +19,14 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
     }
 
     // Build the request URL
-    let endpoint = "ct_init".to_string();
-    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
+    let mut path = String::from("ct_init");
+    path.push_str("/");
+    path.push_str(&ctn.to_string());
+    path.push_str("/");
+    path.push_str(&pn.to_string());
 
     // Perform the request
-    let mut response = match http::simple_post(&path) {
+    let mut response = match http::simple_post(path) {
         Ok(response) => response,
         Err(error) => {
             debug!("Error: {:?}", error);
