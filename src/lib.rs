@@ -15,7 +15,7 @@ pub mod http;
 pub mod logging;
 
 #[no_mangle]
-#[allow(non_snake_case, unused_must_use)]
+#[allow(non_snake_case)]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     ctapi::init::init(ctn, pn)
 }
