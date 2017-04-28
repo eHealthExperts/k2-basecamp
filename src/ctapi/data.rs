@@ -71,12 +71,8 @@ pub fn data(ctn: u16,
         lenr: *_lenr,
     };
 
-    let pn = MAP.lock().unwrap();
-    let pn = pn.get(&ctn).unwrap();
-    let endpoint = "ct_data".to_string();
-    let path = endpoint + "/" + &ctn.to_string() + "/" + &pn.to_string();
-
-    let mut http_response = match http::post(&path, &request_data) {
+    let path = get_request_path(ctn);
+    let mut http_response = match http::post(path, &request_data) {
         Ok(http_response) => http_response,
         Err(error) => {
             debug!("Error: {:?}", error);
@@ -116,4 +112,17 @@ pub fn data(ctn: u16,
             ERR_HOST
         }
     }
+}
+
+fn get_request_path(ctn: u16) -> String {
+    let pn = MAP.lock().unwrap();
+    let pn = pn.get(&ctn).unwrap();
+
+    let mut path = String::from("ct_data");
+    path.push_str("/");
+    path.push_str(&ctn.to_string());
+    path.push_str("/");
+    path.push_str(&pn.to_string());
+
+    path
 }
