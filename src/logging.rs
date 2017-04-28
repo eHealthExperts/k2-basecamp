@@ -7,6 +7,7 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::env::var;
+use std::path::MAIN_SEPARATOR;
 use std::sync::{Once, ONCE_INIT};
 
 static INIT: Once = ONCE_INIT;
@@ -25,8 +26,8 @@ fn init_logger() {
 }
 
 fn init_file_logger(mut path: String) -> Config {
-    if !path.trim().ends_with("/") {
-        path.push_str("/");
+    if !path.trim().ends_with(MAIN_SEPARATOR) {
+        path.push(MAIN_SEPARATOR);
     }
 
     path.push_str("ctehxk2.log");
