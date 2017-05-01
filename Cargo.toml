@@ -11,14 +11,14 @@ name = "ctehxk2"
 crate-type = ["cdylib"]
 
 [dependencies]
-base64 = "0.4"
+base64 = "0.5"
 hyper = "0.10"
 lazy_static = "0.2"
 log = "0.3"
-log4rs = "0.6"
-serde = "0.9"
-serde_derive = "0.9"
-serde_json = "0.9"
+log4rs = "0.7"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
 
 [build-dependencies]
 rusty-cheddar = "0.3"
