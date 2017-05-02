@@ -8,5 +8,7 @@ var packageJson = require('./package.json');
 gulp.task('update-version', function(){
   gulp.src(['Cargo.toml'])
     .pipe(replace(/version = ".*"/g, `version = "${packageJson.version}"`))
+    .pipe(replace(/FileVersion = ".*"/g, `FileVersion = "${packageJson.version}"`))
+    .pipe(replace(/ProductVersion = ".*"/g, `ProductVersion = "${packageJson.version}"`))
     .pipe(gulp.dest('.'));
 });
