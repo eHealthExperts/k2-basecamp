@@ -1,7 +1,7 @@
 {
   "name": "k2-basecamp",
   "version": "0.5.7",
-  "description": "K2-Adapter for CTAPI",
+  "description": "K2 adapter for CTAPI",
   "license": "UNLICENSED",
   "author": "Christian Fochler <fochler@ehealthexperts.de>",
   "repository": {
