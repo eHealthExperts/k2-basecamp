@@ -22,3 +22,15 @@ serde_json = "1.0"
 
 [build-dependencies]
 rusty-cheddar = "0.3"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
+[package.metadata.winres]
+CompanyName = "eHealthExperts GmbH"
+FileDescription = "K2 adapter for CTAPI"
+FileVersion = "0.5.7"
+LegalCopyright = "All rights reserved."
+OriginalFilename = "ctehxk2.dll"
+ProductName = "K2 basecamp"
+ProductVersion = "0.5.7"

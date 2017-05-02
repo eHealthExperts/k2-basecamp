@@ -33,7 +33,9 @@
 
 ### Howto create a *Windows DLL*
 
-1. Install *MSVC* and *Redistrubtable Pages*:
+1. Install *Windows SDK* with *MSVC* and *Redistrubtable Pages*:
+
+   - [Microsoft Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)
 
    - [Microsoft Visual C++ Build Tools 2015](https://blogs.msdn.microsoft.com/vcblog/2016/03/31/announcing-the-official-release-of-the-visual-c-build-tools-2015/)
 
