@@ -36,10 +36,6 @@ pub fn data(ctn: u16,
             lenr: *mut usize,
             response: *mut u8)
             -> i8 {
-    logging::init();
-
-    debug!("CT_data: Called");
-    debug!(" ctn: {}", ctn);
 
     let _dad: &mut u8 = unsafe { &mut *dad };
     debug!(" dad: {}", _dad);

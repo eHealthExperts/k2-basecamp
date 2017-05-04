@@ -8,10 +8,6 @@ use hyper::status::StatusCode;
 use std::io::Read;
 
 pub fn init(ctn: u16, pn: u16) -> i8 {
-    logging::init();
-
-    debug!("CT_init: Called (ctn {}, pn {})", ctn, pn);
-
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&ctn) {
         debug!("CT_init: Card terminal has already been opened. Returning {}",
