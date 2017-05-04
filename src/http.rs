@@ -70,6 +70,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn simple_post_is_sending_empty_body() {
         let url = HttpStub::run(|mut stub| {
                                     stub.got_body("");
@@ -106,6 +107,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn post_is_sending_payload_as_json_in_body() {
         let url = HttpStub::run(|mut stub| {
             stub.got_path("/hello");
