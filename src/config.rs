@@ -1,6 +1,7 @@
 extern crate envy;
 
 use std::env::var;
+use std::path::MAIN_SEPARATOR;
 
 static BASE_URL_KEY: &str = "K2_BASE_URL";
 static DEFAULT_BASE_URL: &str = "http://localhost:8080/k2/ctapi/";
@@ -26,7 +27,13 @@ pub fn base_url() -> String {
 
 pub fn log_path() -> Option<String> {
     match var(LOG_PATH_KEY) {
-        Ok(path) => Some(path),
+        Ok(mut path) => {
+            if !path.trim().ends_with(MAIN_SEPARATOR) {
+                path.push(MAIN_SEPARATOR);
+            }
+
+            Some(path)
+        },
         _ => None,
     }
 }
@@ -128,7 +135,7 @@ mod tests {
         env::set_var(LOG_PATH_KEY, "a");
         let path = log_path();
 
-        assert_eq!(path, Some(String::from("a")));
+        assert_eq!(path, Some(String::from("a/")));
     }
 
     #[test]
