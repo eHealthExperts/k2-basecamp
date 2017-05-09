@@ -6,9 +6,9 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use std::env::var;
 use std::path::MAIN_SEPARATOR;
 use std::sync::{Once, ONCE_INIT};
+use super::config;
 
 static INIT: Once = ONCE_INIT;
 
@@ -17,8 +17,8 @@ pub fn init() {
 }
 
 fn init_logger() {
-    let config = match var("K2_LOG_PATH") {
-        Ok(path) => init_file_logger(String::from(path)),
+    let config = match config::log_path() {
+        Some(path) => init_file_logger(String::from(path)),
         _ => init_stdout_logger(),
     };
 

@@ -4,6 +4,7 @@ use std::env::var;
 
 static BASE_URL_KEY: &str = "K2_BASE_URL";
 static DEFAULT_BASE_URL: &str = "http://localhost:8080/k2/ctapi/";
+static LOG_PATH_KEY: &str = "K2_LOG_PATH";
 
 #[derive(Deserialize)]
 struct CtnPn {
@@ -21,6 +22,13 @@ pub fn base_url() -> String {
     }
 
     url
+}
+
+pub fn log_path() -> Option<String> {
+    match var(LOG_PATH_KEY) {
+        Ok(path) => Some(path),
+        _ => None,
+    }
 }
 
 pub fn ctn_or(ctn: u16) -> u16 {
