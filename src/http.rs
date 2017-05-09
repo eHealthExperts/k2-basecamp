@@ -5,16 +5,13 @@ extern crate log;
 extern crate serde;
 extern crate serde_json;
 
+use super::config;
 use hyper::Client;
 use hyper::Error;
 use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use serde::Serialize;
-use std::env::var;
-
-const BASE_URL_KEY: &'static str = "K2_BASE_URL";
-const BASE_URL: &'static str = "http://localhost:8080/k2/ctapi/";
 
 #[derive(Serialize)]
 struct Empty();
@@ -26,7 +23,8 @@ pub fn simple_post(path: String) -> Result<Response, Error> {
 pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
     where T: Serialize
 {
-    let url = get_request_url(path);
+    let mut url = config::base_url();
+    url.push_str(&path);
     debug!("HTTP POST URL: {}", url);
 
     let body = serde_json::to_string(&payload).unwrap();
@@ -42,17 +40,6 @@ pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
     builder.send()
 }
 
-fn get_request_url(path: String) -> String {
-    let mut url = var(BASE_URL_KEY).unwrap_or(BASE_URL.to_string());
-    if !url.trim().ends_with("/") {
-        url.push_str("/");
-    }
-
-    url.push_str(&path);
-
-    url
-}
-
 #[cfg(test)]
 mod tests {
     use self::http_stub as hs;
@@ -60,6 +47,8 @@ mod tests {
     use super::*;
     use std::env;
     use std::io::Read;
+
+    const BASE_URL_KEY: &'static str = "K2_BASE_URL";
 
     #[test]
     fn simple_post_is_returning_error() {
@@ -134,21 +123,5 @@ mod tests {
         let mut body = String::new();
         res.read_to_string(&mut body).unwrap();
         assert_eq!(body, "world");
-    }
-
-    #[test]
-    fn get_request_url_concats_default_value_of_base_url_key_and_given_string() {
-        env::remove_var(BASE_URL_KEY);
-
-        let url = get_request_url(String::from("a"));
-        assert_eq!(url, BASE_URL.to_owned() + "a");
-    }
-
-    #[test]
-    fn get_request_url_concats_value_of_base_url_key_and_given_string() {
-        env::set_var(BASE_URL_KEY, "abc");
-
-        let url = get_request_url(String::from("a"));
-        assert_eq!(url, "abc/a");
     }
 }

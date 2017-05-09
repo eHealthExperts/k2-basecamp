@@ -8,10 +8,6 @@ use hyper::status::StatusCode;
 use std::io::Read;
 
 pub fn close(ctn: u16) -> i8 {
-    logging::init();
-
-    debug!("CT_close: Called (ctn {})", ctn);
-
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
         debug!("CT_close: Card terminal has not been opened. Returning {}",
