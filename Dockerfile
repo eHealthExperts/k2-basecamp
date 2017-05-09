@@ -1,7 +1,7 @@
 FROM debian:jessie
 
 ENV USER root
-ENV RUST_VERSION=1.16.0
+ENV RUST_VERSION=1.17.0
 
 # install git, cmake, ...
 RUN apt-get update && \
