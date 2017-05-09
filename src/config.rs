@@ -122,4 +122,20 @@ mod tests {
 
         assert_eq!(url, DEFAULT_BASE_URL);
     }
+
+    #[test]
+    fn log_path_returns_env_value() {
+        env::set_var(LOG_PATH_KEY, "a");
+        let path = log_path();
+
+        assert_eq!(path, Some(String::from("a")));
+    }
+
+    #[test]
+    fn log_path_return_none_if_no_env() {
+        env::remove_var(LOG_PATH_KEY);
+        let path = log_path();
+
+        assert!(path.is_none());
+    }
 }
