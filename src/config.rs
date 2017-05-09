@@ -33,7 +33,7 @@ pub fn log_path() -> Option<String> {
             }
 
             Some(path)
-        },
+        }
         _ => None,
     }
 }

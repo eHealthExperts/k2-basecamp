@@ -5,13 +5,13 @@ extern crate log;
 extern crate serde;
 extern crate serde_json;
 
+use super::config;
 use hyper::Client;
 use hyper::Error;
 use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use serde::Serialize;
-use super::config;
 
 #[derive(Serialize)]
 struct Empty();
