@@ -163,11 +163,11 @@ describe('CT_data func', () => {
         CT_init(1, 1).then(() => {
             CT_data(1, dad, sad, lenc, command, lenr, response).then(() => {
                 __.assertThat(r.body, __.equalTo({
-                    dad: dad.readUInt8(0),
-                    sad: sad.readUInt8(0),
+                    dad: 3,
+                    sad: 2,
                     lenc,
                     command: "AQIDBAU=",
-                    lenr: lenr.readUInt16LE(0)
+                    lenr: 10
                 }))
 
                 done();
