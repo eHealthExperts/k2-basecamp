@@ -1,3 +1,4 @@
+extern crate cast;
 extern crate hyper;
 extern crate serde_json;
 
@@ -6,8 +7,10 @@ pub use self::super::super::{http, logging};
 
 use base64::{encode, decode};
 use hyper::status::StatusCode;
+use std::cmp;
 use std::io::Read;
 use std::slice;
+use std::u16;
 
 #[derive(Serialize)]
 struct RequestData {
@@ -49,6 +52,8 @@ pub fn data(ctn: u16,
 
     let _lenr: &mut usize = unsafe { &mut *lenr };
     debug!(" lenr: {}", _lenr);
+
+    sanitize_lenr(&mut *_lenr);
 
     let _response = unsafe { slice::from_raw_parts_mut(response, *_lenr) };
     debug!(" response.len(): {}", _response.len());
@@ -121,4 +126,12 @@ fn get_request_path(ctn: u16) -> String {
     path.push_str(&pn.to_string());
 
     path
+}
+
+fn sanitize_lenr(lenr: &mut usize) {
+    let max_usize = cast::usize(u16::MAX);
+    if *lenr > max_usize {
+        debug!(" ... sanitize lenr to {}", u16::MAX);
+    }
+    *lenr = cmp::min(*lenr, max_usize);
 }
