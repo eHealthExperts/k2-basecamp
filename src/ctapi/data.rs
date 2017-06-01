@@ -1,4 +1,3 @@
-extern crate cast;
 extern crate hyper;
 extern crate serde_json;
 
@@ -128,7 +127,7 @@ fn get_request_path(ctn: u16) -> String {
 }
 
 fn sanitize_lenr(lenr: &mut usize) {
-    let max_usize = cast::usize(u16::MAX);
+    let max_usize = u16::MAX as usize;
     if *lenr > max_usize {
         debug!(" ... sanitize lenr to {}", u16::MAX);
         *lenr = max_usize;
