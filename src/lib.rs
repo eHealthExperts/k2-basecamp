@@ -1,5 +1,4 @@
 extern crate base64;
-extern crate cast;
 extern crate envy;
 extern crate hyper;
 #[macro_use]
