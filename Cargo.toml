@@ -23,7 +23,7 @@ serde_derive = "1.0"
 serde_json = "1.0"
 
 [build-dependencies]
-rusty-cheddar = "0.3"
+moz-cheddar = "0.4"
 
 [dev-dependencies]
 http_stub = "0.1"
