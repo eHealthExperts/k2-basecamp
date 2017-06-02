@@ -22,7 +22,7 @@ mod ctapi;
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
-    debug!("CT_init: Called (ctn {}, pn {})", ctn, pn);
+    debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
 
     ctapi::init(config::ctn_or(ctn), config::pn_or(pn))
 }
@@ -39,7 +39,7 @@ pub extern "system" fn CT_data(ctn: u16,
                                -> i8 {
     logging::init();
 
-    debug!("CT_data: Called (ctn {})", ctn);
+    debug!("CT_data(ctn: {})", ctn);
 
     ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response)
 }
@@ -49,7 +49,7 @@ pub extern "system" fn CT_data(ctn: u16,
 pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
-    debug!("CT_close: Called (ctn {})", ctn);
+    debug!("CT_close(ctn: {})", ctn);
 
     ctapi::close(config::ctn_or(ctn))
 }

@@ -40,7 +40,7 @@ pub fn log_path() -> Option<String> {
 pub fn ctn_or(ctn: u16) -> u16 {
     match envy::from_env::<Config>() {
         Ok(config) => {
-            debug!("From env: ctn {}", config.ctn);
+            info!("CTN from env: {}", config.ctn);
             config.ctn
         }
         _ => ctn,
@@ -50,7 +50,7 @@ pub fn ctn_or(ctn: u16) -> u16 {
 pub fn pn_or(pn: u16) -> u16 {
     match envy::from_env::<Config>() {
         Ok(config) => {
-            debug!("From env: pn {}", config.pn);
+            info!("PN from env: {}", config.pn);
             config.pn
         }
         _ => pn,
