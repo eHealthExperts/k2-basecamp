@@ -32,10 +32,9 @@ http_stub = "0.1"
 winres = "0.1"
 
 [package.metadata.winres]
-CompanyName = "eHealthExperts GmbH"
 FileDescription = "K2 adapter for CTAPI"
 FileVersion = "0.8.2"
-LegalCopyright = "All rights reserved."
+LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
 ProductVersion = "0.8.2"
