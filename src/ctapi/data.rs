@@ -1,12 +1,9 @@
-extern crate hyper;
 extern crate serde_json;
 
-pub use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
-pub use self::super::super::{http, logging};
+use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::super::http;
 
 use base64::{encode, decode};
-use hyper::status::StatusCode;
-use std::io::Read;
 use std::slice;
 use std::u16;
 
@@ -39,25 +36,25 @@ pub fn data(ctn: u16,
             -> i8 {
 
     let _dad: &mut u8 = unsafe { &mut *dad };
-    debug!(" dad: {}", _dad);
+    debug!("dad: {}", _dad);
 
     let _sad: &mut u8 = unsafe { &mut *sad };
-    debug!(" sad: {}", _sad);
-    debug!(" lenc: {}", lenc);
+    debug!("sad: {}", _sad);
+    debug!("lenc: {}", lenc);
 
     let _command = unsafe { slice::from_raw_parts(command, lenc as usize) };
-    debug!(" command: {:?}", _command);
+    debug!("command: {:?}", _command);
 
     let _lenr: &mut usize = unsafe { &mut *lenr };
-    debug!(" lenr: {}", _lenr);
+    debug!("lenr: {}", _lenr);
 
     sanitize_lenr(&mut *_lenr);
 
     let _response = unsafe { slice::from_raw_parts_mut(response, *_lenr) };
-    debug!(" response.len(): {}", _response.len());
+    debug!("response with {} slices formed", _response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        debug!("CT_data: Card terminal has not been opened. Returning {}",
+        debug!("Card terminal has not been opened. Returning {}",
                ERR_INVALID);
         return ERR_INVALID;
     }
@@ -71,43 +68,37 @@ pub fn data(ctn: u16,
     };
 
     let path = get_request_path(ctn);
-    let mut http_response = match http::post(path, &request_data) {
+    let http_response = match http::post(path, &request_data) {
         Ok(http_response) => http_response,
         Err(error) => {
             debug!("Error: {:?}", error);
-            error!("CT_data: Request failed! Returning {}", ERR_HTSI);
+            error!("Request failed! Returning {}", ERR_HTSI);
             return ERR_HTSI;
         }
     };
 
-    debug!("{:?}", http_response); // TODO enrich output
+    let (http_status, response_body) = http::extract_response(http_response);
+    match http_status {
+        http::HttpStatus::Ok => {
+            let data: ResponseData = serde_json::from_str(&response_body).unwrap();
 
-    match http_response.status {
-        StatusCode::Ok => {
-            // decode server response
-            let mut body = String::new();
-            http_response.read_to_string(&mut body).unwrap();
-            debug!("CT_data: Response body: {}", body);
+            if data.responseCode == OK {
+                *_dad = data.dad;
+                *_sad = data.sad;
+                *_lenr = data.lenr;
 
-            let response_data: ResponseData = serde_json::from_str(&body).unwrap();
-
-            if response_data.responseCode == OK {
-                *_dad = response_data.dad;
-                *_sad = response_data.sad;
-                *_lenr = response_data.lenr;
-
-                let decoded = decode(&response_data.response).unwrap();
-                debug!("CT_data: Decoded response field {:?}", decoded);
+                let decoded = decode(&data.response).unwrap();
+                debug!("Decoded response field {:?}", decoded);
 
                 for (place, element) in _response.iter_mut().zip(decoded.iter()) {
                     *place = *element;
                 }
             }
-            debug!("CT_data: Returning {}", response_data.responseCode);
-            return response_data.responseCode;
+            debug!("Returning {}", data.responseCode);
+            return data.responseCode;
         }
         _ => {
-            error!("CT_data: Response not OK! Returning {}", ERR_HOST);
+            error!("Response not OK! Returning {}", ERR_HOST);
             ERR_HOST
         }
     }
@@ -129,7 +120,7 @@ fn get_request_path(ctn: u16) -> String {
 fn sanitize_lenr(lenr: &mut usize) {
     let max_usize = u16::MAX as usize;
     if *lenr > max_usize {
-        debug!(" ... sanitize lenr to {}", u16::MAX);
+        debug!("... sanitize lenr to {}", u16::MAX);
         *lenr = max_usize;
     }
 }
