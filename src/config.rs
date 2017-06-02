@@ -8,11 +8,10 @@ static DEFAULT_BASE_URL: &str = "http://localhost:8080/k2/ctapi/";
 static LOG_PATH_KEY: &str = "K2_LOG_PATH";
 
 #[derive(Deserialize)]
-struct CtnPn {
-    #[serde(rename="K2_CTN")]
+struct Config {
+    #[serde(rename = "k2_ctn")]
     ctn: u16,
-
-    #[serde(rename="K2_PN")]
+    #[serde(rename = "k2_pn")]
     pn: u16,
 }
 
@@ -39,7 +38,7 @@ pub fn log_path() -> Option<String> {
 }
 
 pub fn ctn_or(ctn: u16) -> u16 {
-    match envy::from_env::<CtnPn>() {
+    match envy::from_env::<Config>() {
         Ok(config) => {
             debug!("From env: ctn {}", config.ctn);
             config.ctn
@@ -49,7 +48,7 @@ pub fn ctn_or(ctn: u16) -> u16 {
 }
 
 pub fn pn_or(pn: u16) -> u16 {
-    match envy::from_env::<CtnPn>() {
+    match envy::from_env::<Config>() {
         Ok(config) => {
             debug!("From env: pn {}", config.pn);
             config.pn
