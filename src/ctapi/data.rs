@@ -73,7 +73,7 @@ pub fn data(ctn: u16,
     debug!("response with {} slices formed", safe_response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        debug!("Card terminal has not been opened. Returning {}",
+        error!("Card terminal has not been opened. Returning {}",
                ERR_INVALID);
         return ERR_INVALID;
     }
