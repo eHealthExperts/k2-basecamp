@@ -34,7 +34,7 @@ pub extern "system" fn CT_data(ctn: u16,
                                sad: *mut u8,
                                lenc: u16,
                                command: *const u8,
-                               lenr: *mut usize,
+                               lenr: *mut u16,
                                response: *mut u8)
                                -> i8 {
     logging::init();

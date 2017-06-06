@@ -14,7 +14,7 @@ struct RequestData {
     sad: u8,
     lenc: u16,
     command: String,
-    lenr: usize,
+    lenr: u16,
 }
 
 #[allow(non_snake_case)]
@@ -22,7 +22,7 @@ struct RequestData {
 struct ResponseData {
     dad: u8,
     sad: u8,
-    lenr: usize,
+    lenr: u16,
     response: String,
     responseCode: i8,
 }
@@ -32,7 +32,7 @@ pub fn data(ctn: u16,
             sad: *mut u8,
             lenc: u16,
             command: *const u8,
-            lenr: *mut usize,
+            lenr: *mut u16,
             response: *mut u8)
             -> i8 {
 
@@ -65,11 +65,11 @@ pub fn data(ctn: u16,
     let safe_command = unsafe { slice::from_raw_parts(command, lenc as usize) };
     debug!("command: {:?}", safe_command);
 
-    let safe_lenr: &mut usize = unsafe { &mut *lenr };
+    let safe_lenr: &mut u16 = unsafe { &mut *lenr };
     debug!("lenr: {}", safe_lenr);
     sanitize_lenr(&mut *safe_lenr);
 
-    let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr) };
+    let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
@@ -143,11 +143,9 @@ fn get_request_path(ctn: u16) -> String {
     path
 }
 
-fn sanitize_lenr(lenr: &mut usize) {
-    let max_usize = u16::MAX as usize;
-    let min_usize = u16::MIN as usize;
-    if *lenr < min_usize || *lenr > max_usize {
+fn sanitize_lenr(lenr: &mut u16) {
+    if *lenr < u16::MIN || *lenr > u16::MAX {
         debug!("... sanitize lenr to {}", u16::MAX);
-        *lenr = max_usize;
+        *lenr = u16::MAX;
     }
 }
