@@ -34,7 +34,7 @@ pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
     debug!("Request URL: {}", url);
 
     let body = serde_json::to_string(&payload).unwrap();
-    debug!("Request body: {:?}", body);
+    debug!("Request body: {}", body);
 
     let mut headers = Headers::new();
     headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![])));

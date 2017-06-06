@@ -212,40 +212,6 @@ describe('CT_data func', () => {
             });
         });
     });
-
-    it('should sanitize lenr if bigger than 65535', done => {
-
-        var r;
-        handler = (request, response) => {
-            r = request;
-            response.sendStatus(500);
-        }
-
-        var dad = convertToUInt8Pointer(3);
-        var sad = convertToUInt8Pointer(2);
-
-        var commands = [1, 2, 3, 4, 5];
-        var command = new UInt8Array(commands);
-        var lenc = command.length;
-
-        var responseSize = 2415920105;
-        var lenr = convertToUInt32Pointer(responseSize);
-        var response = new UInt8Array(10);
-
-        CT_init(1, 1).then(() => {
-            CT_data(1, dad, sad, lenc, command, lenr, response).then(() => {
-                __.assertThat(r.body, __.equalTo({
-                    dad: 3,
-                    sad: 2,
-                    lenc,
-                    command: "AQIDBAU=",
-                    lenr: 65535
-                }));
-
-                done();
-            });
-        });
-    });
 });
 
 function convertToUInt8Pointer(int) {

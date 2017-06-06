@@ -32,9 +32,9 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
 pub extern "system" fn CT_data(ctn: u16,
                                dad: *mut u8,
                                sad: *mut u8,
-                               lenc: usize,
+                               lenc: u16,
                                command: *const u8,
-                               lenr: *mut usize,
+                               lenr: *mut u16,
                                response: *mut u8)
                                -> i8 {
     logging::init();

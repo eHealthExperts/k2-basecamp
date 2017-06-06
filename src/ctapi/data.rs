@@ -12,9 +12,9 @@ use std::u8;
 struct RequestData {
     dad: u8,
     sad: u8,
-    lenc: usize,
+    lenc: u16,
     command: String,
-    lenr: usize,
+    lenr: u16,
 }
 
 #[allow(non_snake_case)]
@@ -22,7 +22,7 @@ struct RequestData {
 struct ResponseData {
     dad: u8,
     sad: u8,
-    lenr: usize,
+    lenr: u16,
     response: String,
     responseCode: i8,
 }
@@ -30,50 +30,50 @@ struct ResponseData {
 pub fn data(ctn: u16,
             dad: *mut u8,
             sad: *mut u8,
-            lenc: usize,
+            lenc: u16,
             command: *const u8,
-            lenr: *mut usize,
+            lenr: *mut u16,
             response: *mut u8)
             -> i8 {
 
     debug!("ctn: {}", ctn);
-    if !(ctn >= u16::MIN && ctn <= u16::MAX) {
+    if ctn < u16::MIN && ctn > u16::MAX {
         error!("ctn is not an u16. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     let safe_dad: &mut u8 = unsafe { &mut *dad };
     debug!("dad: {}", safe_dad);
-    if !(safe_dad >= &mut u8::MIN && safe_dad <= &mut u8::MAX) {
+    if safe_dad < &mut u8::MIN && safe_dad > &mut u8::MAX {
         error!("dad is not an u8. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     let safe_sad: &mut u8 = unsafe { &mut *sad };
     debug!("sad: {}", safe_sad);
-    if !(safe_sad >= &mut u8::MIN && safe_sad <= &mut u8::MAX) {
+    if safe_sad < &mut u8::MIN && safe_sad > &mut u8::MAX {
         error!("sad is not an u8. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     debug!("lenc: {}", lenc);
-    if !(lenc > u16::MIN as usize && lenc < u16::MAX as usize) {
+    if lenc < u16::MIN && lenc > u16::MAX {
         error!("lenc is not an u16. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
-    let safe_command = unsafe { slice::from_raw_parts(command, lenc) };
+    let safe_command = unsafe { slice::from_raw_parts(command, lenc as usize) };
     debug!("command: {:?}", safe_command);
 
-    let safe_lenr: &mut usize = unsafe { &mut *lenr };
+    let safe_lenr: &mut u16 = unsafe { &mut *lenr };
     debug!("lenr: {}", safe_lenr);
     sanitize_lenr(&mut *safe_lenr);
 
-    let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr) };
+    let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        debug!("Card terminal has not been opened. Returning {}",
+        error!("Card terminal has not been opened. Returning {}",
                ERR_INVALID);
         return ERR_INVALID;
     }
@@ -99,7 +99,14 @@ pub fn data(ctn: u16,
     let (http_status, response_body) = http::extract_response(http_response);
     match http_status {
         http::HttpStatus::Ok => {
-            let data: ResponseData = serde_json::from_str(&response_body).unwrap();
+            let data: ResponseData = match serde_json::from_str(&response_body) {
+                Ok(response) => response,
+                Err(error) => {
+                    error!("Failed to parse response data. {}", error);
+                    error!("Returning {}", ERR_HOST);
+                    return ERR_HOST;
+                }
+            };
 
             if data.responseCode == OK {
                 *safe_dad = data.dad;
@@ -136,11 +143,9 @@ fn get_request_path(ctn: u16) -> String {
     path
 }
 
-fn sanitize_lenr(lenr: &mut usize) {
-    let max_usize = u16::MAX as usize;
-    let min_usize = u16::MIN as usize;
-    if *lenr < min_usize || *lenr > max_usize {
+fn sanitize_lenr(lenr: &mut u16) {
+    if *lenr < u16::MIN || *lenr > u16::MAX {
         debug!("... sanitize lenr to {}", u16::MAX);
-        *lenr = max_usize;
+        *lenr = u16::MAX;
     }
 }
