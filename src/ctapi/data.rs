@@ -99,7 +99,14 @@ pub fn data(ctn: u16,
     let (http_status, response_body) = http::extract_response(http_response);
     match http_status {
         http::HttpStatus::Ok => {
-            let data: ResponseData = serde_json::from_str(&response_body).unwrap();
+            let data: ResponseData = match serde_json::from_str(&response_body) {
+                Ok(response) => response,
+                Err(error) => {
+                    error!("Failed to parse response data. {}", error);
+                    error!("Returning {}", ERR_HOST);
+                    return ERR_HOST;
+                }
+            };
 
             if data.responseCode == OK {
                 *safe_dad = data.dad;
