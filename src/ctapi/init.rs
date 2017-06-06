@@ -1,16 +1,34 @@
-pub use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
-pub use self::super::super::http;
+use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::super::http;
+
+use std::u16;
 
 pub fn init(ctn: u16, pn: u16) -> i8 {
+    let checked_ctn = match ctn {
+        ctn if ctn >= u16::MIN && ctn <= u16::MAX => ctn,
+        _ => {
+            error!("ctn is not an u16!. Returning {}", ERR_INVALID);
+            return ERR_INVALID;
+        }
+    };
+
+    let checked_pn = match pn {
+        pn if pn >= u16::MIN && pn <= u16::MAX => pn,
+        _ => {
+            error!("pn is not an u16!. Returning {}", ERR_INVALID);
+            return ERR_INVALID;
+        }
+    };
+
     // Do we know this CTN?
-    if MAP.lock().unwrap().contains_key(&ctn) {
-        debug!("Card terminal has already been opened. Returning {}",
+    if MAP.lock().unwrap().contains_key(&checked_ctn) {
+        error!("Card terminal has already been opened. Returning {}",
                ERR_INVALID);
         return ERR_INVALID;
     }
 
     // Build the request URL
-    let path = get_request_path(ctn, pn);
+    let path = get_request_path(checked_ctn, checked_pn);
 
     // Perform the request
     let http_response = match http::simple_post(path) {
@@ -24,7 +42,7 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
 
     let (http_status, response_body) = http::extract_response(http_response);
     match http_status {
-        http::HttpStatus::Ok => handle_ok_status(response_body, ctn, pn),
+        http::HttpStatus::Ok => handle_ok_status(response_body, checked_ctn, checked_pn),
         _ => {
             error!("Response not OK! Returning {}", ERR_HOST);
             ERR_HOST
