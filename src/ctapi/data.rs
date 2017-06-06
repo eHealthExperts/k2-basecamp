@@ -6,6 +6,7 @@ use self::super::super::http;
 use base64::{encode, decode};
 use std::slice;
 use std::u16;
+use std::u8;
 
 #[derive(Serialize)]
 struct RequestData {
@@ -35,23 +36,41 @@ pub fn data(ctn: u16,
             response: *mut u8)
             -> i8 {
 
-    let _dad: &mut u8 = unsafe { &mut *dad };
-    debug!("dad: {}", _dad);
+    debug!("ctn: {}", ctn);
+    if !(ctn >= u16::MIN && ctn <= u16::MAX) {
+        error!("ctn is not an u16. Returning {}", ERR_INVALID);
+        return ERR_INVALID;
+    }
 
-    let _sad: &mut u8 = unsafe { &mut *sad };
-    debug!("sad: {}", _sad);
+    let safe_dad: &mut u8 = unsafe { &mut *dad };
+    debug!("dad: {}", safe_dad);
+    if !(safe_dad >= &mut u8::MIN && safe_dad <= &mut u8::MAX) {
+        error!("dad is not an u8. Returning {}", ERR_INVALID);
+        return ERR_INVALID;
+    }
+
+    let safe_sad: &mut u8 = unsafe { &mut *sad };
+    debug!("sad: {}", safe_sad);
+    if !(safe_sad >= &mut u8::MIN && safe_sad <= &mut u8::MAX) {
+        error!("sad is not an u8. Returning {}", ERR_INVALID);
+        return ERR_INVALID;
+    }
+
     debug!("lenc: {}", lenc);
+    if !(lenc > u16::MIN as usize && lenc < u16::MAX as usize) {
+        error!("lenc is not an u16. Returning {}", ERR_INVALID);
+        return ERR_INVALID;
+    }
 
-    let _command = unsafe { slice::from_raw_parts(command, lenc as usize) };
-    debug!("command: {:?}", _command);
+    let safe_command = unsafe { slice::from_raw_parts(command, lenc) };
+    debug!("command: {:?}", safe_command);
 
-    let _lenr: &mut usize = unsafe { &mut *lenr };
-    debug!("lenr: {}", _lenr);
+    let safe_lenr: &mut usize = unsafe { &mut *lenr };
+    debug!("lenr: {}", safe_lenr);
+    sanitize_lenr(&mut *safe_lenr);
 
-    sanitize_lenr(&mut *_lenr);
-
-    let _response = unsafe { slice::from_raw_parts_mut(response, *_lenr) };
-    debug!("response with {} slices formed", _response.len());
+    let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr) };
+    debug!("response with {} slices formed", safe_response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
         debug!("Card terminal has not been opened. Returning {}",
@@ -60,11 +79,11 @@ pub fn data(ctn: u16,
     }
 
     let request_data = RequestData {
-        dad: *_dad,
-        sad: *_sad,
-        lenc: lenc,
-        command: encode(_command),
-        lenr: *_lenr,
+        dad: *safe_dad,
+        sad: *safe_sad,
+        lenc,
+        command: encode(safe_command),
+        lenr: *safe_lenr,
     };
 
     let path = get_request_path(ctn);
@@ -83,14 +102,14 @@ pub fn data(ctn: u16,
             let data: ResponseData = serde_json::from_str(&response_body).unwrap();
 
             if data.responseCode == OK {
-                *_dad = data.dad;
-                *_sad = data.sad;
-                *_lenr = data.lenr;
+                *safe_dad = data.dad;
+                *safe_sad = data.sad;
+                *safe_lenr = data.lenr;
 
                 let decoded = decode(&data.response).unwrap();
                 debug!("Decoded response field {:?}", decoded);
 
-                for (place, element) in _response.iter_mut().zip(decoded.iter()) {
+                for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
                     *place = *element;
                 }
             }
@@ -119,7 +138,8 @@ fn get_request_path(ctn: u16) -> String {
 
 fn sanitize_lenr(lenr: &mut usize) {
     let max_usize = u16::MAX as usize;
-    if *lenr > max_usize {
+    let min_usize = u16::MIN as usize;
+    if *lenr < min_usize || *lenr > max_usize {
         debug!("... sanitize lenr to {}", u16::MAX);
         *lenr = max_usize;
     }
