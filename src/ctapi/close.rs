@@ -5,7 +5,7 @@ use std::u16;
 
 pub fn close(ctn: u16) -> i8 {
     let checked_ctn = match ctn {
-        ctn if ctn > u16::MIN && ctn < u16::MAX => ctn,
+        ctn if ctn >= u16::MIN && ctn <= u16::MAX => ctn,
         _ => {
             error!("ctn is not an u16!. Returning {}", ERR_INVALID);
             return ERR_INVALID;

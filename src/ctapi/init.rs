@@ -5,7 +5,7 @@ use std::u16;
 
 pub fn init(ctn: u16, pn: u16) -> i8 {
     let checked_ctn = match ctn {
-        ctn if ctn > u16::MIN && ctn < u16::MAX => ctn,
+        ctn if ctn >= u16::MIN && ctn <= u16::MAX => ctn,
         _ => {
             error!("ctn is not an u16!. Returning {}", ERR_INVALID);
             return ERR_INVALID;
@@ -13,7 +13,7 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
     };
 
     let checked_pn = match pn {
-        pn if pn > u16::MIN && pn < u16::MAX => pn,
+        pn if pn >= u16::MIN && pn <= u16::MAX => pn,
         _ => {
             error!("pn is not an u16!. Returning {}", ERR_INVALID);
             return ERR_INVALID;
