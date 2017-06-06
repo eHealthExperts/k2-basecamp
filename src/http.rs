@@ -31,10 +31,10 @@ pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
 {
     let mut url = config::base_url();
     url.push_str(&path);
-    debug!("request URL: {}", url);
+    debug!("Request URL: {}", url);
 
     let body = serde_json::to_string(&payload).unwrap();
-    debug!("request body: {:?}", body);
+    debug!("Request body: {:?}", body);
 
     let mut headers = Headers::new();
     headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![])));
