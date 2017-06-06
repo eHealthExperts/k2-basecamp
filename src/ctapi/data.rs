@@ -37,27 +37,27 @@ pub fn data(ctn: u16,
             -> i8 {
 
     debug!("ctn: {}", ctn);
-    if !(ctn >= u16::MIN && ctn <= u16::MAX) {
+    if ctn < u16::MIN && ctn > u16::MAX {
         error!("ctn is not an u16. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     let safe_dad: &mut u8 = unsafe { &mut *dad };
     debug!("dad: {}", safe_dad);
-    if !(safe_dad >= &mut u8::MIN && safe_dad <= &mut u8::MAX) {
+    if safe_dad < &mut u8::MIN && safe_dad > &mut u8::MAX {
         error!("dad is not an u8. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     let safe_sad: &mut u8 = unsafe { &mut *sad };
     debug!("sad: {}", safe_sad);
-    if !(safe_sad >= &mut u8::MIN && safe_sad <= &mut u8::MAX) {
+    if safe_sad < &mut u8::MIN && safe_sad > &mut u8::MAX {
         error!("sad is not an u8. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
     debug!("lenc: {}", lenc);
-    if !(lenc > u16::MIN as usize && lenc < u16::MAX as usize) {
+    if lenc < u16::MIN as usize && lenc > u16::MAX as usize {
         error!("lenc is not an u16. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
