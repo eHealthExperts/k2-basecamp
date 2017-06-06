@@ -12,7 +12,7 @@ use std::u8;
 struct RequestData {
     dad: u8,
     sad: u8,
-    lenc: usize,
+    lenc: u16,
     command: String,
     lenr: usize,
 }
@@ -30,7 +30,7 @@ struct ResponseData {
 pub fn data(ctn: u16,
             dad: *mut u8,
             sad: *mut u8,
-            lenc: usize,
+            lenc: u16,
             command: *const u8,
             lenr: *mut usize,
             response: *mut u8)
@@ -57,12 +57,12 @@ pub fn data(ctn: u16,
     }
 
     debug!("lenc: {}", lenc);
-    if lenc < u16::MIN as usize && lenc > u16::MAX as usize {
+    if lenc < u16::MIN && lenc > u16::MAX {
         error!("lenc is not an u16. Returning {}", ERR_INVALID);
         return ERR_INVALID;
     }
 
-    let safe_command = unsafe { slice::from_raw_parts(command, lenc) };
+    let safe_command = unsafe { slice::from_raw_parts(command, lenc as usize) };
     debug!("command: {:?}", safe_command);
 
     let safe_lenr: &mut usize = unsafe { &mut *lenr };
