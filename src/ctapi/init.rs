@@ -27,10 +27,8 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
         return ERR_INVALID;
     }
 
-    // Build the request URL
-    let path = get_request_path(checked_ctn, checked_pn);
-
     // Perform the request
+    let path = format!("ct_init/{}/{}", checked_ctn, checked_pn);
     let http_response = match http::simple_post(path) {
         Ok(http_response) => http_response,
         Err(error) => {
@@ -48,16 +46,6 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
             ERR_HOST
         }
     }
-}
-
-fn get_request_path(ctn: u16, pn: u16) -> String {
-    let mut path = String::from("ct_init");
-    path.push_str("/");
-    path.push_str(&ctn.to_string());
-    path.push_str("/");
-    path.push_str(&pn.to_string());
-
-    path
 }
 
 fn handle_ok_status(body: String, ctn: u16, pn: u16) -> i8 {
