@@ -1,6 +1,6 @@
 {
   "name": "@ehex/k2-basecamp",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "K2 adapter for CTAPI",
   "license": "UNLICENSED",
   "author": "Christian Fochler <fochler@ehealthexperts.de>",
