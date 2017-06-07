@@ -134,13 +134,7 @@ fn get_request_path(ctn: u16) -> String {
     let pn = MAP.lock().unwrap();
     let pn = pn.get(&ctn).unwrap();
 
-    let mut path = String::from("ct_data");
-    path.push_str("/");
-    path.push_str(&ctn.to_string());
-    path.push_str("/");
-    path.push_str(&pn.to_string());
-
-    path
+    format!("ct_data/{}/{}", ctn, pn)
 }
 
 fn sanitize_lenr(lenr: &mut u16) {
