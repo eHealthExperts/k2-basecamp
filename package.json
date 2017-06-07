@@ -1,5 +1,5 @@
 {
-  "name": "k2-basecamp",
+  "name": "@ehex/k2-basecamp",
   "version": "0.8.6",
   "description": "K2 adapter for CTAPI",
   "license": "UNLICENSED",
