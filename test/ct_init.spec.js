@@ -3,7 +3,7 @@
 var _ = require('lodash');
 var __ = require('hamjest');
 var express = require('express');
-var EXT = require('./library-ext.js');
+var LIBNAME = require('./library-name.js');
 var Library = require('fastcall').Library;
 var path = require('path');
 
@@ -18,7 +18,7 @@ describe('CT_init func', () => {
     var result;
 
     beforeEach(done => {
-        var location = path.join(__dirname, '../target/debug/libctehxk2') + EXT;
+        var location = path.join(__dirname, '../target/debug/') + LIBNAME;
         library = new Library(location).asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]});
 
         CT_init = library.interface.CT_init;
