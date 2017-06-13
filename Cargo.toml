@@ -11,7 +11,7 @@ name = "ctehxk2"
 crate-type = ["cdylib"]
 
 [dependencies]
-base64 = "0.5"
+base64 = "0.6"
 cast = "0.2"
 envy = "0.3"
 hyper = "0.10"
