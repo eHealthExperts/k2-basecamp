@@ -27,14 +27,15 @@ struct ResponseData {
     responseCode: i8,
 }
 
-pub fn data(ctn: u16,
-            dad: *mut u8,
-            sad: *mut u8,
-            lenc: u16,
-            command: *const u8,
-            lenr: *mut u16,
-            response: *mut u8)
-            -> i8 {
+pub fn data(
+    ctn: u16,
+    dad: *mut u8,
+    sad: *mut u8,
+    lenc: u16,
+    command: *const u8,
+    lenr: *mut u16,
+    response: *mut u8,
+) -> i8 {
 
     debug!("ctn: {}", ctn);
     if ctn < u16::MIN && ctn > u16::MAX {
@@ -73,8 +74,10 @@ pub fn data(ctn: u16,
     debug!("response with {} slices formed", safe_response.len());
 
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        error!("Card terminal has not been opened. Returning {}",
-               ERR_INVALID);
+        error!(
+            "Card terminal has not been opened. Returning {}",
+            ERR_INVALID
+        );
         return ERR_INVALID;
     }
 

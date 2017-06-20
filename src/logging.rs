@@ -36,13 +36,15 @@ fn init_file_logger(mut path: String) -> Config {
 
     Config::builder()
         .appender(Appender::builder().build(appender_id, Box::new(file)))
-        .logger(Logger::builder()
-                    .appender(appender_id)
-                    .additive(false)
-                    .build("ctehxk2", LogLevelFilter::Debug))
-        .build(Root::builder()
-                   .appender(appender_id)
-                   .build(LogLevelFilter::Error))
+        .logger(
+            Logger::builder()
+                .appender(appender_id)
+                .additive(false)
+                .build("ctehxk2", LogLevelFilter::Debug),
+        )
+        .build(Root::builder().appender(appender_id).build(
+            LogLevelFilter::Error,
+        ))
         .unwrap()
 }
 
@@ -53,12 +55,14 @@ fn init_stdout_logger() -> Config {
 
     Config::builder()
         .appender(Appender::builder().build(appender_id, Box::new(stdout)))
-        .logger(Logger::builder()
-                    .appender(appender_id)
-                    .additive(false)
-                    .build("ctehxk2", LogLevelFilter::Debug))
-        .build(Root::builder()
-                   .appender(appender_id)
-                   .build(LogLevelFilter::Error))
+        .logger(
+            Logger::builder()
+                .appender(appender_id)
+                .additive(false)
+                .build("ctehxk2", LogLevelFilter::Debug),
+        )
+        .build(Root::builder().appender(appender_id).build(
+            LogLevelFilter::Error,
+        ))
         .unwrap()
 }

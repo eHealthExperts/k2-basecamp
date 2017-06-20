@@ -14,8 +14,10 @@ pub fn close(ctn: u16) -> i8 {
 
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&checked_ctn) {
-        error!("Card terminal has not been opened. Returning {}",
-               ERR_INVALID);
+        error!(
+            "Card terminal has not been opened. Returning {}",
+            ERR_INVALID
+        );
         return ERR_INVALID;
     }
 

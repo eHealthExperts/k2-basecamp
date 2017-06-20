@@ -22,8 +22,10 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
 
     // Do we know this CTN?
     if MAP.lock().unwrap().contains_key(&checked_ctn) {
-        error!("Card terminal has already been opened. Returning {}",
-               ERR_INVALID);
+        error!(
+            "Card terminal has already been opened. Returning {}",
+            ERR_INVALID
+        );
         return ERR_INVALID;
     }
 

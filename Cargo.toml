@@ -12,7 +12,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 base64 = "0.6"
-cast = "0.2"
 envy = "0.3"
 hyper = "0.10"
 lazy_static = "0.2"
@@ -24,9 +23,6 @@ serde_json = "1.0"
 
 [build-dependencies]
 moz-cheddar = "0.4"
-
-[dev-dependencies]
-http_stub = "0.1"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
