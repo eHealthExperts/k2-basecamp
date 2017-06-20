@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:stretch
 
 ENV USER root
 ENV RUST_VERSION=1.18.0
