@@ -7,7 +7,6 @@ use super::config;
 use hyper::{Client, Error};
 use hyper::client::response::Response;
 use hyper::header::{Headers, ContentType};
-use hyper::mime::{Mime, TopLevel, SubLevel};
 use hyper::status::StatusCode;
 use serde::Serialize;
 use std::io::Read;
@@ -35,9 +34,7 @@ where
     debug!("Request body: {}", body);
 
     let mut headers = Headers::new();
-    headers.set(ContentType(
-        Mime(TopLevel::Application, SubLevel::Json, vec![]),
-    ));
+    headers.set(ContentType::json());
 
     let client = Client::new();
     let mut builder = client.post(&url);
