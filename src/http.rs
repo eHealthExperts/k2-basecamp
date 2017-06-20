@@ -27,7 +27,8 @@ pub fn simple_post(path: String) -> Result<Response, Error> {
 }
 
 pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
-    where T: Serialize
+where
+    T: Serialize,
 {
     let mut url = config::base_url();
     url.push_str(&path);
@@ -82,13 +83,13 @@ mod tests {
     #[ignore]
     fn simple_post_is_sending_empty_body() {
         let url = HttpStub::run(|mut stub| {
-                                    stub.got_body("");
-                                    stub.got_path("/hello");
-                                    stub.got_method(hs::Method::Post);
+            stub.got_body("");
+            stub.got_path("/hello");
+            stub.got_method(hs::Method::Post);
 
-                                    stub.send_status(hs::StatusCode::Ok);
-                                    stub.send_body("world");
-                                });
+            stub.send_status(hs::StatusCode::Ok);
+            stub.send_body("world");
+        });
 
         env::set_var(BASE_URL_KEY, url);
 

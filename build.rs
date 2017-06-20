@@ -10,8 +10,10 @@ fn build_header_file() {
 
     cheddar::Cheddar::new()
         .expect("could not read manifest")
-        .run_build("target".to_owned() + &MAIN_SEPARATOR.to_string() + &profile +
-                   &MAIN_SEPARATOR.to_string() + "ctehxk2.h");
+        .run_build(
+            "target".to_owned() + &MAIN_SEPARATOR.to_string() + &profile +
+                &MAIN_SEPARATOR.to_string() + "ctehxk2.h",
+        );
 }
 
 #[cfg(windows)]
