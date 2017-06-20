@@ -60,23 +60,21 @@ pipeline {
                     targetLocation: '.npmrc')
                 ]) {
                     script {
-                        def currentBranch = sh(script: 'git name-rev --name-only HEAD', returnStdout: true).trim()
-                        echo "Branch: ${currentBranch}"
+                        if (env.BRANCH_NAME == 'master') {
+                            def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
+                            echo "Latest tag: ${latestTag}"
 
-                        def publish = currentBranch.endsWith('master')
-                        def latestTag = sh(script: 'git tag --sort version:refname | tail -1', returnStdout: true).trim()
-                        echo "Latest tag: ${latestTag}"
+                            def headTag = sh(script: 'git tag -l --contains HEAD', returnStdout: true).trim()
+                            echo "Tag on head: ${headTag}"
+                            def publish = latestTag.endsWith(headTag)
 
-                        def headTag = sh(script: 'git tag -l --contains HEAD', returnStdout: true).trim()
-                        echo "Tag on head: ${headTag}"
-                        publish && latestTag.endsWith(headTag)
+                            def name = getName(readFile('package.json'))
+                            def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
+                            echo "Latest version: ${latestVersion}"
 
-                        def name = getName(readFile('package.json'))
-                        def latestVersion = sh(script: "npm show ${name} version 2>/dev/null || echo 0.0.0", returnStdout: true).trim()
-                        echo "Latest version: ${latestVersion}"
-
-                        if (publish && isNewVersion(latestTag, latestVersion)) {
-                            sh 'npm publish'
+                            if (publish && isNewVersion(latestTag, latestVersion)) {
+                                sh 'npm publish'
+                            }
                         }
                     }
                 }

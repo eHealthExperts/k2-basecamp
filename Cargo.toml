@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.8.8"
+version = "0.8.9"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 repository = "http://stash.ehex.de/scm/k2/k2-basecamp.git"
 publish = false
@@ -29,8 +29,8 @@ winres = "0.1"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
-FileVersion = "0.8.8"
+FileVersion = "0.8.9"
 LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
-ProductVersion = "0.8.8"
+ProductVersion = "0.8.9"
