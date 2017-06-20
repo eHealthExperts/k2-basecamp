@@ -28,8 +28,7 @@ pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
 where
     T: Serialize,
 {
-    let mut url = config::base_url();
-    url.push_str(&path);
+    let url = format!("{}{}", config::base_url(), path);
     debug!("Request URL: {}", url);
 
     let body = serde_json::to_string(&payload).unwrap();
