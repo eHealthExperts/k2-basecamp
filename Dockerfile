@@ -11,6 +11,7 @@ RUN apt-get update && \
     cmake \
     curl \
     git \
+    gnupg \
     libssl-dev \
     pkg-config && \
   # install rust binaries
@@ -18,8 +19,7 @@ RUN apt-get update && \
   tar -xzf rust-$RUST_VERSION-x86_64-unknown-linux-gnu.tar.gz && \
   ./rust-$RUST_VERSION-x86_64-unknown-linux-gnu/install.sh --without=rust-docs && \
   # install nodejs
-  curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
-  apt-get update && \
+  curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs && \
   # cleanup
   DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y curl && \
