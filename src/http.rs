@@ -38,7 +38,9 @@ where
     debug!("Request body: {}", body);
 
     let mut headers = Headers::new();
-    headers.set(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![])));
+    headers.set(ContentType(
+        Mime(TopLevel::Application, SubLevel::Json, vec![]),
+    ));
 
     let client = Client::new();
     let mut builder = client.post(&url);
