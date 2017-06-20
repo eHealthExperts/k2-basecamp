@@ -12,7 +12,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 base64 = "0.6"
-cast = "0.2"
 envy = "0.3"
 hyper = "0.10"
 lazy_static = "0.2"
