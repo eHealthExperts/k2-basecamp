@@ -74,7 +74,6 @@ pub fn data(
     if response.status() != 200 {
         error!("Request failed! Returning {}", ERR_HTSI);
         return ERR_HTSI;
-
     }
 
     let data: ResponseData = match serde_json::from_str(&response.body()) {
