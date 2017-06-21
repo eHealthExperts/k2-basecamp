@@ -6,25 +6,6 @@ use self::super::super::http;
 use base64::{encode, decode};
 use std::slice;
 
-#[derive(Serialize)]
-struct RequestData {
-    dad: u8,
-    sad: u8,
-    lenc: u16,
-    command: String,
-    lenr: u16,
-}
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-struct ResponseData {
-    dad: u8,
-    sad: u8,
-    lenr: u16,
-    response: String,
-    responseCode: i8,
-}
-
 pub fn data(
     ctn: u16,
     dad: *mut u8,
@@ -67,10 +48,10 @@ pub fn data(
         lenr: *safe_lenr,
     };
 
-    let path = get_request_path(ctn);
-    let request_body = serde_json::to_string(&request_data).unwrap();
-    let response = http::request().post(&path, Some(request_body)).response();
-
+    let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
+    let path = format!("ct_data/{}/{}", ctn, pn);
+    let json = serde_json::to_string(&request_data).unwrap();
+    let response = http::request().post(&path, Some(json)).response();
     if response.status() != 200 {
         error!("Request failed! Returning {}", ERR_HTSI);
         return ERR_HTSI;
@@ -101,9 +82,21 @@ pub fn data(
     return data.responseCode;
 }
 
-fn get_request_path(ctn: u16) -> String {
-    let pn = MAP.lock().unwrap();
-    let pn = pn.get(&ctn).unwrap();
+#[derive(Serialize)]
+struct RequestData {
+    dad: u8,
+    sad: u8,
+    lenc: u16,
+    command: String,
+    lenr: u16,
+}
 
-    format!("ct_data/{}/{}", ctn, pn)
+#[allow(non_snake_case)]
+#[derive(Deserialize)]
+struct ResponseData {
+    dad: u8,
+    sad: u8,
+    lenr: u16,
+    response: String,
+    responseCode: i8,
 }
