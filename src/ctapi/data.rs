@@ -6,6 +6,16 @@ use self::super::super::http;
 use base64::{encode, decode};
 use std::slice;
 
+#[allow(non_snake_case)]
+#[derive(Deserialize)]
+struct Response {
+    dad: u8,
+    sad: u8,
+    lenr: u16,
+    response: String,
+    responseCode: i8,
+}
+
 pub fn data(
     ctn: u16,
     dad: *mut u8,
@@ -40,24 +50,24 @@ pub fn data(
         return ERR_INVALID;
     }
 
-    let request_data = RequestData {
-        dad: *safe_dad,
-        sad: *safe_sad,
+    let json = format!(
+        "{{\"dad\":{},\"sad\":{},\"lenc\":{},\"command\":\"{}\",\"lenr\":{}}}",
+        *safe_dad,
+        *safe_sad,
         lenc,
-        command: encode(safe_command),
-        lenr: *safe_lenr,
-    };
+        encode(safe_command),
+        *safe_lenr
+    );
 
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_data/{}/{}", ctn, pn);
-    let json = serde_json::to_string(&request_data).unwrap();
     let response = http::request().post(&path, Some(json)).response();
     if response.status() != 200 {
         error!("Request failed! Returning {}", ERR_HTSI);
         return ERR_HTSI;
     }
 
-    let data: ResponseData = match serde_json::from_str(&response.body()) {
+    let data: Response = match serde_json::from_str(&response.body()) {
         Ok(response) => response,
         Err(error) => {
             error!("Failed to parse response data. {}", error);
@@ -80,23 +90,4 @@ pub fn data(
     }
     debug!("Returning {}", data.responseCode);
     return data.responseCode;
-}
-
-#[derive(Serialize)]
-struct RequestData {
-    dad: u8,
-    sad: u8,
-    lenc: u16,
-    command: String,
-    lenr: u16,
-}
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-struct ResponseData {
-    dad: u8,
-    sad: u8,
-    lenr: u16,
-    response: String,
-    responseCode: i8,
 }
