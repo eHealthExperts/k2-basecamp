@@ -1,58 +1,92 @@
+extern crate futures;
 extern crate hyper;
 extern crate log;
 extern crate serde;
-extern crate serde_json;
+extern crate tokio_core;
 
 use super::config;
-use hyper::{Client, Error};
-use hyper::client::response::Response;
-use hyper::header::{Headers, ContentType};
-use hyper::status::StatusCode;
-use serde::Serialize;
-use std::io::Read;
+use futures::Stream;
+use hyper::{Client, Method, Request as HyperRequest, Response as HyperResponse, Uri};
+use hyper::header::{ContentLength, ContentType};
+use tokio_core::reactor::Core;
 
-pub enum HttpStatus {
-    Ok,
-    Other,
+pub fn request() -> Request {
+    let core = Core::new().unwrap();
+    let client = Client::new(&core.handle());
+
+    Request {
+        addr: config::base_url().clone(),
+        core,
+        client,
+        request: None,
+    }
 }
 
-#[derive(Serialize)]
-struct Empty();
-
-pub fn simple_post(path: String) -> Result<Response, Error> {
-    post(path, &Empty {})
+pub struct Request {
+    addr: String,
+    core: Core,
+    client: Client<self::hyper::client::HttpConnector>,
+    request: Option<HyperRequest>,
 }
 
-pub fn post<T>(path: String, payload: &T) -> Result<Response, Error>
-where
-    T: Serialize,
-{
-    let url = format!("{}{}", config::base_url(), path);
-    debug!("Request URL: {}", url);
+impl Request {
+    pub fn post(mut self, path: &str, body: Option<String>) -> Request {
+        let mut request = HyperRequest::new(Method::Post, self.uri(path));
+        match body {
+            Some(json) => {
+                debug!("Request body: {}", json);
+                request.headers_mut().set(ContentType::json());
+                request.headers_mut().set(ContentLength(json.len() as u64));
+                request.set_body(json);
+            }
+            _ => {
+                debug!("Empty request body...");
+            }
+        }
 
-    let body = serde_json::to_string(&payload).unwrap();
-    debug!("Request body: {}", body);
+        self.request = Some(request);
+        self
+    }
 
-    let mut headers = Headers::new();
-    headers.set(ContentType::json());
+    pub fn response(self) -> Response {
+        let req = self.request.unwrap();
+        let mut core = self.core;
+        let client = self.client;
 
-    let client = Client::new();
-    let mut builder = client.post(&url);
-    builder = builder.headers(headers);
-    builder = builder.body(&body[..]);
-    builder.send()
+        let res = core.run(client.request(req)).unwrap();
+        Response {
+            core: core,
+            response: res,
+        }
+    }
+
+    fn uri(&self, path: &str) -> Uri {
+        let uri = format!("{}{}", self.addr, path).parse().unwrap();
+        debug!("Request URL: {}", uri);
+        uri
+    }
 }
 
-pub fn extract_response(mut response: Response) -> (HttpStatus, String) {
-    debug!("Response status: {}", response.status);
-    let status = match response.status {
-        StatusCode::Ok => HttpStatus::Ok,
-        _ => HttpStatus::Other,
-    };
+pub struct Response {
+    core: Core,
+    response: HyperResponse,
+}
 
-    let mut body = String::new();
-    response.read_to_string(&mut body).unwrap();;
-    debug!("Response body: {}", body);
+impl Response {
+    pub fn status(&self) -> u16 {
+        debug!("Response status: {}", self.response.status());
+        self.response.status().clone().into()
+    }
 
-    (status, body)
+    pub fn body(self) -> String {
+        let mut core = self.core;
+        let body = core.run(self.response.body().fold(Vec::new(), |mut body, chunk| {
+            body.extend_from_slice(&chunk);
+            Ok::<_, self::hyper::Error>(body)
+        })).unwrap();
+
+        let json = String::from_utf8(body).unwrap();
+        debug!("Response body: {}", json);
+        json
+    }
 }

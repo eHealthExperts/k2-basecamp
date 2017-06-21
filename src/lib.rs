@@ -1,5 +1,6 @@
 extern crate base64;
 extern crate envy;
+extern crate futures;
 extern crate hyper;
 #[macro_use]
 extern crate lazy_static;
@@ -10,6 +11,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate tokio_core;
 
 pub mod config;
 pub mod http;

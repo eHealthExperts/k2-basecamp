@@ -104,7 +104,7 @@ describe('CT_data func', () => {
 
         CT_init(1, 1).then(result => {
             CT_data(1, dad, sad, lenc, command, lenr, new UInt8Array(0)).then(result => {
-                __.assertThat(result, __.is(-127));
+                __.assertThat(result, __.is(-128));
 
                 done();
             });
