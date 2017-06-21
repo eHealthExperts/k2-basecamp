@@ -1,6 +1,6 @@
 extern crate serde_json;
 
-use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::{ERR_HTSI, ERR_INVALID, MAP, OK};
 use self::super::super::http;
 
 use base64::{encode, decode};
@@ -90,47 +90,38 @@ pub fn data(
     };
 
     let path = get_request_path(ctn);
-    let http_response = match http::post(path, &request_data) {
-        Ok(http_response) => http_response,
+    let request_body = serde_json::to_string(&request_data).unwrap();
+    let response = http::request().post(&path, Some(request_body)).response();
+
+    if response.status() != 200 {
+        error!("Request failed! Returning {}", ERR_HTSI);
+        return ERR_HTSI;
+
+    }
+
+    let data: ResponseData = match serde_json::from_str(&response.body()) {
+        Ok(response) => response,
         Err(error) => {
-            debug!("Error: {:?}", error);
-            error!("Request failed! Returning {}", ERR_HTSI);
+            error!("Failed to parse response data. {}", error);
+            error!("Returning {}", ERR_HTSI);
             return ERR_HTSI;
         }
     };
 
-    let (http_status, response_body) = http::extract_response(http_response);
-    match http_status {
-        http::HttpStatus::Ok => {
-            let data: ResponseData = match serde_json::from_str(&response_body) {
-                Ok(response) => response,
-                Err(error) => {
-                    error!("Failed to parse response data. {}", error);
-                    error!("Returning {}", ERR_HOST);
-                    return ERR_HOST;
-                }
-            };
+    if data.responseCode == OK {
+        *safe_dad = data.dad;
+        *safe_sad = data.sad;
+        *safe_lenr = data.lenr;
 
-            if data.responseCode == OK {
-                *safe_dad = data.dad;
-                *safe_sad = data.sad;
-                *safe_lenr = data.lenr;
+        let decoded = decode(&data.response).unwrap();
+        debug!("Decoded response field {:?}", decoded);
 
-                let decoded = decode(&data.response).unwrap();
-                debug!("Decoded response field {:?}", decoded);
-
-                for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
-                    *place = *element;
-                }
-            }
-            debug!("Returning {}", data.responseCode);
-            return data.responseCode;
-        }
-        _ => {
-            error!("Response not OK! Returning {}", ERR_HOST);
-            ERR_HOST
+        for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
+            *place = *element;
         }
     }
+    debug!("Returning {}", data.responseCode);
+    return data.responseCode;
 }
 
 fn get_request_path(ctn: u16) -> String {

@@ -1,4 +1,4 @@
-use self::super::{ERR_HOST, ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::{ERR_HTSI, ERR_INVALID, MAP, OK};
 use self::super::super::http;
 
 use std::u16;
@@ -31,23 +31,14 @@ pub fn init(ctn: u16, pn: u16) -> i8 {
 
     // Perform the request
     let path = format!("ct_init/{}/{}", checked_ctn, checked_pn);
-    let http_response = match http::simple_post(path) {
-        Ok(http_response) => http_response,
-        Err(error) => {
-            debug!("Error: {:?}", error);
-            error!("Request failed! Returning {}", ERR_HTSI);
-            return ERR_HTSI;
-        }
-    };
+    let response = http::request().post(&path, None).response();
 
-    let (http_status, response_body) = http::extract_response(http_response);
-    match http_status {
-        http::HttpStatus::Ok => handle_ok_status(response_body, checked_ctn, checked_pn),
-        _ => {
-            error!("Response not OK! Returning {}", ERR_HOST);
-            ERR_HOST
-        }
+    if response.status() != 200 {
+        error!("Request failed! Returning {}", ERR_HTSI);
+        return ERR_HTSI;
     }
+
+    handle_ok_status(response.body(), checked_ctn, checked_pn)
 }
 
 fn handle_ok_status(body: String, ctn: u16, pn: u16) -> i8 {
