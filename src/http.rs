@@ -84,7 +84,7 @@ impl Response {
             body.extend_from_slice(&chunk);
             Ok::<_, self::hyper::Error>(body)
         })).unwrap();
-        
+
         let json = String::from_utf8(body).unwrap();
         debug!("Response body: {}", json);
         json
