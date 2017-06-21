@@ -5,8 +5,6 @@ use self::super::super::http;
 
 use base64::{encode, decode};
 use std::slice;
-use std::u16;
-use std::u8;
 
 #[derive(Serialize)]
 struct RequestData {
