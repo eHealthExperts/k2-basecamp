@@ -14,7 +14,7 @@ pub enum StatusCode {
     ErrMemory,
     // -127
     ErrHost,
-    // -18
+    // -128
     ErrHtsi,
 }
 
