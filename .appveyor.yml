@@ -33,7 +33,7 @@ artifacts:
     name: ctehxk2.dll
 
 deploy:
-  description: 'Windows release'
+  description: ''
   auth_token:
     secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
   provider: GitHub
