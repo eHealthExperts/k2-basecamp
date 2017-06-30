@@ -31,8 +31,6 @@ after_test:
 artifacts:
   - path: target/release/ctehxk2.dll
     name: ctehxk2.dll
-  - path: target/release/ctehxk2.h
-    name: ctehxk2.h
 
 deploy:
   description: 'Windows release'
