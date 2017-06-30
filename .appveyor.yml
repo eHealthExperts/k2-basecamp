@@ -1,0 +1,52 @@
+version: 0.8.11-{branch}-{build}
+
+environment:
+  NAME_PREFIX: basecamp
+  TARGET: i686-pc-windows-msvc
+  CHANNEL: stable
+
+install:
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -vV
+  - cargo -vV
+  - cargo install rustfmt --force
+
+build: false
+
+cache:
+  - target
+  - '%USERPROFILE%\.cargo'
+
+build_script: cargo build --verbose
+
+test_script:
+  - cargo fmt -- --write-mode=diff
+  - cargo test -- --test-threads=1
+
+after_test:
+  - cargo build --release
+
+artifacts:
+  - path: target/release/ctehxk2.dll
+    name: ctehxk2.dll
+  - path: target/release/ctehxk2.h
+    name: ctehxk2.h
+
+deploy:
+  description: 'Windows release'
+  auth_token:
+    secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
+  provider: GitHub
+  on:
+    branch: master
+    appveyor_repo_tag: true
+
+notifications:
+  - provider: GitHubPullRequest
+    auth_token:
+      secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
+  - provider: Slack
+    incoming_webhook: 
+      secure: BQ8Pkout/6vbpxbzPyKxjQe1DeMADjtSBvX87D9I3BC5w3MRvoIOKk8PoIE3jJJa8x4LTzenOY5NvRJ3n8VKZA==
