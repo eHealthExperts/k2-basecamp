@@ -1,6 +1,6 @@
 extern crate serde_json;
 
-use self::super::{ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::{MAP, StatusCode};
 use self::super::super::http;
 
 use base64::{encode, decode};
@@ -24,7 +24,11 @@ pub fn data(
     command: *const u8,
     lenr: *mut u16,
     response: *mut u8,
-) -> i8 {
+) -> StatusCode {
+    if !MAP.lock().unwrap().contains_key(&ctn) {
+        error!("Card terminal has not been opened.");
+        return StatusCode::ErrInvalid;
+    }
 
     let safe_dad: &mut u8 = unsafe { &mut *dad };
     debug!("dad: {}", safe_dad);
@@ -42,14 +46,6 @@ pub fn data(
     let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
-    if !MAP.lock().unwrap().contains_key(&ctn) {
-        error!(
-            "Card terminal has not been opened. Returning {}",
-            ERR_INVALID
-        );
-        return ERR_INVALID;
-    }
-
     let json = format!(
         "{{\"dad\":{},\"sad\":{},\"lenc\":{},\"command\":\"{}\",\"lenr\":{}}}",
         *safe_dad,
@@ -62,32 +58,48 @@ pub fn data(
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_data/{}/{}", ctn, pn);
     let response = http::request().post(&path, Some(json)).response();
-    if response.status() != 200 {
-        error!("Request failed! Returning {}", ERR_HTSI);
-        return ERR_HTSI;
-    }
+    match response.status() {
+        200 => {
+            match serde_json::from_str(&response.body()) {
+                Ok(mut data) => {
+                    data = data as Response;
+                    match StatusCode::from_i8(data.responseCode) {
+                        Some(code) => {
+                            match code {
+                                StatusCode::Ok => {
+                                    *safe_dad = data.dad;
+                                    *safe_sad = data.sad;
+                                    *safe_lenr = data.lenr;
 
-    let data: Response = match serde_json::from_str(&response.body()) {
-        Ok(response) => response,
-        Err(error) => {
-            error!("Failed to parse response data. {}", error);
-            error!("Returning {}", ERR_HTSI);
-            return ERR_HTSI;
+                                    let decoded = decode(&data.response).unwrap();
+                                    debug!("Decoded response field {:?}", decoded);
+
+                                    for (place, element) in safe_response.iter_mut().zip(
+                                        decoded.iter(),
+                                    )
+                                    {
+                                        *place = *element;
+                                    }
+                                    code
+                                }
+                                _ => code,
+                            }
+                        }
+                        None => {
+                            error!("Status code from server responses is not CTAPI conform!");
+                            StatusCode::ErrHtsi
+                        }
+                    }
+                }
+                Err(why) => {
+                    error!("Failed to parse server response data. {}", why);
+                    StatusCode::ErrHtsi
+                }
+            }
         }
-    };
-
-    if data.responseCode == OK {
-        *safe_dad = data.dad;
-        *safe_sad = data.sad;
-        *safe_lenr = data.lenr;
-
-        let decoded = decode(&data.response).unwrap();
-        debug!("Decoded response field {:?}", decoded);
-
-        for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
-            *place = *element;
+        _ => {
+            error!("Request failed! Server response was not OK!");
+            return StatusCode::ErrHtsi;
         }
     }
-    debug!("Returning {}", data.responseCode);
-    return data.responseCode;
 }

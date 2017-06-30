@@ -1,35 +1,41 @@
-use self::super::{ERR_HTSI, ERR_INVALID, MAP, OK};
+use self::super::{MAP, StatusCode};
 use self::super::super::http;
 
-pub fn close(ctn: u16) -> i8 {
+pub fn close(ctn: u16) -> StatusCode {
     // Do we know this CTN?
     if !MAP.lock().unwrap().contains_key(&ctn) {
-        error!(
-            "Card terminal has not been opened. Returning {}",
-            ERR_INVALID
-        );
-        return ERR_INVALID;
+        error!("Card terminal has not been opened.");
+        return StatusCode::ErrInvalid;
     }
 
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_close/{}/{}", ctn, pn);
     let response = http::request().post(&path, None).response();
-    if response.status() != 200 {
-        error!("Request failed! Returning {}", ERR_HTSI);
-        return ERR_HTSI;
+    match response.status() {
+        200 => handle_ok_status(response.body(), ctn),
+        _ => {
+            error!("Request failed! Server response was not OK!");
+            return StatusCode::ErrHtsi;
+        }
     }
-
-    handle_ok_status(response.body(), ctn)
 }
 
-fn handle_ok_status(body: String, ctn: u16) -> i8 {
-    let status = body.parse::<i8>().unwrap();
-    if status == OK {
-        // Remove CTN
-        MAP.lock().unwrap().remove(&ctn);
-        debug!("Card terminal has been closed.");
+fn handle_ok_status(body: String, ctn: u16) -> StatusCode {
+    match StatusCode::from_i8(body.parse::<i8>().unwrap()) {
+        Some(code) => {
+            match code {
+                StatusCode::Ok => {
+                    // Remove CTN
+                    MAP.lock().unwrap().remove(&ctn);
+                    debug!("Card terminal has been closed.");
+                    code
+                }
+                _ => code,
+            }
+        }
+        None => {
+            error!("Status code from server responses is not CTAPI conform!");
+            StatusCode::ErrHtsi
+        }
     }
-
-    debug!("Returning {}", status);
-    status
 }
