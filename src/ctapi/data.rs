@@ -64,7 +64,7 @@ pub fn data(
                 Ok(mut data) => {
                     data = data as Response;
                     match StatusCode::from_i8(data.responseCode) {
-                        Some(code) => {
+                        Ok(code) => {
                             match code {
                                 StatusCode::Ok => {
                                     *safe_dad = data.dad;
@@ -85,14 +85,14 @@ pub fn data(
                                 _ => code,
                             }
                         }
-                        None => {
-                            error!("Status code from server responses is not CTAPI conform!");
+                        Err(why) => {
+                            error!("{}", why);
                             StatusCode::ErrHtsi
                         }
                     }
                 }
                 Err(why) => {
-                    error!("Failed to parse server response data. {}", why);
+                    error!("Failed to parse server response data. {:?}", why);
                     StatusCode::ErrHtsi
                 }
             }

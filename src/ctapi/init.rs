@@ -21,7 +21,7 @@ pub fn init(ctn: u16, pn: u16) -> StatusCode {
 
 fn handle_ok_status(body: String, ctn: u16, pn: u16) -> StatusCode {
     match StatusCode::from_i8(body.parse::<i8>().unwrap()) {
-        Some(code) => {
+        Ok(code) => {
             match code {
                 StatusCode::Ok => {
                     // Store CTN
@@ -32,8 +32,8 @@ fn handle_ok_status(body: String, ctn: u16, pn: u16) -> StatusCode {
                 _ => code,
             }
         }
-        None => {
-            error!("Status code from server responses is not CTAPI conform!");
+        Err(why) => {
+            error!("{}", why);
             StatusCode::ErrHtsi
         }
     }

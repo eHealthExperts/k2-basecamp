@@ -31,16 +31,16 @@ impl StatusCode {
         }
     }
 
-    pub fn from_i8(n: i8) -> Option<StatusCode> {
+    pub fn from_i8(n: i8) -> Result<StatusCode, &'static str> {
         match n {
-            0 => Some(StatusCode::Ok),
-            -1 => Some(StatusCode::ErrInvalid),
-            -8 => Some(StatusCode::ErrCt),
-            -10 => Some(StatusCode::ErrTrans),
-            -11 => Some(StatusCode::ErrMemory),
-            -127 => Some(StatusCode::ErrHost),
-            -128 => Some(StatusCode::ErrHtsi),
-            _ => None,
+            0 => Ok(StatusCode::Ok),
+            -1 => Ok(StatusCode::ErrInvalid),
+            -8 => Ok(StatusCode::ErrCt),
+            -10 => Ok(StatusCode::ErrTrans),
+            -11 => Ok(StatusCode::ErrMemory),
+            -127 => Ok(StatusCode::ErrHost),
+            -128 => Ok(StatusCode::ErrHtsi),
+            _ => Err("Invalid CTAPI status code!"),
         }
     }
 }
