@@ -19,7 +19,7 @@ cache:
   - target
   - '%USERPROFILE%\.cargo'
 
-build_script: cargo build --verbose
+build_script: cargo build
 
 test_script:
   - cargo fmt -- --write-mode=diff
