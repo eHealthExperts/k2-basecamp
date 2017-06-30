@@ -1,0 +1,28 @@
+dist: trusty
+language: rust
+cache:
+  directories:
+    - $HOME/.cargo
+    - $TRAVIS_BUILD_DIR/node_modules
+    - $TRAVIS_BUILD_DIR/target
+before_script:
+  - cargo install rustfmt --force
+  - nvm install node
+  - npm install
+script:
+  - npm run test
+  - npm run release
+deploy:
+  provider: releases
+  api_key:
+    secure: tv9nB3IgsCOI5lneZewGzra0DE1kAR2O6k6q/LytRQ3GWNucLRIBXwR63DxIVWRBPQiftshzAR2GjmK8LeHnd8FfKPBThJZkI18t61jmq+9And012OXqtrhenE8k/uEmu/amV25a3dmA/HFrSokyGUQRCxEjxrk+VTpU6kBZs/HVVW3MZqA2Mm7KFNMUI0d4igJ4zsUT0Db78FLDmsHDozdIdLnMpUFl0Dh8oWeyhCNpMDY0z8aR0zJplGdby1Tu2ZbKBNENIIsOHC3j4oDs8ckL6zccenrXmfNpd+DyLdb/iMoH0l6f0MVRt7j52+WjcQa6Xavd6nBL164mMAbzs/7VeyMwwY6/dOd79ivVWJmQvyLZr0P0wrYEd+gBc7uZlhibXCzcDp7gry1fSZ2d6wK736Ks0/ApM70V3EKizTLCEXlp2QCwL6JuhyOpLxE8/k8HfX2O1cLLWc0sYEQlyI8fQO1L9tnFw21oJD/0CrFGEBxOa9wVTSAxYTddNx7aqCZJRPOiUd8bnB0qUpZk2nblZICC1q6VWnkHclPbXMv2QRO+jKB1MBhoM1pGCx6DkCOwA0b6+tJ7bbOUEm2GYTtEWw2KOPav5cgxky4Xm8A+OWfN+mXPRHOXRuHZdRR/S8FbNXyIPVEcyRwcfKhLlPQfuh5gOA4+lG24Jvq+aBI=
+  file:
+    - path: target/release/libctehxk2.so
+      name: libctehxk2.so
+    - path: target/release/ctehxk2.h
+      name: ctehxk2.h
+  skip_cleanup: true
+  on:
+    tags: true
+notifications:
+  email: false
