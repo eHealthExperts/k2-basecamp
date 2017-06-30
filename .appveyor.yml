@@ -40,13 +40,9 @@ deploy:
     secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
   provider: GitHub
   on:
-    branch: master
     appveyor_repo_tag: true
 
 notifications:
   - provider: GitHubPullRequest
     auth_token:
       secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
-  - provider: Slack
-    incoming_webhook: 
-      secure: BQ8Pkout/6vbpxbzPyKxjQe1DeMADjtSBvX87D9I3BC5w3MRvoIOKk8PoIE3jJJa8x4LTzenOY5NvRJ3n8VKZA==
