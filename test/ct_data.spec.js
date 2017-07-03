@@ -43,7 +43,7 @@ describe('CT_data func', () => {
             response.send('0');
         });
 
-        app.post('/k2/ctapi/ct_data/:ctn/:pn', jsonParser, function (request, response) {
+        app.post('/k2/ctapi/ct_data/:ctn/:pn', jsonParser, (request, response) => {
             handler(request, response);
         });
 
