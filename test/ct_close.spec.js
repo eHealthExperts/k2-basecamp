@@ -19,7 +19,7 @@ describe('CT_close func', () => {
     var result;
 
     beforeEach(() => {
-        var location = path.join(__dirname, '../target/debug/') + LIBNAME;
+        var location = path.join(__dirname, '../target/debug/', LIBNAME);
         library = new Library(location)
             .asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]})
             .asyncFunction({ CT_close: ['int8', ['uint16']]});
