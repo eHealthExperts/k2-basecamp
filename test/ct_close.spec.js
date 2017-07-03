@@ -18,7 +18,7 @@ describe('CT_close func', () => {
 
     var result;
 
-    beforeEach(done => {
+    beforeEach(() => {
         var location = path.join(__dirname, '../target/debug/') + LIBNAME;
         library = new Library(location)
             .asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]})
@@ -44,16 +44,13 @@ describe('CT_close func', () => {
             response.send(result);
         });
 
-        server = app.listen(8080, done);
+        server = app.listen(8080);
     });
 
-    afterEach(done => {
-        server.close(() => {
-            library.release();
-            library = null;
-
-            done();
-        });
+    afterEach(() => {
+        library.release();
+        library = null;
+        server.close();
     });
 
     it('should not call REST path but return with -1', done => {
