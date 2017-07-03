@@ -17,10 +17,8 @@ deploy:
   api_key:
     secure: "IY1voefOLO+X2JA7jL4gOnqn8LhE1wQ+/i3vFdhxwiYjGONGHu/dsH4MddJvZn3PSWj+U6Aao6gx8d32bVDYECXsS9+wcm63nb2CfL/2yGAa/bkIuSidn0N6H6RizmdaMwq5acSbsHyGGevPYkjAKDN0K30XnUnJcEXMJshhAP67E5dqRpc1/p47ewW10x4JLOkKrfnBK2minT2g/BoQsw83BiUMRI59obEJDkmq3w3MCU7NIszq5uWhiuOTGfkLXxhJ7QkKfjd7NYNnl1D6MAW0L0LUoJLnYvlkv7kDFXIH+88wdva2k/tfZovLf0dwEqtUoMtL1WRorHocm8kpeVsvDTXslsWx++6+m5SRiUf9daPLun5AG7nhSpKxuB5yUbTEW0MpbTywQcpLifp0todIgEloTBaUDtTYS8o4FifBCnrMrMDi47wxtgg6Sj+Te5rWPKoqS+fL+l7WdSqDZRJNd7YiCjP5bpbUee55StllyRUgRBssmsosPYc77s0Q7E6XCI7l0ri4Jdf5jmVH+dw6rQZJOSDxJ/i/F8Mhyk58YW5iRfFgIVyzmzIjDALmsuFW59utXLXr7qGWuFotlnsvWaTdYOCGH4YjIo8OQRaOCeSTMGuPVewwMLG/lpBoTgEDLB+Alc3i7h5KVA5rANzwf4G/cFxm8Iijm8Zd3dc="
   file:
-  - path: target/release/libctehxk2.so
-    name: libctehxk2.so
-  - path: target/release/ctehxk2.h
-    name: ctehxk2.h
+  - "target/release/libctehxk2.so"
+  - "target/release/ctehxk2.h"
   skip_cleanup: true
   on:
     tags: true
