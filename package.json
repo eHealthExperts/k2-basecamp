@@ -25,7 +25,7 @@
     "express": "4.15.3",
     "fastcall": "0.2.4",
     "gulp": "3.9.1",
-    "gulp-replace": "0.5.4",
+    "gulp-replace": "0.6.1",
     "hamjest": "3.0.0",
     "lodash": "4.17.4",
     "mocha": "3.4.2"
