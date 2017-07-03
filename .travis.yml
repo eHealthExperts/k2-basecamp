@@ -2,30 +2,25 @@ dist: trusty
 language: rust
 cache:
   directories:
-    - $HOME/.cargo
-    - $TRAVIS_BUILD_DIR/node_modules
-    - $TRAVIS_BUILD_DIR/target
+  - $HOME/.cargo
+  - $TRAVIS_BUILD_DIR/node_modules
+  - $TRAVIS_BUILD_DIR/target
 before_script:
-  - cargo install rustfmt --force
-  - nvm install node
-  - npm install
+- cargo install rustfmt --force
+- nvm install node
+- npm install
 script:
-  - npm run test
-  - cargo build --release
+- npm run test
+- cargo build --release
 deploy:
   provider: releases
-  api_key:
-    secure: "0PjWY+wqGzyjKofsdBIG4+fDBrpCZNzOLsQbpvBOvwYOBakEFIFbQPdjU39Smam5pxme0zcZjH5yPpHE34leJLCom1S4SbwgJhMEmAM0EX/6nnTv2l8wBtS9d16JeH
-bIzjeIlDcNMtQaGbV7a/Ft/81My1KYhNZrC4IzQf2JL4teg1G2CBBGaAoginUPRFgDR3L42XeDeiIP3YA4E4BdTG7Vggh0p2P0a/CrFelpfnYIYKvuWzic+FKJ78HuMEFFhMuiLh3
-mB5nOrT3p5mj1PB2UA3BhPemaDb7gyv3mvZLPy/sxyS2SuBkCKKwCYOSbMG8rxGZLlkrpfLFFW3m4cVNC82B4dk4yAxQYUOzdZeYcjeZFEEpgYgRHHdWZRcAMb/HXjvDJIfBwZghx
-9bIts/kjsr9ebtwwSZdAdZdHoJ7vYHBNxLG1q0Mpx+vNez1H2/vO0WqAwHmZjylkWUv/euOh1Fb6stCiHfYZTZDuPTh1pAiThMbIQs/US6lL7uWs1lA1LJ+xSnLCXnkyllw4v+l5K
-q+Ufqx4UQYlz4ANsfq1336Bf1eIYmXiOCaSTem9zRM8bcapdWPjT7cLsbHHKgZsQBlstbQnK3QjPbH+xSvRvE5ktMGxsY3FVTgPa1lTGg1v1yea4Hu/8qpNGYuYCSVE0agNJ2NEZM
-g5dXSMPiA="
+  api-key:
+    secure: a2AuuC5bFwG5HyHFii/6oAoX6HjiOLtjnNjC1pJLBPGNVb0HS9m543MXEWstSfGZpyNBN5eAOcBwOM0AWv+J9KSKQBzqM3OnhZNyZXiPv26sy+mrjAvTkOgvP77VsoOB0nLS+x6ViP0Ly6HbLBXDAiCgN3q+bMlmmWeYMrqPdemzVlGN8bEqSexYTTn3mgpPoTpX1FS3/aQbYxP3e3TT0GoEydKjDqW2HZbzO7uNWOim1/W5+aPj+hDjpYAhurIzktkgkVGFSUsNlY0xaf/MUo3VeOE4M5ITBhWgXltgA9YltAEKu8KMlQ+dIP696c8dkc+QGJdziPz33ExAkvLWpnmSWqjHp+VZlEAG7ZYS/JJOzJl7zdfFMGHu52uDI4cmjbDISu+pOLhn3V1jynuN+42nOe0ZqOFLbrd/OtW+/DHtPF1hxxYnMHaEge0j25T6lRKtb0+9Vo+tu4rvAMc0OeZgcxwA7PKLjmq5CsRSOOAeRTX4dUEt9q/xdMdCIDdc7rwtSRVwoQSTk0o4nZOq+ebrz7SKy/Mx7i8x9JMHziaca2q0sNdhiGnJqq+y3WoDNsADhYO6+MTnwfZtYdjadfd2bQeNi8my+Bj+aX4sWo6yzWTCjX/OeZTZlecxHcoWUa2mE6J1bzrT1eNSKjUukEEdqoCoAVFKPxZb88Sng80=
   file:
-    - path: target/release/libctehxk2.so
-      name: libctehxk2.so
-    - path: target/release/ctehxk2.h
-      name: ctehxk2.h
+  - path: target/release/libctehxk2.so
+    name: libctehxk2.so
+  - path: target/release/ctehxk2.h
+    name: ctehxk2.h
   skip_cleanup: true
   on:
     tags: true
