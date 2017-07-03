@@ -15,7 +15,7 @@
     "test": "npm run lint && npm run utest && npm run itest",
     "utest": "cargo test -- --test-threads=1",
     "itest": "npm run build && mocha",
-    "version": "gulp update-version && git add Cargo.toml"
+    "version": "gulp update-version && git add ."
   },
   "devDependencies": {
     "body-parser": "1.17.2",
