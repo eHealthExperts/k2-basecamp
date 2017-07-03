@@ -25,7 +25,7 @@ describe('CT_data func', () => {
 
     var handler;
 
-    beforeEach(done => {
+    beforeEach(() => {
         var location = path.join(__dirname, '../target/debug/') + LIBNAME;
         library = new Library(location)
             .asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]})
@@ -51,18 +51,14 @@ describe('CT_data func', () => {
             response.send('0');
         });
 
-        server = app.listen(8080, done);
+        server = app.listen(8080);
     });
 
-    afterEach(done => {
+    afterEach(() => {
         handler = null;
-
-        server.close(() => {
-            library.release();
-            library = null;
-
-            done();
-        });
+        library.release();
+        library = null;
+        server.close();
     });
 
     it('should not call REST path but return with -1', done => {
