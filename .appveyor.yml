@@ -42,8 +42,3 @@ deploy:
   force_update: true
   on:
     appveyor_repo_tag: true
-
-notifications:
-  - provider: GitHubPullRequest
-    auth_token:
-      secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk

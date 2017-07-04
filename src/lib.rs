@@ -13,11 +13,10 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio_core;
 
-pub mod config;
-pub mod http;
-pub mod logging;
-
+mod config;
 mod ctapi;
+mod http;
+mod logging;
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -25,8 +24,10 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
+    let status = ctapi::init(config::ctn_or(ctn), config::pn_or(pn));
 
-    ctapi::init(config::ctn_or(ctn), config::pn_or(pn))
+    debug!("Returning {}", status);
+    status.to_i8()
 }
 
 #[no_mangle]
@@ -43,8 +44,10 @@ pub extern "system" fn CT_data(
     logging::init();
 
     debug!("CT_data(ctn: {})", ctn);
+    let status = ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response);
 
-    ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response)
+    debug!("Returning {}", status);
+    status.to_i8()
 }
 
 #[no_mangle]
@@ -53,6 +56,8 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
+    let status = ctapi::close(config::ctn_or(ctn));
 
-    ctapi::close(config::ctn_or(ctn))
+    debug!("Returning {}", status);
+    status.to_i8()
 }
