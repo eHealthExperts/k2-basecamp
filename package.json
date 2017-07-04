@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/eHealthExperts/k2-basecamp.git"
   },
+  "bugs": {
+    "url": "https://github.com/eHealthExperts/k2-basecamp/issues"
+  },
   "scripts": {
     "build": "cargo build",
     "lint": "cargo fmt -- --write-mode=diff",
