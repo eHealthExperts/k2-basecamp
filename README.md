@@ -1,15 +1,48 @@
-[![Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp) [![Build status](https://ci.appveyor.com/api/projects/status/wki43vn7gouqrh9s/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp/branch/master)
+[![Latest](https://img.shields.io/github/release/eHealthExperts/k2-basecamp.svg?label=latest)](https://github.com/eHealthExperts/k2-basecamp/releases/latest) [![Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp) [![Build status](https://ci.appveyor.com/api/projects/status/wki43vn7gouqrh9s/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp/branch/master)
 
-# K2 Basecamp
+# K2 basecamp
 
-Environment variables for application configuration settings:
+> CTAPI adapter for the gematik Konnektor
 
-The following table lists environment variables and their effect to basecamp.
+K2 basecamp is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
+Currently [builds](https://github.com/ChriFo/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux.
 
-| Key          | Description                              |
+
+## Requirements
+
+* **K2** from [eHealth Experts GmbH](http://ehealthexperts.de)
+
+
+## Configuration
+
+The *basecamp* is configurable by the following environment variables.
+
+| Variable     | Description                              |
 | ------------ | ---------------------------------------- |
+| K2_BASE_URL  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** <br/> |
+| K2_LOG_LEVEL | Set the verbosity level for logging.<br/>Possible values: Off, Error, Warn, Info, Debug, Trace<br/>**Default: Error** |
+| K2_LOG_PATH  | Target folder of the log file ctehxk2.log.<br/>**Default: Logging to STDOUT** |
 | K2_CTN       | Set CTN to use for all requests. *Requires that K2_PN is set!* |
 | K2_PN        | Set PN to use for all requests. *Requires that K2_CTN is set!* |
-| K2_BASE_URL  | **Default: http://localhost:8080/k2/ctapi** <br/>The REST endpoint of K2 peak. |
-| K2_LOG_LEVEL | **Default: Error** Set the verbosity level for logging. <br/>Possible values: Off, Error, Warn, Info, Debug, Trace |
-| K2_LOG_PATH  | **Default: Logging to stout** Target folder of the debug log file: **ctehxk2.log** |
+
+
+## Build (on Windows)
+
+1. Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools 2015].(http://landinghub.visualstudio.com/visual-cpp-build-tools)
+
+2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
+
+   > Ensure that the following environment variables are set: 
+   >
+   > DEP_OPENSSL_INCLUDE, OPENSSL_INCLUDE_DIR, OPENSSL_LIB_DIR, OPENSSL_LIBS
+
+3. Install [Rust](https://www.rust-lang.org).
+
+   > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
+
+4. Run `cargo build —-release`  to create **ctehxk2.dll** in the folder **target/release**. 
+
+
+## License
+
+MIT © [eHealth Experts GmbH](http://ehealthexperts.de)
