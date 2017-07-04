@@ -1,0 +1,26 @@
+dist: trusty
+language: rust
+cache:
+  directories:
+  - $HOME/.cargo
+  - $TRAVIS_BUILD_DIR/node_modules
+  - $TRAVIS_BUILD_DIR/target
+before_script:
+- cargo install rustfmt --force
+- nvm install node
+- npm install
+script:
+- npm run test
+- cargo build --release
+deploy:
+  provider: releases
+  api_key:
+    secure: $API_KEY
+  file:
+  - "target/release/libctehxk2.so"
+  - "target/release/ctehxk2.h"
+  skip_cleanup: true
+  on:
+    tags: true
+notifications:
+  email: false

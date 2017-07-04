@@ -5,6 +5,7 @@ use std::path::MAIN_SEPARATOR;
 
 static BASE_URL_KEY: &str = "K2_BASE_URL";
 static DEFAULT_BASE_URL: &str = "http://localhost:8080/k2/ctapi/";
+static LOG_LEVEL_KEY: &str = "K2_LOG_LEVEL";
 static LOG_PATH_KEY: &str = "K2_LOG_PATH";
 
 #[derive(Deserialize)]
@@ -22,6 +23,13 @@ pub fn base_url() -> String {
     }
 
     url
+}
+
+pub fn log_level() -> String {
+    match var(LOG_LEVEL_KEY) {
+        Ok(level) => level,
+        _ => String::from("Error"),
+    }
 }
 
 pub fn log_path() -> Option<String> {
@@ -134,7 +142,7 @@ mod tests {
         env::set_var(LOG_PATH_KEY, "a");
         let path = log_path();
 
-        assert_eq!(path, Some(String::from("a/")));
+        assert_eq!(path, Some(String::from(format!("a{}", MAIN_SEPARATOR))));
     }
 
     #[test]

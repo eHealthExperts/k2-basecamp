@@ -7,6 +7,7 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use std::str::FromStr;
 use std::sync::{Once, ONCE_INIT};
 
 static INIT: Once = ONCE_INIT;
@@ -25,9 +26,8 @@ fn init_logger() {
 }
 
 fn init_file_logger(mut path: String) -> Config {
-    path.push_str("ctehxk2.log");
-
     let appender_id = "file";
+    path.push_str("ctehxk2.log");
 
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
@@ -40,7 +40,7 @@ fn init_file_logger(mut path: String) -> Config {
             Logger::builder()
                 .appender(appender_id)
                 .additive(false)
-                .build("ctehxk2", LogLevelFilter::Debug),
+                .build("ctehxk2", log_level()),
         )
         .build(Root::builder().appender(appender_id).build(
             LogLevelFilter::Error,
@@ -49,9 +49,8 @@ fn init_file_logger(mut path: String) -> Config {
 }
 
 fn init_stdout_logger() -> Config {
-    let stdout = ConsoleAppender::builder().build();
-
     let appender_id = "stdout";
+    let stdout = ConsoleAppender::builder().build();
 
     Config::builder()
         .appender(Appender::builder().build(appender_id, Box::new(stdout)))
@@ -59,10 +58,17 @@ fn init_stdout_logger() -> Config {
             Logger::builder()
                 .appender(appender_id)
                 .additive(false)
-                .build("ctehxk2", LogLevelFilter::Debug),
+                .build("ctehxk2", log_level()),
         )
         .build(Root::builder().appender(appender_id).build(
             LogLevelFilter::Error,
         ))
         .unwrap()
+}
+
+fn log_level() -> LogLevelFilter {
+    return match LogLevelFilter::from_str(&config::log_level()) {
+        Ok(log_level) => log_level,
+        _ => LogLevelFilter::Error,
+    };
 }
