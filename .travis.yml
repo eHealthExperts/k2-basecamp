@@ -14,8 +14,7 @@ script:
 - cargo build --release
 deploy:
   provider: releases
-  api_key:
-    secure: $API_KEY
+  api_key: ${API_KEY}
   file:
   - "target/release/libctehxk2.so"
   - "target/release/ctehxk2.h"
