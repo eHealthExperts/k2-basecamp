@@ -142,7 +142,7 @@ mod tests {
         env::set_var(LOG_PATH_KEY, "a");
         let path = log_path();
 
-        assert_eq!(path, Some(String::from("a/")));
+        assert_eq!(path, Some(String::from(format!("a{}", MAIN_SEPARATOR))));
     }
 
     #[test]

@@ -1,31 +1,28 @@
 {
   "name": "@ehex/k2-basecamp",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "description": "K2 adapter for CTAPI",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": "Christian Fochler <fochler@ehealthexperts.de>",
+  "private": true,
   "repository": {
     "type": "git",
-    "url": "http://stash.ehex.de/scm/k2/k2-basecamp.git"
-  },
-  "publishConfig": {
-    "registry": "https://artifacts.ehex.de/repository/npm-internal/"
+    "url": "https://github.com/eHealthExperts/k2-basecamp.git"
   },
   "scripts": {
     "build": "cargo build",
     "lint": "cargo fmt -- --write-mode=diff",
-    "release": "cargo build --release",
     "test": "npm run lint && npm run utest && npm run itest",
     "utest": "cargo test -- --test-threads=1",
     "itest": "npm run build && mocha",
-    "version": "gulp update-version && git add Cargo.toml"
+    "version": "gulp update-version && git add ."
   },
   "devDependencies": {
     "body-parser": "1.17.2",
     "express": "4.15.3",
     "fastcall": "0.2.4",
     "gulp": "3.9.1",
-    "gulp-replace": "0.5.4",
+    "gulp-replace": "0.6.1",
     "hamjest": "3.0.0",
     "lodash": "4.17.4",
     "mocha": "3.4.2"

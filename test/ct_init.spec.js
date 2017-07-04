@@ -17,8 +17,8 @@ describe('CT_init func', () => {
 
     var result;
 
-    beforeEach(done => {
-        var location = path.join(__dirname, '../target/debug/') + LIBNAME;
+    beforeEach(() => {
+        var location = path.join(__dirname, '../target/debug/', LIBNAME);
         library = new Library(location).asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]});
 
         CT_init = library.interface.CT_init;
@@ -34,16 +34,13 @@ describe('CT_init func', () => {
 
             response.send(result);
         });
-        server = app.listen(8080, done);
+        server = app.listen(8080);
     });
 
-    afterEach(done => {
-        server.close(() => {
-            library.release();
-            library = null;
-
-            done();
-        });
+    afterEach(() => {
+        library.release();
+        library = null;
+        server.close();
     });
 
     it('should call equivalent REST path with ctn and pn parameter', done => {

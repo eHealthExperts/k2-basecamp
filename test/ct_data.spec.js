@@ -25,8 +25,8 @@ describe('CT_data func', () => {
 
     var handler;
 
-    beforeEach(done => {
-        var location = path.join(__dirname, '../target/debug/') + LIBNAME;
+    beforeEach(() => {
+        var location = path.join(__dirname, '../target/debug/', LIBNAME);
         library = new Library(location)
             .asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]})
             .asyncFunction({ CT_data: ['int8', ['uint16', 'pointer', 'pointer', 'uint16', UInt8Array, 'pointer', UInt8Array]]})
@@ -43,7 +43,7 @@ describe('CT_data func', () => {
             response.send('0');
         });
 
-        app.post('/k2/ctapi/ct_data/:ctn/:pn', jsonParser, function (request, response) {
+        app.post('/k2/ctapi/ct_data/:ctn/:pn', jsonParser, (request, response) => {
             handler(request, response);
         });
 
@@ -51,18 +51,14 @@ describe('CT_data func', () => {
             response.send('0');
         });
 
-        server = app.listen(8080, done);
+        server = app.listen(8080);
     });
 
-    afterEach(done => {
+    afterEach(() => {
         handler = null;
-
-        server.close(() => {
-            library.release();
-            library = null;
-
-            done();
-        });
+        library.release();
+        library = null;
+        server.close();
     });
 
     it('should not call REST path but return with -1', done => {
