@@ -17,8 +17,8 @@ describe('CTAPI status', () => {
 
     var statusCode;
 
-    beforeEach(done => {
-        var location = path.join(__dirname, '../target/debug/') + LIBNAME;
+    beforeEach(() => {
+        var location = path.join(__dirname, '../target/debug/', LIBNAME);
         library = new Library(location).asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]});
 
         CT_init = library.interface.CT_init;
@@ -27,16 +27,13 @@ describe('CTAPI status', () => {
         app.post('/k2/ctapi/ct_init/:ctn/:pn', (request, response) => {
             response.send(statusCode);
         });
-        server = app.listen(8080, done);
+        server = app.listen(8080);
     });
 
-    afterEach(done => {
-        server.close(() => {
-            library.release();
-            library = null;
-
-            done();
-        });
+    afterEach(() => {
+        library.release();
+        library = null;
+        server.close();
     });
 
     _.forEach([0, -1, -8, -10, -11, -127, -128], value => {
