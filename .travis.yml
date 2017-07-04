@@ -15,7 +15,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: "J10E0cpvLdBI6sGHcdL7V2wojQZ3E+Uh+Wso6iilM2mdD9zjVkCw877lM9/IBt5vEiPcOB1dBBndy7Vg3syf4jumB9P6OkD4/x/IR+11UEKaWwGl67UjxdjbBh/IljU5B/XbDYDTfPuZVgedkM28EAra/ALgpS0P3W/MBPEpVJY0SumAxuba8DOaD88YpHxNT8XlW6vMafWZat4xws4lPXqVmOguSTTwjpsC1oQDO3KkzoksAQps5Rcj6/d0Kp4UaCMCBG698tD9Ay/Gs/HORpdFHtlgNp/m5ACMZCjLlKwDzea2Fabmpret8Ed/q68K9nmMZD2skGqKezYCCC9vYkvRaSHKcTcNG/ZPIb0jpPKlrK4xZBkLpDbc+pNVg4Umc7FF4Yj7DfLWkKUDQjlvEWruiLN4yd7v+BpGXjDCqa8rIb5LvydA4XRiiRgJW680I4l1FM3yG3tOPHVrib1JQam6Qh2suKx0cUyqiTMjVS38t965KZOY9y3Mx16CZjbdb3Am7r6bvJk9KHu2neAuETIA39xEvY9l1CcfEEfnJdOt2SaURIF2W6AUi+MMYLqq5M4M+R3r6XTaSr8LMxt2NGCpZtWhk1WjFAdOc41J8MK33rtGtPf3QU9HlwZXW+etzTjXuQdXMX3YXS9Pn4IFlSh8OC9spBHRU33cznHfQGc="
+    secure: $API_KEY
   file:
   - "target/release/libctehxk2.so"
   - "target/release/ctehxk2.h"
