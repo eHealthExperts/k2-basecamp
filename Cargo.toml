@@ -1,7 +1,10 @@
 [package]
 name = "k2_basecamp"
 version = "0.10.0"
+description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
+license = "MIT"
+homepage = "http://k2.ehealthexperts.de"
 repository = "https://github.com/eHealthExperts/k2-basecamp.git"
 publish = false
 build = "build.rs"
