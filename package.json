@@ -1,13 +1,17 @@
 {
   "name": "@ehex/k2-basecamp",
   "version": "0.10.0",
-  "description": "K2 adapter for CTAPI",
+  "description": "CTAPI adpater for the gematik Konnektor",
   "license": "MIT",
-  "author": "Christian Fochler <fochler@ehealthexperts.de>",
   "private": true,
+  "author": "Christian Fochler <fochler@ehealthexperts.de>",
+  "homepage": "http://k2.ehealthexperts.de",
   "repository": {
     "type": "git",
     "url": "https://github.com/eHealthExperts/k2-basecamp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eHealthExperts/k2-basecamp/issues"
   },
   "scripts": {
     "build": "cargo build",
