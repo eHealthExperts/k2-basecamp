@@ -9,9 +9,9 @@ pub fn init(ctn: u16, pn: u16) -> StatusCode {
     }
 
     let path = format!("ct_init/{}/{}", ctn, pn);
-    let response = http::request().post(&path, None).response();
-    match response.status() {
-        200 => handle_ok_status(response.body(), ctn, pn),
+    let response = http::request(&path, None);
+    match response.status {
+        200 => handle_ok_status(response.body, ctn, pn),
         _ => {
             error!("Request failed! Server response was not OK!");
             return StatusCode::ErrHtsi;

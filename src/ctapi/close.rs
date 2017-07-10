@@ -10,9 +10,9 @@ pub fn close(ctn: u16) -> StatusCode {
 
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_close/{}/{}", ctn, pn);
-    let response = http::request().post(&path, None).response();
-    match response.status() {
-        200 => handle_ok_status(response.body(), ctn),
+    let response = http::request(&path, None);
+    match response.status {
+        200 => handle_ok_status(response.body, ctn),
         _ => {
             error!("Request failed! Server response was not OK!");
             return StatusCode::ErrHtsi;

@@ -57,10 +57,10 @@ pub fn data(
 
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_data/{}/{}", ctn, pn);
-    let response = http::request().post(&path, Some(json)).response();
-    match response.status() {
+    let response = http::request(&path, Some(json));
+    match response.status {
         200 => {
-            match serde_json::from_str(&response.body()) {
+            match serde_json::from_str(&response.body) {
                 Ok(mut data) => {
                     data = data as Response;
                     match StatusCode::from_i8(data.responseCode) {
