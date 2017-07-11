@@ -8,7 +8,7 @@ use super::config;
 use futures::{Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
-use std::io;
+use std::io::{Error, ErrorKind};
 use std::str;
 use tokio_core::reactor::Core;
 
@@ -17,7 +17,7 @@ pub struct Response {
     pub body: String,
 }
 
-pub fn request(path: &str, request_body: Option<String>) -> Result<Response, io::Error> {
+pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Error> {
     let mut request = Request::new(Method::Post, uri(path));
     match request_body {
         Some(json) => {
@@ -45,7 +45,7 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, io:
                     futures::future::ok(())
                 })
             })
-            .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
+            .map_err(|err| Error::new(ErrorKind::Other, err));
         try!(core.run(work));
     }
 
