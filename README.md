@@ -11,6 +11,7 @@ Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
+* [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
 
 
 ## Configuration
