@@ -8,6 +8,7 @@ use super::config;
 use futures::{Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
+use std::io;
 use std::str;
 use tokio_core::reactor::Core;
 
@@ -16,7 +17,7 @@ pub struct Response {
     pub body: String,
 }
 
-pub fn request(path: &str, request_body: Option<String>) -> Response {
+pub fn request(path: &str, request_body: Option<String>) -> Result<Response, io::Error> {
     let mut request = Request::new(Method::Post, uri(path));
     match request_body {
         Some(json) => {
@@ -35,19 +36,22 @@ pub fn request(path: &str, request_body: Option<String>) -> Response {
     {
         let mut core = Core::new().unwrap();
         let client = Client::new(&core.handle());
-        let work = client.request(request).and_then(|res| {
-            status = res.status().clone().into();
-            res.body().for_each(|chunk| {
-                body.push_str(str::from_utf8(&*chunk).unwrap());
-                futures::future::ok(())
+        let work = client
+            .request(request)
+            .and_then(|res| {
+                status = res.status().clone().into();
+                res.body().for_each(|chunk| {
+                    body.push_str(str::from_utf8(&*chunk).unwrap());
+                    futures::future::ok(())
+                })
             })
-        });
-        core.run(work).unwrap();
+            .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
+        try!(core.run(work));
     }
 
     debug!("Response status: {}", status);
     debug!("Response body: {}", body);
-    Response { status, body }
+    Ok(Response { status, body })
 }
 
 fn uri(path: &str) -> Uri {
