@@ -1,5 +1,6 @@
 [![Latest](https://img.shields.io/github/release/eHealthExperts/k2-basecamp.svg?label=latest)](https://github.com/eHealthExperts/k2-basecamp/releases/latest) [![Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp) [![Build status](https://ci.appveyor.com/api/projects/status/mr7hc26i3nvddi04/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp/branch/master)
 
+
 # K2 basecamp
 
 > CT-API adapter for the gematik Konnektor
@@ -7,10 +8,12 @@
 *K2 basecamp* is an implementation of the [CT-API](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
 Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux, both as a 32-bit version.
 
+
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
 * [MS Visual C++ Redistributable](https://www.microsoft.com/de-de/download/details.aspx?id=48145) from Microsoft, 32-bit (vc_redist.x86.exe)
+
 
 ## Configuration
 
