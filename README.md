@@ -12,7 +12,8 @@ Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
-* [MS Visual C++ Redistributable](https://www.microsoft.com/de-de/download/details.aspx?id=48145) from Microsoft, 32-bit (vc_redist.x86.exe)
+
+* In case you are using the 32-/64-bit MSVC DLL, you need to install the according 32-/64-bit version of [MS Visual C++ Redistributable](https://www.microsoft.com/de-de/download/details.aspx?id=48145) too.
 
 
 ## Configuration
@@ -24,13 +25,13 @@ The library is configurable by the following environment variables.
 | K2_BASE_URL  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** <br/> |
 | K2_LOG_LEVEL | Set the verbosity level for logging.<br/>Possible values: Off, Error, Warn, Info, Debug, Trace<br/>**Default: Error** |
 | K2_LOG_PATH  | Target folder of the log file ctehxk2.log.<br/>**Default: Logging to STDOUT** |
-| K2_CTN       | Set CTN to use for all requests. *Requires that K2_PN is set!* |
-| K2_PN        | Set PN to use for all requests. *Requires that K2_CTN is set!* |
+| K2_CTN       | Set card terminal number (CTN) to use for all requests. *Requires that K2_PN is set!* |
+| K2_PN        | Set port number (PN) to use for all requests. *Requires that K2_CTN is set!* |
 
 
 ## Build (on Windows)
 
-1. Install a *MSVC* (32-bit) , e.g., by installing the [Microsoft Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools).
+1. Install a *MSVC*, e.g., by installing the [Microsoft Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools).
 
 2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
 
@@ -40,7 +41,7 @@ The library is configurable by the following environment variables.
 
 3. Install [Rust](https://www.rust-lang.org).
 
-   > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
+   > Select the desired target triplet. For example, use **i686-pc-windows-msvc** for 32-bit MSVC (Windows 7+) or **x86_64-unknown-linux-gnu** for 64-bit Linux (2.6.18+) (see [Rust Platform Support](https://forge.rust-lang.org/platform-support.html)).
 
 4. Run `cargo build —-release`  to create **ctehxk2.dll** in the folder **target/release**. 
 
