@@ -1,4 +1,4 @@
-version: 0.10.1-{branch}-{build}
+version: 0.10.2-{branch}-{build}
 
 environment:
   NAME_PREFIX: basecamp
