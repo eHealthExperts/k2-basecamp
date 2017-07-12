@@ -13,7 +13,6 @@ Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
-* [Visual C++ Redistributable for Visual Studio](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
 
 * In case you are using the 32-/64-bit MSVC DLL, you need to install the according 32-/64-bit version of [MS Visual C++ Redistributable](https://www.microsoft.com/de-de/download/details.aspx?id=48145) too.
 
