@@ -8,8 +8,8 @@ use super::config;
 use futures::{Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
-use std::{mem, str};
 use std::io::{Error, ErrorKind};
+use std::str;
 use tokio_core::reactor::Core;
 
 pub struct Response {
@@ -47,10 +47,6 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
             })
             .map_err(|err| Error::new(ErrorKind::Other, err));
         try!(core.run(work));
-
-        // explicit destroy http fuss
-        mem::drop(client);
-        mem::drop(core);
     }
 
     debug!("Response status: {}", status);
