@@ -1,29 +1,58 @@
 dist: trusty
+sudo: required
+
+addons:
+  apt:
+    packages: 
+    - g++-multilib
+
 language: rust
-env:
-- ARCH=x86_64
-- ARCH=i686
+
+matrix:
+  include:
+  - env: TARGET_TRIPLET=x86_64-unknown-linux-gnu
+         TARGET_ARCH=x64
+         INFIX=x64
+  - env: TARGET_TRIPLET=i686-unknown-linux-gnu
+         TARGET_ARCH=ia32
+         INFIX=x86
+
 cache:
   directories:
   - $HOME/.cargo
-  - $TRAVIS_BUILD_DIR/node_modules
-  - $TRAVIS_BUILD_DIR/target
+  - node_modules
+  - target
+
 before_script:
+- rustc -vV
+- rustup target add "$TARGET_TRIPLET" || true
+- cargo -vV
 - cargo install rustfmt --force
-- nvm install node
+- if [[ "$TARGET_ARCH" == "x64" ]]; then
+    nvm install -s node;
+  fi
+- if [[ "$TARGET_ARCH" == "ia32" ]]; then
+    sudo dpkg --add-architecture i386;
+    sudo apt-get update;
+    sudo apt-get install nodejs:i386;
+  fi
 - npm install
+
 script:
-- npm run test
-- cargo build --release
-- mv target/release/libctehxk2.so target/release/libctehxk2-${ARCH}.so
+- cargo fmt -- --write-mode=diff
+- cargo build --target "$TARGET_TRIPLET" --release
+- cargo test --target "$TARGET_TRIPLET" --release -- --test-threads=1
+- mv -f target/$TARGET/release/libctehxk2.so target/release/
+- npm test
+
+before_deploy: mv -f target/release/libctehxk2.so target/release/libctehxk2-$INFIX.so
+
 deploy:
   provider: releases
   api_key: ${API_KEY}
   file:
-  - "target/release/libctehxk2-${ARCH}.so"
-  - "target/release/ctehxk2.h"
+  - target/release/libctehxk2-$INFIX.so
+  - target/release/ctehxk2.h
   skip_cleanup: true
   on:
     tags: true
-notifications:
-  email: false

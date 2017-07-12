@@ -18,7 +18,7 @@ describe('CTAPI status', () => {
     var statusCode;
 
     beforeEach(() => {
-        var location = path.join(__dirname, '../target/debug/', LIBNAME);
+        var location = path.join(__dirname, '../target/release/', LIBNAME);
         library = new Library(location).asyncFunction({ CT_init: ['int8', ['uint16', 'uint16']]});
 
         CT_init = library.interface.CT_init;

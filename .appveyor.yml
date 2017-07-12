@@ -4,10 +4,10 @@ environment:
   matrix:
     - channel: stable
       target: x86_64-pc-windows-msvc
-      name: ctehxk2-x64.dll
+      filename: ctehxk2-x64.dll
     - channel: stable
       target: i686-pc-windows-msvc
-      name: ctehxk2-x86.dll
+      filename: ctehxk2-x86.dll
 
 install:
   - curl -sSf -o rustup-init.exe https://win.rustup.rs/
@@ -15,7 +15,6 @@ install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustc -vV
   - cargo -vV
-  - cargo install rustfmt --force
 
 build: false
 
@@ -23,18 +22,14 @@ cache:
   - target
   - '%USERPROFILE%\.cargo'
 
-build_script: cargo build
+build_script: cargo build --release
 
-test_script:
-  - cargo fmt -- --write-mode=diff
-  - cargo test -- --test-threads=1
+test_script: cargo test --release -- --test-threads=1
 
-after_test:
-  - cargo build --release
-  - rename target/release/ctehxk2.dll %name%
+after_test: ren target\release\ctehxk2.dll %filename%
 
 artifacts:
-  - path: target/release/%name%
+  - path: 'target/release/*.dll'
 
 deploy:
   description: ''
