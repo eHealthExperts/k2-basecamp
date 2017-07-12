@@ -1,6 +1,6 @@
 {
   "name": "@ehex/k2-basecamp",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "CTAPI adpater for the gematik Konnektor",
   "license": "MIT",
   "private": true,
