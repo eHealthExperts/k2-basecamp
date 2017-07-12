@@ -5,12 +5,13 @@
 > CTAPI adapter for the gematik Konnektor
 
 *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
-Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux.
+Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows (x86) and (Ubuntu) Linux.
 
 
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
+* [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
 
 
 ## Configuration
@@ -28,19 +29,13 @@ The library is configurable by the following environment variables.
 
 ## Build (on Windows)
 
-1. Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools).
+1. Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools).
 
-2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
-
-   > Ensure that the following environment variables are set: 
-   >
-   > DEP_OPENSSL_INCLUDE, OPENSSL_INCLUDE_DIR, OPENSSL_LIB_DIR, OPENSSL_LIBS
-
-3. Install [Rust](https://www.rust-lang.org).
+2. Install [Rust](https://www.rust-lang.org).
 
    > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
 
-4. Run `cargo build —-release`  to create **ctehxk2.dll** in the folder **target/release**. 
+3. Run `cargo build —-release`  to create **ctehxk2.dll** in the folder **target/release**. 
 
 
 ## License

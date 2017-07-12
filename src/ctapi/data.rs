@@ -57,49 +57,57 @@ pub fn data(
 
     let pn = MAP.lock().unwrap().get(&ctn).unwrap().clone();
     let path = format!("ct_data/{}/{}", ctn, pn);
-    let response = http::request().post(&path, Some(json)).response();
-    match response.status() {
-        200 => {
-            match serde_json::from_str(&response.body()) {
-                Ok(mut data) => {
-                    data = data as Response;
-                    match StatusCode::from_i8(data.responseCode) {
-                        Ok(code) => {
-                            match code {
-                                StatusCode::Ok => {
-                                    *safe_dad = data.dad;
-                                    *safe_sad = data.sad;
-                                    *safe_lenr = data.lenr;
+    let response = http::request(&path, Some(json));
+    match response {
+        Err(why) => {
+            error!("{}", why);
+            StatusCode::ErrHtsi
+        }
+        Ok(res) => {
+            match res.status {
+                200 => {
+                    match serde_json::from_str(&res.body) {
+                        Ok(mut data) => {
+                            data = data as Response;
+                            match StatusCode::from_i8(data.responseCode) {
+                                Ok(code) => {
+                                    match code {
+                                        StatusCode::Ok => {
+                                            *safe_dad = data.dad;
+                                            *safe_sad = data.sad;
+                                            *safe_lenr = data.lenr;
 
-                                    let decoded = decode(&data.response).unwrap();
-                                    debug!("Decoded response field {:?}", decoded);
+                                            let decoded = decode(&data.response).unwrap();
+                                            debug!("Decoded response field {:?}", decoded);
 
-                                    for (place, element) in safe_response.iter_mut().zip(
-                                        decoded.iter(),
-                                    )
-                                    {
-                                        *place = *element;
+                                            for (place, element) in safe_response.iter_mut().zip(
+                                                decoded.iter(),
+                                            )
+                                            {
+                                                *place = *element;
+                                            }
+                                            code
+                                        }
+                                        _ => code,
                                     }
-                                    code
                                 }
-                                _ => code,
+                                Err(why) => {
+                                    error!("{}", why);
+                                    StatusCode::ErrHtsi
+                                }
                             }
                         }
                         Err(why) => {
-                            error!("{}", why);
+                            error!("Failed to parse server response data. {:?}", why);
                             StatusCode::ErrHtsi
                         }
                     }
                 }
-                Err(why) => {
-                    error!("Failed to parse server response data. {:?}", why);
-                    StatusCode::ErrHtsi
+                _ => {
+                    error!("Request failed! Server response was not OK!");
+                    return StatusCode::ErrHtsi;
                 }
             }
-        }
-        _ => {
-            error!("Request failed! Server response was not OK!");
-            return StatusCode::ErrHtsi;
         }
     }
 }
