@@ -2,16 +2,15 @@
 
 # K2 basecamp
 
-> CTAPI adapter for the gematik Konnektor
+> CT-API adapter for the gematik Konnektor
 
-*K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
-Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux.
-
+*K2 basecamp* is an implementation of the [CT-API](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
+Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux, both as a 32-bit version.
 
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
-
+* [MS Visual C++ Redistributable](https://www.microsoft.com/de-de/download/details.aspx?id=48145) from Microsoft, 32-bit (vc_redist.x86.exe)
 
 ## Configuration
 
@@ -28,7 +27,7 @@ The library is configurable by the following environment variables.
 
 ## Build (on Windows)
 
-1. Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools).
+1. Install a *MSVC* (32-bit) , e.g., by installing the [Microsoft Visual C++ Build Tools 2015](http://landinghub.visualstudio.com/visual-cpp-build-tools).
 
 2. Install [OpenSSL](http://slproweb.com/products/Win32OpenSSL.html).
 
