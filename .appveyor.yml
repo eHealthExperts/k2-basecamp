@@ -35,7 +35,6 @@ after_test:
 
 artifacts:
   - path: target/release/%name%
-    name: %name%
 
 deploy:
   description: ''
