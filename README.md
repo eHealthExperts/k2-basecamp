@@ -5,7 +5,7 @@
 > CTAPI adapter for the gematik Konnektor
 
 *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
-Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and (Ubuntu) Linux.
+Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows (x86) and (Ubuntu) Linux.
 
 
 ## Requirements
