@@ -5,13 +5,14 @@
 > CTAPI adapter for the gematik Konnektor
 
 *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
-Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows (x86) and (Ubuntu) Linux.
+Currently [builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows and Linux.
 
 
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
-* [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
+* on Windows: [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
+  > Select installer according to target triplet of the build, e.g., **vc_redist.x86.exe** for **ctehxk2-x86.dll**
 
 
 ## Configuration
@@ -27,15 +28,15 @@ The library is configurable by the following environment variables.
 | K2_PN        | Set PN to use for all requests. *Requires that K2_CTN is set!* |
 
 
-## Build (on Windows)
+## Building the library
 
-1. Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools).
+1. (On Windows only) Install a *MSVC* , e.g., by installing the [Microsoft Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools).
 
 2. Install [Rust](https://www.rust-lang.org).
 
-   > Select the desired target triplet, e.g., **i686-pc-windows-msvc** for 32-bit Windows.
+   > Select the desired [target triplet](https://forge.rust-lang.org/platform-support.html), e.g., **i686-pc-windows-msvc** for a 32-bit Windows build.
 
-3. Run `cargo build —-release`  to create **ctehxk2.dll** in the folder **target/release**. 
+3. Run `cargo build —-release`  to create **target/release/ctehxk2.dll**. 
 
 
 ## License

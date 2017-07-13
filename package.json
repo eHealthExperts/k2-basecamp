@@ -14,11 +14,7 @@
     "url": "https://github.com/eHealthExperts/k2-basecamp/issues"
   },
   "scripts": {
-    "build": "cargo build",
-    "lint": "cargo fmt -- --write-mode=diff",
-    "test": "npm run lint && npm run utest && npm run itest",
-    "utest": "cargo test -- --test-threads=1",
-    "itest": "npm run build && mocha",
+    "test": "mocha",
     "version": "gulp update-version && git add ."
   },
   "devDependencies": {
