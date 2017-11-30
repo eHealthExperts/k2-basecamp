@@ -51,15 +51,31 @@ impl fmt::Display for StatusCode {
     }
 }
 
+impl fmt::Debug for StatusCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.to_i8())
+    }
+}
+
 impl PartialEq for StatusCode {
-    #[inline]
     fn eq(&self, other: &StatusCode) -> bool {
         self.to_i8() == other.to_i8()
     }
 }
 
+impl PartialEq<i8> for StatusCode {
+    fn eq(&self, other: &i8) -> bool {
+        self.to_i8() == *other
+    }
+}
+
+impl PartialEq<StatusCode> for i8 {
+    fn eq(&self, other: &StatusCode) -> bool {
+        self == &other.to_i8()
+    }
+}
+
 impl PartialOrd for StatusCode {
-    #[inline]
     fn partial_cmp(&self, other: &StatusCode) -> Option<Ordering> {
         self.to_i8().partial_cmp(&(other.to_i8()))
     }

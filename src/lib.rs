@@ -7,6 +7,9 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
+#[cfg(test)]
+extern crate mockito;
+extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
