@@ -10,6 +10,7 @@ use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
 use std::io::{Error, ErrorKind};
 use std::str;
+use std::str::FromStr;
 use tokio_core::reactor::Core;
 
 pub struct Response {
@@ -18,7 +19,7 @@ pub struct Response {
 }
 
 pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Error> {
-    let mut request = Request::new(Method::Post, uri(path));
+    let mut request = Request::new(Method::Post, try!(uri(path)));
     match request_body {
         Some(json) => {
             debug!("Request body: {}", json);
@@ -54,9 +55,10 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     Ok(Response { status, body })
 }
 
-fn uri(path: &str) -> Uri {
-    let addr = config::base_url().clone();
-    let uri = format!("{}{}", addr, path).parse().unwrap();
-    debug!("Request URL: {}", uri);
-    uri
+fn uri(path: &str) -> Result<Uri, Error> {
+    let mut addr = config::base_url().clone();
+    addr.push_str(path);
+    debug!("Request URL: {}", addr);
+
+    Uri::from_str(&addr).map_err(|err| Error::new(ErrorKind::Other, err))
 }
