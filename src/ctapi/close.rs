@@ -67,6 +67,18 @@ mod tests {
     use std::env;
 
     #[test]
+    fn call_close_when_server_not_up_returns_minus_128() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        MAP.lock().unwrap().insert(ctn, pn);
+
+        env::set_var("K2_BASE_URL", mockito::SERVER_URL);
+
+        assert_eq!(-128, close(ctn))
+    }
+
+    #[test]
     fn call_close_on_closed_terminal_returns_minus_1() {
         let ctn = rand::random::<u16>();
         assert_eq!(-1, close(ctn))
