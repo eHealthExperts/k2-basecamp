@@ -1,11 +1,11 @@
-use self::super::{MAP, StatusCode};
+use self::super::{MAP, Status};
 use self::super::super::http;
 
-pub fn init(ctn: u16, pn: u16) -> StatusCode {
+pub fn init(ctn: u16, pn: u16) -> Status {
     // Do we know this CTN?
-    if MAP.lock().unwrap().contains_key(&ctn) {
+    if MAP.lock().contains_key(&ctn) {
         error!("Card terminal has already been opened.");
-        return StatusCode::ErrInvalid;
+        return Status::ErrInvalid;
     }
 
     let path = format!("ct_init/{}/{}", ctn, pn);
@@ -13,45 +13,37 @@ pub fn init(ctn: u16, pn: u16) -> StatusCode {
     match response {
         Err(why) => {
             error!("{}", why);
-            StatusCode::ErrHtsi
+            Status::ErrHtsi
         }
         Ok(res) => {
             match res.status {
                 200 => handle_ok_status(res.body, ctn, pn),
                 _ => {
                     error!("Request failed! Server response was not OK!");
-                    return StatusCode::ErrHtsi;
+                    return Status::ErrHtsi;
                 }
             }
         }
     }
 }
 
-fn handle_ok_status(body: String, ctn: u16, pn: u16) -> StatusCode {
-    match body.parse::<i8>() {
-        Ok(status) => {
-            match StatusCode::from_i8(status) {
-                Ok(code) => {
-                    match code {
-                        StatusCode::Ok => {
-                            // Store CTN
-                            MAP.lock().unwrap().insert(ctn, pn);
-                            debug!("Card terminal opened.");
-                            code
-                        }
-                        _ => code,
-                    }
-                }
-                _ => {
-                    error!("Unexpected server reponse body!");
-                    StatusCode::ErrHtsi
-                }
-            }
-        }
+fn handle_ok_status(body: String, ctn: u16, pn: u16) -> Status {
+    let status: Status = match body.parse::<Status>() {
+        Ok(status) => status,
         _ => {
             error!("Unexpected server reponse body!");
-            StatusCode::ErrHtsi
+            Status::ErrHtsi
         }
+    };
+
+    match status {
+        Status::OK => {
+            // Store CTN
+            MAP.lock().insert(ctn, pn);
+            debug!("Card terminal opened.");
+            status
+        }
+        _ => status,
     }
 }
 
@@ -60,62 +52,117 @@ mod tests {
 
     use super::init;
     use super::super::MAP;
-    use mockito;
-    use mockito::mock;
+    use antidote::Mutex;
     use rand;
-    use std::env;
+    use rouille::Response;
 
     #[test]
-    fn call_init_when_server_not_up_returns_minus_128() {
+    fn returns_err_htsi_if_no_server() {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-
-        env::set_var("K2_BASE_URL", mockito::SERVER_URL);
 
         assert_eq!(-128, init(ctn, pn))
     }
 
     #[test]
-    fn call_init_on_open_terminal_returns_minus_1() {
+    fn returns_err_invalid_if_already_open() {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        MAP.lock().unwrap().insert(ctn, pn);
+        MAP.lock().insert(ctn, pn);
 
         assert_eq!(-1, init(ctn, pn))
     }
 
-    macro_rules! with_server_response {
-        ($($name:ident: $value:expr,)*) => {
-            $(
-                #[test]
-                fn $name() {
-                    let (status, body, expected, map_contains_ctn) = $value;
+    #[test]
+    fn returns_err_htsi_if_server_response_is_not_200() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
 
-                    let ctn = rand::random::<u16>();
-                    let pn = rand::random::<u16>();
+        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
 
-                    let path = format!("/ct_init/{}/{}", ctn, pn);
-                    let _mock = mock("POST", path.as_str())
-                        .with_status(status)
-                        .with_body(body)
-                        .create();
+        let shutdown = test_server!({
+            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
+                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
+                assert_eq!(&pn, param.lock().get("pn").unwrap());
 
-                    env::set_var("K2_BASE_URL", mockito::SERVER_URL);
+                Response::empty_404()
+            }
+        });
 
-                    assert_eq!(expected, init(ctn, pn));
-                    assert_eq!(map_contains_ctn, MAP.lock().unwrap().contains_key(&ctn));
+        assert_eq!(-128, init(ctn, pn));
+        assert_eq!(false, MAP.lock().contains_key(&ctn));
 
-                    mockito::reset();
-                }
-            )*
-        }
+        // kill server thread
+        let _ = shutdown.send(());
     }
 
-    with_server_response! {
-        not_found_returns_minus_128: (400, "Not found", -128, false),
-        incorrect_response_returns_minus_128: (200, "hello world", -128, false),
-        minus_1_response_returns_minus_1: (200, "-1", -1, false),
-        zero_response_return_0: (200, "0", 0, true),
+    #[test]
+    fn returns_err_htsi_if_server_response_not_contains_status() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
+
+        let shutdown = test_server!({
+            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
+                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
+                assert_eq!(&pn, param.lock().get("pn").unwrap());
+
+                Response::text("hello world")
+            }
+        });
+
+        assert_eq!(-128, init(ctn, pn));
+        assert_eq!(false, MAP.lock().contains_key(&ctn));
+
+        // kill server thread
+        let _ = shutdown.send(());
+    }
+
+    #[test]
+    fn returns_response_status_from_server() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
+
+        let shutdown = test_server!({
+            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
+                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
+                assert_eq!(&pn, param.lock().get("pn").unwrap());
+
+                Response::text("-11")
+            }
+        });
+
+        assert_eq!(-11, init(ctn, pn));
+        assert_eq!(false, MAP.lock().contains_key(&ctn));
+
+        // kill server thread
+        let _ = shutdown.send(());
+    }
+
+    #[test]
+    fn returns_ok_and_init_ctn_if_server_returns_ok() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
+
+        let shutdown = test_server!({
+            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
+                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
+                assert_eq!(&pn, param.lock().get("pn").unwrap());
+
+                Response::text("0")
+            }
+        });
+
+        assert_eq!(0, init(ctn, pn));
+        assert_eq!(true, MAP.lock().contains_key(&ctn));
+
+        // kill server thread
+        let _ = shutdown.send(());
     }
 }
