@@ -30,7 +30,7 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     let status = ctapi::init(config::ctn_or(ctn), config::pn_or(pn));
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }
 
 #[no_mangle]
@@ -50,7 +50,7 @@ pub extern "system" fn CT_data(
     let status = ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response);
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }
 
 #[no_mangle]
@@ -62,5 +62,5 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     let status = ctapi::close(config::ctn_or(ctn));
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }
