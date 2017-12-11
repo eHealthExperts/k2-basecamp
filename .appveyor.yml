@@ -1,44 +1,44 @@
 version: 0.10.2-{branch}-{build}
 
 environment:
-  NAME_PREFIX: basecamp
-  TARGET: i686-pc-windows-msvc
-  CHANNEL: stable
+    NAME_PREFIX: basecamp
+    TARGET: i686-pc-windows-msvc
+    CHANNEL: stable
 
 install:
-  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
-  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
-  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-  - rustc -vV
-  - cargo -vV
-  - cargo install rustfmt --force
+    - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+    - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
+    - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+    - rustc -vV
+    - cargo -vV
+    - cargo install rustfmt --force
 
 build: false
 
 cache:
-  - target
-  - '%USERPROFILE%\.cargo'
+    - target
+    - '%USERPROFILE%\.cargo'
 
 build_script: cargo build
 
 test_script:
-  - cargo fmt -- --write-mode=diff
-  - cargo test -- --test-threads=1
+    - cargo fmt -- --write-mode=diff
+    - cargo test --verbose --all -- --test-threads=1
 
 after_test:
-  - cargo build --release
+    - cargo build --release --verbose
 
 artifacts:
-  - path: target/release/ctehxk2.dll
-    name: ctehxk2.dll
+    - path: target/release/ctehxk2.dll
+      name: ctehxk2.dll
 
 deploy:
-  description: ''
-  auth_token:
-    secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
-  provider: GitHub
-  draft: false
-  prerelease: false
-  force_update: true
-  on:
-    appveyor_repo_tag: true
+    description: ''
+    auth_token:
+        secure: VeDpNYDNNJvMfdBEgizkRlB/Goejuq3IVt5ltSJ48ZVGJpvxBNEApjHAvTuCsNAk
+    provider: GitHub
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+        appveyor_repo_tag: true
