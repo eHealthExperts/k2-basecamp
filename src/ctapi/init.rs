@@ -52,7 +52,6 @@ mod tests {
 
     use super::init;
     use super::super::MAP;
-    use antidote::Mutex;
     use rand;
     use rouille::Response;
 
@@ -75,19 +74,31 @@ mod tests {
     }
 
     #[test]
+    fn use_ctn_and_pn_in_request_path() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        let shutdown =
+            test_server!((request: &Request) {
+            assert_eq!(request.url(), format!("/ct_init/{}/{}", ctn, pn));
+
+            Response::empty_404()
+        });
+
+        init(ctn, pn);
+
+        // kill server thread
+        let _ = shutdown.send(());
+    }
+
+    #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::empty_404()
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::empty_404()
         });
 
         assert_eq!(-128, init(ctn, pn));
@@ -102,15 +113,9 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("hello world")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::text("hello world")
         });
 
         assert_eq!(-128, init(ctn, pn));
@@ -125,19 +130,12 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("-11")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::text("-11")
         });
 
         assert_eq!(-11, init(ctn, pn));
-        assert_eq!(false, MAP.lock().contains_key(&ctn));
 
         // kill server thread
         let _ = shutdown.send(());
@@ -148,15 +146,9 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_init/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("0")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+             Response::text("0")
         });
 
         assert_eq!(0, init(ctn, pn));
