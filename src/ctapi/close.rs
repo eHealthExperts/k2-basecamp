@@ -53,7 +53,6 @@ mod tests {
 
     use super::close;
     use super::super::MAP;
-    use antidote::Mutex;
     use rand;
     use rouille::Response;
 
@@ -75,21 +74,35 @@ mod tests {
     }
 
     #[test]
+    fn use_ctn_and_pn_in_request_path() {
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        MAP.lock().insert(ctn, pn);
+
+        let shutdown =
+            test_server!((request: &Request) {
+            assert_eq!(request.url(), format!("/ct_close/{}/{}", ctn, pn));
+
+            Response::empty_404()
+        });
+
+        close(ctn);
+
+        // kill server thread
+        let _ = shutdown.send(());
+    }
+
+    #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
         MAP.lock().insert(ctn, pn);
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_close/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::empty_404()
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::empty_404()
         });
 
         assert_eq!(-128, close(ctn));
@@ -106,15 +119,9 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_close/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("hello world")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::text("hello world")
         });
 
         assert_eq!(-128, close(ctn));
@@ -131,15 +138,9 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_close/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("-11")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::text("-11")
         });
 
         assert_eq!(-11, close(ctn));
@@ -156,15 +157,9 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let param = Mutex::new(hashmap!["ctn" => ctn, "pn" => pn]);
-
-        let shutdown = test_server!({
-            (POST) (/ct_close/{ctn: u16}/{pn: u16}) => {
-                assert_eq!(&ctn, param.lock().get("ctn").unwrap());
-                assert_eq!(&pn, param.lock().get("pn").unwrap());
-
-                Response::text("0")
-            }
+        let shutdown =
+            test_server!((request: &Request) {
+            Response::text("0")
         });
 
         assert_eq!(0, close(ctn));
