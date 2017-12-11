@@ -33,6 +33,7 @@ moz-cheddar = "0.4"
 
 [dev-dependencies]
 rouille = "1.0"
+rustc-serialize = "0.3"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"

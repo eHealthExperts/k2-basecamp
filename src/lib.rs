@@ -10,8 +10,9 @@ extern crate log;
 extern crate log4rs;
 extern crate rand;
 #[cfg(test)]
-#[macro_use]
 extern crate rouille;
+#[cfg(test)]
+extern crate rustc_serialize;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
