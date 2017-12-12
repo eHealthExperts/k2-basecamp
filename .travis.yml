@@ -1,25 +1,24 @@
 dist: trusty
 language: rust
-cache:
-  directories:
-  - $HOME/.cargo
-  - $TRAVIS_BUILD_DIR/node_modules
-  - $TRAVIS_BUILD_DIR/target
+rust:
+    - stable
+cache: cargo
 before_script:
-- cargo install rustfmt --force
-- nvm install node
-- npm install
+    - rustup install nightly
+    - rustup update
+    - rustup run nightly cargo install rustfmt-nightly --force
 script:
-- npm run test
-- cargo build --release
+    - rustup run nightly cargo fmt --all
+    - cargo test --verbose --all -- --test-threads=1
+    - cargo build --release --verbose
 deploy:
-  provider: releases
-  api_key: ${API_KEY}
-  file:
-  - "target/release/libctehxk2.so"
-  - "target/release/ctehxk2.h"
-  skip_cleanup: true
-  on:
-    tags: true
+    provider: releases
+    api_key: ${API_KEY}
+    file:
+        - "target/release/libctehxk2.so"
+        - "target/release/ctehxk2.h"
+    skip_cleanup: true
+    on:
+        tags: true
 notifications:
-  email: false
+    email: false

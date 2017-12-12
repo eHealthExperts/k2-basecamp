@@ -10,10 +10,8 @@ static LOG_PATH_KEY: &str = "K2_LOG_PATH";
 
 #[derive(Deserialize)]
 struct Config {
-    #[serde(rename = "k2_ctn")]
-    ctn: u16,
-    #[serde(rename = "k2_pn")]
-    pn: u16,
+    #[serde(rename = "k2_ctn")] ctn: u16,
+    #[serde(rename = "k2_pn")] pn: u16,
 }
 
 pub fn base_url() -> String {
