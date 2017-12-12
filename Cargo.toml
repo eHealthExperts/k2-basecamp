@@ -45,3 +45,17 @@ LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
 ProductVersion = "0.11.0"
+
+[package.metadata.release]
+sign-commit = true
+disable-push = true
+upload-doc = false
+no-dev-version = true
+tag-message = "{{version}}"
+tag-prefix = "v"
+pre-release-replacements = [
+    {file=".appveyor.yml", search="version: [0-9]+.[0-9]+.[0-9]+-{branch}-{build}", replace="version: {{version}}-{branch}-{build}"},
+    {file="Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"", replace="version = \"{{version}}\""},
+    {file="Cargo.toml", search="FileVersion = \"[0-9]+.[0-9]+.[0-9]+\"", replace="FileVersion = \"{{version}}\""},
+    {file="Cargo.toml", search="ProductVersion = \"[0-9]+.[0-9]+.[0-9]+\"", replace="ProductVersion = \"{{version}}\""},
+]
