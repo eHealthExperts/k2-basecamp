@@ -1,5 +1,8 @@
-dist: trusty
 language: rust
+env:
+  global:
+    - RUST_BACKTRACE=1
+    - RUST_TEST_THREADS=1
 matrix:
   include:
     - os: linux
@@ -9,10 +12,6 @@ matrix:
       rust: stable
       env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
-env:
-  global:
-    - RUST_BACKTRACE=1
-    - RUST_TEST_THREADS=1
 before_script:
     - rustup install nightly
     - rustup update
@@ -20,6 +19,7 @@ before_script:
 script:
     - rustup run nightly cargo fmt --all
     - cargo test --verbose --all
+before_deploy:
     - cargo build --release --verbose
 deploy:
     provider: releases
