@@ -77,8 +77,7 @@ mod tests {
             body.push(rand::random::<u8>() as char);
         }
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             let header = request.header("Content-Type");
             assert!(header.unwrap().starts_with("application/json"));
 
@@ -100,8 +99,7 @@ mod tests {
 
         let holder = Mutex::new(hashmap!["body" => body.clone()]);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             let mut body = String::new();
             let data = request.data();
             let _ = data.unwrap().read_to_string(&mut body);
@@ -119,8 +117,7 @@ mod tests {
 
     #[test]
     fn if_no_json_is_given_send_empty_request_body() {
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             let mut body = String::new();
             let data = request.data();
             let _ = data.unwrap().read_to_string(&mut body);
@@ -138,8 +135,7 @@ mod tests {
 
     #[test]
     fn response_contains_status_and_body() {
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             ::rouille::Response::text("hello world").with_status_code(500)
         });
 

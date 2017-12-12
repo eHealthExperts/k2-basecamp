@@ -1,9 +1,9 @@
 extern crate serde_json;
 
-use self::super::{MAP, Status};
+use self::super::{Status, MAP};
 use self::super::super::http;
 
-use base64::{encode, decode};
+use base64::{decode, encode};
 use std::slice;
 
 #[allow(non_snake_case)]
@@ -13,8 +13,7 @@ struct Response {
     sad: u8,
     lenr: u16,
     response: String,
-    #[serde(rename = "responseCode")]
-    status: i8,
+    #[serde(rename = "responseCode")] status: i8,
 }
 
 pub fn data(
@@ -175,8 +174,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
 
             Response::empty_404()
@@ -204,8 +202,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
 
             #[derive(RustcDecodable)]
@@ -243,8 +240,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
 
             #[derive(RustcDecodable)]
@@ -302,8 +298,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::empty_404()
         });
 
@@ -330,8 +325,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("hello world")
         });
 
@@ -358,8 +352,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text(r#"{"dad":1,"sad":1,"lenr":1,"response":"a","responseCode":-11}"#)
         });
 

@@ -1,5 +1,5 @@
-extern crate log;
 extern crate log4rs;
+extern crate log;
 
 use super::config;
 use log::LogLevelFilter;
@@ -42,9 +42,11 @@ fn init_file_logger(mut path: String) -> Config {
                 .additive(false)
                 .build("ctehxk2", log_level()),
         )
-        .build(Root::builder().appender(appender_id).build(
-            LogLevelFilter::Error,
-        ))
+        .build(
+            Root::builder()
+                .appender(appender_id)
+                .build(LogLevelFilter::Error),
+        )
         .unwrap()
 }
 
@@ -60,9 +62,11 @@ fn init_stdout_logger() -> Config {
                 .additive(false)
                 .build("ctehxk2", log_level()),
         )
-        .build(Root::builder().appender(appender_id).build(
-            LogLevelFilter::Error,
-        ))
+        .build(
+            Root::builder()
+                .appender(appender_id)
+                .build(LogLevelFilter::Error),
+        )
         .unwrap()
 }
 

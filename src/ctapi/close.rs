@@ -1,4 +1,4 @@
-use self::super::{MAP, Status};
+use self::super::{Status, MAP};
 use self::super::super::http;
 
 pub fn close(ctn: u16) -> Status {
@@ -16,15 +16,13 @@ pub fn close(ctn: u16) -> Status {
             error!("{}", why);
             Status::ErrHtsi
         }
-        Ok(res) => {
-            match res.status {
-                200 => handle_ok_status(res.body, ctn),
-                _ => {
-                    error!("Request failed! Server response was not OK!");
-                    return Status::ErrHtsi;
-                }
+        Ok(res) => match res.status {
+            200 => handle_ok_status(res.body, ctn),
+            _ => {
+                error!("Request failed! Server response was not OK!");
+                return Status::ErrHtsi;
             }
-        }
+        },
     }
 }
 
@@ -80,8 +78,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             assert_eq!(request.url(), format!("/ct_close/{}/{}", ctn, pn));
 
             Response::empty_404()
@@ -100,8 +97,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::empty_404()
         });
 
@@ -119,8 +115,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("hello world")
         });
 
@@ -138,8 +133,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("-11")
         });
 
@@ -157,8 +151,7 @@ mod tests {
 
         MAP.lock().insert(ctn, pn);
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("0")
         });
 

@@ -1,4 +1,4 @@
-use self::super::{MAP, Status};
+use self::super::{Status, MAP};
 use self::super::super::http;
 
 pub fn init(ctn: u16, pn: u16) -> Status {
@@ -15,15 +15,13 @@ pub fn init(ctn: u16, pn: u16) -> Status {
             error!("{}", why);
             Status::ErrHtsi
         }
-        Ok(res) => {
-            match res.status {
-                200 => handle_ok_status(res.body, ctn, pn),
-                _ => {
-                    error!("Request failed! Server response was not OK!");
-                    return Status::ErrHtsi;
-                }
+        Ok(res) => match res.status {
+            200 => handle_ok_status(res.body, ctn, pn),
+            _ => {
+                error!("Request failed! Server response was not OK!");
+                return Status::ErrHtsi;
             }
-        }
+        },
     }
 }
 
@@ -78,8 +76,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             assert_eq!(request.url(), format!("/ct_init/{}/{}", ctn, pn));
 
             Response::empty_404()
@@ -96,8 +93,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::empty_404()
         });
 
@@ -113,8 +109,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("hello world")
         });
 
@@ -130,8 +125,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
             Response::text("-11")
         });
 
@@ -146,8 +140,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown =
-            test_server!((request: &Request) {
+        let shutdown = test_server!((request: &Request) {
              Response::text("0")
         });
 
