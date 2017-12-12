@@ -4,8 +4,11 @@ rust:
     - stable
 cache: cargo
 before_script:
-    - cargo install rustfmt --force
+    - rustup install nightly
+    - rustup update
+    - rustup run nightly cargo install rustfmt-nightly --force
 script:
+    - rustup run nightly cargo fmt --all
     - cargo test --verbose --all -- --test-threads=1
     - cargo build --release --verbose
 deploy:

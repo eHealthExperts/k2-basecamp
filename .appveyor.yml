@@ -11,7 +11,6 @@ install:
     - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     - rustc -vV
     - cargo -vV
-    - cargo install rustfmt --force
 
 build: false
 
@@ -22,7 +21,6 @@ cache:
 build_script: cargo build
 
 test_script:
-    - cargo fmt -- --write-mode=diff
     - cargo test --verbose --all -- --test-threads=1
 
 after_test:
