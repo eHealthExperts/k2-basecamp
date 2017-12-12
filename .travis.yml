@@ -1,22 +1,30 @@
 dist: trusty
 language: rust
-rust:
-    - stable
+matrix:
+  include:
+    - os: linux
+      rust: stable
+      env: DEPLOY_FILE=target/release/libctehxk2.so
+    - os: osx
+      rust: stable
+      env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
+env:
+  global:
+    - RUST_BACKTRACE=1
+    - RUST_TEST_THREADS=1
 before_script:
     - rustup install nightly
     - rustup update
     - rustup run nightly cargo install rustfmt-nightly --force
 script:
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all -- --test-threads=1
+    - cargo test --verbose --all
     - cargo build --release --verbose
 deploy:
     provider: releases
     api_key: ${API_KEY}
-    file:
-        - "target/release/libctehxk2.so"
-        - "target/release/ctehxk2.h"
+    file: $DEPLOY_FILE
     skip_cleanup: true
     on:
         tags: true
