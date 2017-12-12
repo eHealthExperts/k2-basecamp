@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.10.2"
+version = "0.11.0"
 description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 license = "MIT"
@@ -14,13 +14,15 @@ name = "ctehxk2"
 crate-type = ["cdylib"]
 
 [dependencies]
-base64 = "0.6"
+antidote = "1.0"
+base64 = "0.8"
 envy = "0.3"
 futures = "0.1"
 hyper = "0.11"
-lazy_static = "0.2"
+lazy_static = "1.0"
 log = "0.3"
 log4rs = "0.7"
+rand = "0.3"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -29,13 +31,17 @@ tokio-core = "0.1"
 [build-dependencies]
 moz-cheddar = "0.4"
 
+[dev-dependencies]
+rouille = "1.0"
+rustc-serialize = "0.3"
+
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
-FileVersion = "0.10.2"
+FileVersion = "0.11.0"
 LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
-ProductVersion = "0.10.2"
+ProductVersion = "0.11.0"

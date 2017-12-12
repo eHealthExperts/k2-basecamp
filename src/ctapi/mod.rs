@@ -1,10 +1,9 @@
 pub use self::close::close;
 pub use self::data::data;
 pub use self::init::init;
-pub use self::status::StatusCode;
-
+pub use self::status::Status;
+use antidote::Mutex;
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 mod close;
 mod data;

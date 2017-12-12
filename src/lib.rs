@@ -1,18 +1,27 @@
+extern crate antidote;
 extern crate base64;
 extern crate envy;
 extern crate futures;
 extern crate hyper;
 #[macro_use]
 extern crate lazy_static;
+extern crate log4rs;
 #[macro_use]
 extern crate log;
-extern crate log4rs;
+extern crate rand;
+#[cfg(test)]
+extern crate rouille;
+#[cfg(test)]
+extern crate rustc_serialize;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio_core;
 
+#[macro_use]
+#[cfg(test)]
+mod macros;
 mod config;
 mod ctapi;
 mod http;
@@ -27,7 +36,7 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     let status = ctapi::init(config::ctn_or(ctn), config::pn_or(pn));
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }
 
 #[no_mangle]
@@ -47,7 +56,7 @@ pub extern "system" fn CT_data(
     let status = ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response);
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }
 
 #[no_mangle]
@@ -59,5 +68,5 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     let status = ctapi::close(config::ctn_or(ctn));
 
     debug!("Returning {}", status);
-    status.to_i8()
+    status.into()
 }

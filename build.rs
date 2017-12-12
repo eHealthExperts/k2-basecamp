@@ -6,9 +6,10 @@ use std::env;
 use std::path::MAIN_SEPARATOR;
 
 fn build_header_file() {
-    let target = format!("{}{}{}{}{}",
+    let target = format!(
+        "{}{}{}{}{}",
         "target".to_owned(),
-        MAIN_SEPARATOR.to_string(), 
+        MAIN_SEPARATOR.to_string(),
         env::var("PROFILE").unwrap(),
         MAIN_SEPARATOR.to_string(),
         "ctehxk2.h"

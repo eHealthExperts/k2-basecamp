@@ -1,72 +1,75 @@
-use std::cmp::Ordering;
 use std::fmt;
+use std::num::ParseIntError;
+use std::str::FromStr;
 
-pub enum StatusCode {
-    // 0
-    Ok,
-    // -1
+#[derive(Clone, PartialEq)]
+pub enum Status {
+    OK,
     ErrInvalid,
-    // -8
     ErrCt,
-    // -10
     ErrTrans,
-    // -11
     ErrMemory,
-    // -127
     ErrHost,
-    // -128
     ErrHtsi,
+    Unknown(i8),
 }
 
-impl StatusCode {
-    pub fn to_i8(&self) -> i8 {
-        match *self {
-            StatusCode::Ok => 0,
-            StatusCode::ErrInvalid => -1,
-            StatusCode::ErrCt => -8,
-            StatusCode::ErrTrans => -10,
-            StatusCode::ErrMemory => -11,
-            StatusCode::ErrHost => -127,
-            StatusCode::ErrHtsi => -128,
-        }
-    }
-
-    pub fn from_i8(n: i8) -> Result<StatusCode, &'static str> {
-        match n {
-            0 => Ok(StatusCode::Ok),
-            -1 => Ok(StatusCode::ErrInvalid),
-            -8 => Ok(StatusCode::ErrCt),
-            -10 => Ok(StatusCode::ErrTrans),
-            -11 => Ok(StatusCode::ErrMemory),
-            -127 => Ok(StatusCode::ErrHost),
-            -128 => Ok(StatusCode::ErrHtsi),
-            _ => Err("Invalid CTAPI status code!"),
+impl From<i8> for Status {
+    fn from(value: i8) -> Status {
+        match value {
+            0 => Status::OK,
+            -1 => Status::ErrInvalid,
+            -8 => Status::ErrCt,
+            -10 => Status::ErrTrans,
+            -11 => Status::ErrMemory,
+            -127 => Status::ErrHost,
+            -128 => Status::ErrHtsi,
+            code => Status::Unknown(code),
         }
     }
 }
 
-impl fmt::Display for StatusCode {
+impl From<Status> for i8 {
+    fn from(status: Status) -> i8 {
+        match status {
+            Status::OK => 0,
+            Status::ErrInvalid => -1,
+            Status::ErrCt => -8,
+            Status::ErrTrans => -10,
+            Status::ErrMemory => -11,
+            Status::ErrHost => -127,
+            Status::ErrHtsi => -128,
+            Status::Unknown(code) => code,
+        }
+    }
+}
+
+impl FromStr for Status {
+    type Err = ParseIntError;
+
+    fn from_str(status: &str) -> Result<Self, Self::Err> {
+        let code: i8 = try!(status.parse::<i8>());
+        Ok(From::from(code))
+    }
+}
+
+impl PartialEq<Status> for i8 {
+    fn eq(&self, status: &Status) -> bool {
+        let code: i8 = From::from(status.clone());
+        *self == code
+    }
+}
+
+impl fmt::Debug for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_i8())
+        let code: i8 = From::from(self.clone());
+        let _ = f.write_str(&code.to_string());
+        Ok(())
     }
 }
 
-impl PartialEq for StatusCode {
-    #[inline]
-    fn eq(&self, other: &StatusCode) -> bool {
-        self.to_i8() == other.to_i8()
-    }
-}
-
-impl PartialOrd for StatusCode {
-    #[inline]
-    fn partial_cmp(&self, other: &StatusCode) -> Option<Ordering> {
-        self.to_i8().partial_cmp(&(other.to_i8()))
-    }
-}
-
-impl From<StatusCode> for i8 {
-    fn from(code: StatusCode) -> i8 {
-        code.to_i8()
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
     }
 }
