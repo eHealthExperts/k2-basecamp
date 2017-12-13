@@ -1,34 +1,40 @@
-version: 0.11.0-{branch}-{build}
+version: 0.12.0-{branch}-{build}
 
 environment:
-    NAME_PREFIX: basecamp
-    TARGET: i686-pc-windows-msvc
-    CHANNEL: stable
+    global:
+        RUST_BACKTRACE: 1
+        RUST_TEST_THREADS: 1
+    matrix:
+        - channel: stable
+          target: x86_64-pc-windows-msvc
+          filename: ctehxk2-x64.dll
+        - channel: stable
+          target: i686-pc-windows-msvc
+          filename: ctehxk2-x86.dll
 
 install:
     - curl -sSf -o rustup-init.exe https://win.rustup.rs/
-    - rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
+    - rustup-init.exe -y --default-host %target% --default-toolchain %channel%
     - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     - rustc -vV
     - cargo -vV
-
-build: false
 
 cache:
     - target
     - '%USERPROFILE%\.cargo'
 
+build: off
+
 build_script: cargo build
 
-test_script:
-    - cargo test --verbose --all -- --test-threads=1
+test_script: cargo test --verbose --all
 
 after_test:
-    - cargo build --release --verbose
+    - cargo build --release
+    - ren target\release\ctehxk2.dll %filename%
 
 artifacts:
-    - path: target/release/ctehxk2.dll
-      name: ctehxk2.dll
+    - path: 'target/release/*.dll'
 
 deploy:
     description: ''
