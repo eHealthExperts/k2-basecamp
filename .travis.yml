@@ -1,22 +1,40 @@
-dist: trusty
 language: rust
-rust:
-    - stable
+env:
+  global:
+    - RUST_BACKTRACE=1
+    - RUST_TEST_THREADS=1
+matrix:
+  include:
+    - os: linux
+      rust: stable
+      env: DEPLOY_FILE=target/release/libctehxk2.so
+    - os: osx
+      rust: stable
+      env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
+before_install:
+    # work-around for travis-ci/travis-ci#6307
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        command curl -sSL https://rvm.io/mpapis.asc | gpg --import -;
+        rvm get stable;
+      fi
 before_script:
     - rustup install nightly
     - rustup update
     - rustup run nightly cargo install rustfmt-nightly --force
 script:
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all -- --test-threads=1
+    - cargo test --verbose --all
+before_deploy:
     - cargo build --release --verbose
+    - mkdir target/github
+    - mv $DEPLOY_FILE target/github/
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; mv target/release/libctehxk2.h target/github/; fi
 deploy:
     provider: releases
     api_key: ${API_KEY}
-    file:
-        - "target/release/libctehxk2.so"
-        - "target/release/ctehxk2.h"
+    file_glob: true
+    file: target/github/*
     skip_cleanup: true
     on:
         tags: true
