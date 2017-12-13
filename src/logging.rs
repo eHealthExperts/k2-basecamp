@@ -1,8 +1,6 @@
-extern crate log4rs;
-extern crate log;
-
-use super::config;
+use super::settings;
 use log::LogLevelFilter;
+use log4rs;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
@@ -17,7 +15,7 @@ pub fn init() {
 }
 
 fn init_logger() {
-    let config = match config::log_path() {
+    let config = match settings::log_path() {
         Some(path) => init_file_logger(String::from(path)),
         _ => init_stdout_logger(),
     };
@@ -71,7 +69,7 @@ fn init_stdout_logger() -> Config {
 }
 
 fn log_level() -> LogLevelFilter {
-    return match LogLevelFilter::from_str(&config::log_level()) {
+    return match LogLevelFilter::from_str(&settings::log_level()) {
         Ok(log_level) => log_level,
         _ => LogLevelFilter::Error,
     };

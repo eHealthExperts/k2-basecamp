@@ -1,5 +1,4 @@
-extern crate envy;
-
+use envy;
 use std::env::var;
 use std::path::MAIN_SEPARATOR;
 

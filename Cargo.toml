@@ -16,6 +16,7 @@ crate-type = ["cdylib"]
 [dependencies]
 antidote = "1.0"
 base64 = "0.8"
+config = "0.7"
 envy = "0.3"
 futures = "0.1"
 hyper = "0.11"

@@ -1,5 +1,6 @@
 extern crate antidote;
 extern crate base64;
+extern crate config;
 extern crate envy;
 extern crate futures;
 extern crate hyper;
@@ -22,7 +23,7 @@ extern crate tokio_core;
 #[macro_use]
 #[cfg(test)]
 mod macros;
-mod config;
+mod settings;
 mod ctapi;
 mod http;
 mod logging;
@@ -33,7 +34,7 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
-    let status = ctapi::init(config::ctn_or(ctn), config::pn_or(pn));
+    let status = ctapi::init(settings::ctn_or(ctn), settings::pn_or(pn));
 
     debug!("Returning {}", status);
     status.into()
@@ -53,7 +54,15 @@ pub extern "system" fn CT_data(
     logging::init();
 
     debug!("CT_data(ctn: {})", ctn);
-    let status = ctapi::data(config::ctn_or(ctn), dad, sad, lenc, command, lenr, response);
+    let status = ctapi::data(
+        settings::ctn_or(ctn),
+        dad,
+        sad,
+        lenc,
+        command,
+        lenr,
+        response,
+    );
 
     debug!("Returning {}", status);
     status.into()
@@ -65,7 +74,7 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = ctapi::close(config::ctn_or(ctn));
+    let status = ctapi::close(settings::ctn_or(ctn));
 
     debug!("Returning {}", status);
     status.into()
