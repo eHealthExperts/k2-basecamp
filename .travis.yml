@@ -21,10 +21,14 @@ script:
     - cargo test --verbose --all
 before_deploy:
     - cargo build --release --verbose
+    - mkdir target/github
+    - mv $DEPLOY_FILE target/github/
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; mv target/release/libctehxk2.h target/github/; fi
 deploy:
     provider: releases
     api_key: ${API_KEY}
-    file: $DEPLOY_FILE
+    file_glob: true
+    file: target/github/*
     skip_cleanup: true
     on:
         tags: true

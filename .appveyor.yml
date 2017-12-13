@@ -35,7 +35,6 @@ after_test:
 
 artifacts:
     - path: 'target/release/*.dll'
-    - path: 'target/release/*.h'
 
 deploy:
     description: ''
