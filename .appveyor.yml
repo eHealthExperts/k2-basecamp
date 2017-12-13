@@ -30,7 +30,8 @@ build_script: cargo build
 test_script: cargo test --verbose --all
 
 after_test:
-    - cargo build --release
+    - cargo clean
+    - cargo build --release --verbose
     - ren target\release\ctehxk2.dll %filename%
 
 artifacts:
