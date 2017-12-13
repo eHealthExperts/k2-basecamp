@@ -20,7 +20,6 @@ install:
     - cargo -vV
 
 cache:
-    - target
     - '%USERPROFILE%\.cargo'
 
 build: off
@@ -30,7 +29,6 @@ build_script: cargo build
 test_script: cargo test --verbose --all
 
 after_test:
-    - cargo clean
     - cargo build --release --verbose
     - ren target\release\ctehxk2.dll %filename%
 
