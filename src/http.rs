@@ -1,11 +1,5 @@
-extern crate futures;
-extern crate hyper;
-extern crate log;
-extern crate serde;
-extern crate tokio_core;
-
 use super::settings;
-use futures::{Future, Stream};
+use futures::{self, Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
 use std::io::{Error, ErrorKind};
