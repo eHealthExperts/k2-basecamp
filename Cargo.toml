@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.12.1"
+version = "0.13.0"
 description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 license = "MIT"
@@ -40,11 +40,11 @@ winres = "0.1"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
-FileVersion = "0.12.1"
+FileVersion = "0.13.0"
 LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
-ProductVersion = "0.12.1"
+ProductVersion = "0.13.0"
 
 [package.metadata.release]
 sign-commit = true
@@ -53,8 +53,9 @@ upload-doc = false
 no-dev-version = true
 tag-message = "{{version}}"
 tag-prefix = "v"
+pre-release-commit-message = "{{version}}"
 pre-release-replacements = [
-    {file=".appveyor.yml", search="version: [a-z0-9\\.-{}]+", replace="version: {{version}}-{branch}-{build}"},
+    {file=".appveyor.yml", search="version: [a-z0-9\\.\\-\\{\\}]+", replace="version: {{version}}-{branch}-{build}"},
     {file="Cargo.toml", search="version = \"[0-9\\.]+\"", replace="version = \"{{version}}\""},
     {file="Cargo.toml", search="FileVersion = \"[0-9\\.]+\"", replace="FileVersion = \"{{version}}\""},
     {file="Cargo.toml", search="ProductVersion = \"[0-9\\.]+\"", replace="ProductVersion = \"{{version}}\""},
