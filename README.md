@@ -7,25 +7,38 @@
 *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
 [Builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows, (Ubuntu) Linux and MacOS.
 
-
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
 * [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-US/download/details.aspx?id=48145)
 
-
 ## Configuration
 
-The library is configurable by the following environment variables.
+| Key       | Value |
+| --------- | ------|
+| base_url  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** |
+| log_level | Set the verbosity level for logging.<br/>Possible values: Off, Error, Warn, Info, Debug, Trace<br/>**Default: Error** |
+| log_path  | Target folder of the log file ctehxk2.log.<br/>**Default: Logging to STDOUT** |
+| ctn       | Set card terminal number to use for all requests. *Requires that ctn is set!* |
+| pn        | Set port number to use for all requests. *Requires that pn is set!* |
 
-| Variable     | Description                              |
-| ------------ | ---------------------------------------- |
-| K2_BASE_URL  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** <br/> |
-| K2_LOG_LEVEL | Set the verbosity level for logging.<br/>Possible values: Off, Error, Warn, Info, Debug, Trace<br/>**Default: Error** |
-| K2_LOG_PATH  | Target folder of the log file ctehxk2.log.<br/>**Default: Logging to STDOUT** |
-| K2_CTN       | Set card terminal number to use for all requests. *Requires that K2_PN is set!* |
-| K2_PN        | Set port number to use for all requests. *Requires that K2_CTN is set!* |
+#### Environment variable
+
+For configuration by envirnoment variable the key need the prefix **K2_** and has to be uppercase, e.g, **K2_BASE_URL**.
+Environent variables will have the higest priority!
+
+#### Config file
+
+Basecamp supports multiple file foramts - `json` `hjson` `yaml` `toml`
+Locate a file with the name **ctehxk2** and the corresponding file ending, e.g., **ctehxk2.yaml** next to the library.
+
+Use the keys in the syntax of the desired file format, e.g., for yaml:
+
+```yaml
+log_level: debug
+base_url: http://localhost:5050
+```
 
 ## License
 
-MIT © [eHealth Experts GmbH](http://ehealthexperts.de)
+MIT © [eHealthExperts GmbH](http://ehealthexperts.de)
