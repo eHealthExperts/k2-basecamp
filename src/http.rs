@@ -1,4 +1,4 @@
-use super::settings;
+use super::settings::Settings;
 use futures::{self, Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
@@ -49,7 +49,7 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
 }
 
 fn uri(path: &str) -> Result<Uri, Error> {
-    let mut addr = settings::base_url().clone();
+    let mut addr = Settings::base_url();
     addr.push_str(path);
     debug!("Request URL: {}", addr);
 
