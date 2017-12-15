@@ -1,6 +1,11 @@
 use config::{Config, Environment, File};
 use std::path::MAIN_SEPARATOR;
 
+#[cfg(target_os = "windows")]
+const CFG_FILE: &str = "ctehxk2";
+#[cfg(not(target_os = "windows"))]
+const CFG_FILE: &str = "libctehxk2";
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     base_url: String,
@@ -18,7 +23,7 @@ impl Settings {
             .unwrap();
         s.set_default("log_level", "Error").unwrap();
 
-        s.merge(File::with_name("ctehxk2").required(false)).unwrap();
+        s.merge(File::with_name(CFG_FILE).required(false)).unwrap();
         s.merge(Environment::with_prefix("k2")).unwrap();
 
         s.try_into().expect("Failed to create configuration")

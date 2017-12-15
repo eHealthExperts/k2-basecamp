@@ -10,6 +10,11 @@ use std::sync::{Once, ONCE_INIT};
 
 static INIT: Once = ONCE_INIT;
 
+#[cfg(target_os = "windows")]
+const FILENAME: &str = "ctehxk2.log";
+#[cfg(not(target_os = "windows"))]
+const FILENAME: &str = "libctehxk2.log";
+
 pub fn init() {
     INIT.call_once(|| init_logger());
 }
@@ -25,7 +30,7 @@ fn init_logger() {
 
 fn init_file_logger(mut path: String) -> Config {
     let appender_id = "file";
-    path.push_str("ctehxk2.log");
+    path.push_str(FILENAME);
 
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
