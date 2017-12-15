@@ -16,7 +16,7 @@ const LOG_FILE_PATH: &str = "libctehxk2.log";
 #[cfg(target_os = "windows")]
 const LIB_PATH: &str = "../../target/debug/ctehxk2.dll";
 #[cfg(target_os = "linux")]
-const LIB_PATH: &str = "../../target/debug/ctehxk2.so";
+const LIB_PATH: &str = "../../target/debug/libctehxk2.so";
 #[cfg(target_os = "macos")]
 const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
