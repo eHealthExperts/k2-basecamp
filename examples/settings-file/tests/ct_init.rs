@@ -22,7 +22,7 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
 #[test]
 fn base_url_from_config_file() {
-    let shutdown = test_server!(("127.0.0.1:5432", request: &Request) {
+    let shutdown = test_server!(("127.0.0.1:65432", request: &Request) {
         if request.url() == "/yaml/ct_init/17/321" {
             ::rouille::Response::text("0")
         } else {
