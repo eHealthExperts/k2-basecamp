@@ -23,6 +23,9 @@ before_script:
 script:
     - rustup run nightly cargo fmt --all
     - cargo test --verbose --all
+    - cd examples/settings-file
+    - rustup run nightly cargo fmt --all
+    - cargo test --verbose --all
 before_deploy:
     - cargo build --release --verbose
 deploy:

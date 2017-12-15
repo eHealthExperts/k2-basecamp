@@ -26,7 +26,10 @@ build: off
 
 build_script: cargo build
 
-test_script: cargo test --verbose --all
+test_script:
+    - cargo test --verbose --all
+    - cd examples/settings-file
+    - cargo test --verbose --all
 
 after_test:
     - cargo build --release --verbose
