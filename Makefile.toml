@@ -4,17 +4,17 @@ RUST_TEST_THREADS = "1"
 [tasks.patch-version]
 install_crate = "cargo-release"
 command = "cargo"
-args = ["release", "-l patch"]
+args = ["release", "--level", "patch"]
 
 [tasks.minor-version]
 install_crate = "cargo-release"
 command = "cargo"
-args = ["release", "-l minor"]
+args = ["release", "--level", "minor"]
 
 [tasks.major-version]
 install_crate = "cargo-release"
 command = "cargo"
-args = ["release", "-l major"]
+args = ["release", "--level", "major"]
 
 [tasks.format]
 description = "Runs the cargo rustfmt plugin."
@@ -28,10 +28,10 @@ args = ["clean"]
 
 [tasks.build]
 command = "cargo"
-args = ["build", "--release"]
+args = ["build"]
 dependencies = ["clean"]
 
 [tasks.test]
 command = "cargo"
 args = ["test"]
-dependencies = ["clean"]
+dependencies = ["clean", "build"]
