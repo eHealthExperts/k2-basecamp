@@ -4,7 +4,7 @@
 
 > CTAPI adapter for the gematik Konnektor
 
-*K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard as a dynamic system library.<br/>
+The dynamic system library *K2 basecamp* is an implementation of [CTAPI](doc/CTAPI.pdf) standard.<br/>
 [Builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows, (Ubuntu) Linux and MacOS.
 
 ## Requirements
@@ -14,30 +14,35 @@
 
 ## Configuration
 
-| Key       | Value |
-| --------- | ------|
+| Key       | Value                                    |
+| --------- | ---------------------------------------- |
 | base_url  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** |
 | log_level | Set the verbosity level for logging.<br/>Possible values: Off, Error, Warn, Info, Debug, Trace<br/>**Default: Error** |
-| log_path  | Target folder of the log file ctehxk2.log.<br/>**Default: Logging to STDOUT** |
+| log_path  | Target folder of the log file.<br/>**Default: Logging to STDOUT** |
 | ctn       | Set card terminal number to use for all requests. *Requires that ctn is set!* |
 | pn        | Set port number to use for all requests. *Requires that pn is set!* |
 
 #### Environment variable
 
-For configuration by envirnoment variable the key need the prefix **K2_** and has to be uppercase, e.g, **K2_BASE_URL**.
-Environent variables will have the higest priority!
+In order to configure by using envirnoment variables, the above mentioned keys need the prefix **K2_** and has to be uppercase, e.g, **K2_BASE_URL**.
 
 #### Config file
 
-Basecamp supports multiple file foramts - `json` `hjson` `yaml` `toml`
-Locate a file with the name **ctehxk2** and the corresponding file ending, e.g., **ctehxk2.yaml** next to the library.
+Basecamp supports multiple file foramts - `JSON` `HJSON` `YAMl` `TOML`
+Locate a file with the library name and the corresponding file ending, e.g., **ctehxk2.json** for Windows or **libctehxk2.json** for Linux next to the library.
 
-Use the keys in the syntax of the desired file format, e.g., for yaml:
+Use the above mentioned keys in the syntax of the desired file format, e.g., for JSON:
 
-```yaml
-log_level: debug
-base_url: http://localhost:5050
+```json
+{
+	"log_level": "debug",
+	"base_url": "http://localhost:5050"
+}
 ```
+
+Please have also a look into this [example](examples/settings-file). 
+
+Both - environment variables and a config file - can coexist where as the environment variables will have higher priority. 
 
 ## License
 
