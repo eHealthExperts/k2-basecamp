@@ -1,0 +1,3 @@
+base_url: http://127.0.0.1:5432/yaml/
+log_path: "."
+log_level: Debug
