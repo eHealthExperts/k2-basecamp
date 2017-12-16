@@ -1,11 +1,5 @@
-extern crate futures;
-extern crate hyper;
-extern crate log;
-extern crate serde;
-extern crate tokio_core;
-
-use super::config;
-use futures::{Future, Stream};
+use super::settings::Settings;
+use futures::{self, Future, Stream};
 use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
 use std::io::{Error, ErrorKind};
@@ -55,7 +49,7 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
 }
 
 fn uri(path: &str) -> Result<Uri, Error> {
-    let mut addr = config::base_url().clone();
+    let mut addr = Settings::base_url();
     addr.push_str(path);
     debug!("Request URL: {}", addr);
 

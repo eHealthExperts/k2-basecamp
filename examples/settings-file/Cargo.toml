@@ -1,0 +1,8 @@
+[package]
+name = "settings-file"
+version = "0.1.0"
+
+[dependencies]
+libloading = "0.4"
+rand = "0.3"
+rouille = "1.0"

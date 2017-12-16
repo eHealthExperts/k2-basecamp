@@ -1,8 +1,6 @@
-extern crate log4rs;
-extern crate log;
-
-use super::config;
+use super::settings::Settings;
 use log::LogLevelFilter;
+use log4rs;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
@@ -12,12 +10,17 @@ use std::sync::{Once, ONCE_INIT};
 
 static INIT: Once = ONCE_INIT;
 
+#[cfg(target_os = "windows")]
+const FILENAME: &str = "ctehxk2.log";
+#[cfg(not(target_os = "windows"))]
+const FILENAME: &str = "libctehxk2.log";
+
 pub fn init() {
     INIT.call_once(|| init_logger());
 }
 
 fn init_logger() {
-    let config = match config::log_path() {
+    let config = match Settings::log_path() {
         Some(path) => init_file_logger(String::from(path)),
         _ => init_stdout_logger(),
     };
@@ -27,7 +30,7 @@ fn init_logger() {
 
 fn init_file_logger(mut path: String) -> Config {
     let appender_id = "file";
-    path.push_str("ctehxk2.log");
+    path.push_str(FILENAME);
 
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
@@ -71,7 +74,7 @@ fn init_stdout_logger() -> Config {
 }
 
 fn log_level() -> LogLevelFilter {
-    return match LogLevelFilter::from_str(&config::log_level()) {
+    return match LogLevelFilter::from_str(&Settings::log_level()) {
         Ok(log_level) => log_level,
         _ => LogLevelFilter::Error,
     };

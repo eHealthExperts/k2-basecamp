@@ -1,8 +1,7 @@
-extern crate serde_json;
-
 use self::super::{Status, MAP};
 use self::super::super::http;
 use base64::{decode, encode};
+use serde_json;
 use std::slice;
 
 #[allow(non_snake_case)]
