@@ -18,9 +18,6 @@ extern crate serde_json;
 extern crate test_server;
 extern crate tokio_core;
 
-#[macro_use]
-#[cfg(test)]
-mod macros;
 mod settings;
 mod ctapi;
 mod http;
