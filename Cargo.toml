@@ -32,8 +32,7 @@ moz-cheddar = "0.4"
 
 [dev-dependencies]
 rand = "0.3"
-rouille = "1.0"
-rustc-serialize = "0.3"
+test-server = { git = "https://github.com/ChriFo/test-server-rs.git", tag = "v0.1.0" }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
