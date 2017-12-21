@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 antidote = "1.0"
-base64 = "0.8"
+base64 = "0.9"
 config = { git = "https://github.com/ChriFo/config-rs", branch = "fix/env" }
 futures = "0.1"
 hyper = "0.11"
@@ -31,8 +31,8 @@ tokio-core = "0.1"
 moz-cheddar = "0.4"
 
 [dev-dependencies]
-rand = "0.3"
-test-server = { git = "https://github.com/ChriFo/test-server-rs.git", tag = "v0.1.0" }
+rand = "0.4"
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.1.0" }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
