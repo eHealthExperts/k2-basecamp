@@ -76,7 +76,7 @@ mod tests {
     fn use_ctn_and_pn_in_request_path() {
         let server = test_server::serve(None);
         server.reply().status(hyper::BadRequest);
-        env::set_var("K2_BASE_URL", format!("//{}", &server.addr()));
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -93,7 +93,7 @@ mod tests {
     fn returns_err_htsi_if_server_response_is_not_200() {
         let server = test_server::serve(None);
         server.reply().status(hyper::BadRequest);
-        env::set_var("K2_BASE_URL", format!("//{}", &server.addr()));
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -107,7 +107,7 @@ mod tests {
     fn returns_err_htsi_if_server_response_not_contains_status() {
         let server = test_server::serve(None);
         server.reply().status(hyper::Ok).body("hello world");
-        env::set_var("K2_BASE_URL", format!("//{}", &server.addr()));
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -121,7 +121,7 @@ mod tests {
     fn returns_response_status_from_server() {
         let server = test_server::serve(None);
         server.reply().status(hyper::Ok).body("-11");
-        env::set_var("K2_BASE_URL", format!("//{}", &server.addr()));
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -135,7 +135,7 @@ mod tests {
     fn return_ok_and_close_ctn_if_server_returns_ok() {
         let server = test_server::serve(None);
         server.reply().status(hyper::Ok).body("0");
-        env::set_var("K2_BASE_URL", format!("//{}", &server.addr()));
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
