@@ -1,11 +1,11 @@
-[![Latest](https://img.shields.io/github/release/eHealthExperts/k2-basecamp.svg?label=latest)](https://github.com/eHealthExperts/k2-basecamp/releases/latest) [![Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp) [![Build status](https://ci.appveyor.com/api/projects/status/mr7hc26i3nvddi04/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp/branch/master)
-
 # K2 basecamp
 
-> CTAPI adapter for the gematik Konnektor
+[![Travis Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/mr7hc26i3nvddi04/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-The dynamic system library *K2 basecamp* is an implementation of [CTAPI](doc/CTAPI.pdf) standard.<br/>
-[Builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows, (Ubuntu) Linux and MacOS.
+The dynamic system library *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard.<br/>
+[Builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows, (Ubuntu) Linux and macOS.
 
 ## Requirements
 
@@ -22,13 +22,13 @@ The dynamic system library *K2 basecamp* is an implementation of [CTAPI](doc/CTA
 | ctn       | Set card terminal number to use for all requests. *Requires that pn is set!* |
 | pn        | Set port number to use for all requests. *Requires that ctn is set!* |
 
-#### Environment variable
+### Environment variable
 
 In order to configure by using envirnoment variables, the above mentioned keys need the prefix **K2_** and has to be uppercase, e.g, **K2_BASE_URL**.
 
-#### Config file
+### Config file
 
-*K2 basecamp* supports multiple file foramts - `JSON` `TOML` `YAMl`
+Multiple file formats are supported: `JSON` `TOML` `YAMl`
 
 Locate a file with the library name and the corresponding file ending, e.g., **ctehxk2.json** for Windows or **libctehxk2.json** for Linux next to the library.
 
@@ -43,8 +43,4 @@ Use the above mentioned keys in the syntax of the desired file format, e.g., for
 
 Please have also a look into this [example](examples/settings-file). 
 
-:exclamation: Both - environment variables and a config file - can coexist where as the environment variables will have higher priority. 
-
-## License
-
-MIT © [eHealthExperts GmbH](http://ehealthexperts.de)
+:exclamation: Both - environment variables and a config file - can coexist where as the environment variables will have higher priority.
