@@ -1,12 +1,12 @@
 extern crate libloading as lib;
 extern crate rand;
-extern crate rouille;
-
-#[macro_use]
-mod macros;
+extern crate test_server;
 
 use std::fs;
 use std::path::Path;
+use std::str;
+use test_server::futures::{Future, Stream};
+use test_server::hyper;
 
 #[cfg(target_os = "windows")]
 const LOG_FILE_PATH: &str = "ctehxk2.log";
@@ -21,14 +21,10 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.so";
 const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
 #[test]
-fn base_url_from_config_file() {
-    let shutdown = test_server!(("127.0.0.1:65432", request: &Request) {
-        if request.url() == "/yaml/ct_init/17/321" {
-            ::rouille::Response::text("0")
-        } else {
-            ::rouille::Response::empty_404()
-        }
-    });
+fn with_config_file() {
+    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+
+    server.reply().status(hyper::Ok).body("0");
 
     match lib::Library::new(LIB_PATH) {
         Ok(lib) => unsafe {
@@ -43,8 +39,11 @@ fn base_url_from_config_file() {
         _ => assert!(false, format!("loading library from {}", LIB_PATH)),
     }
 
-    // kill server thread
-    let _ = shutdown.send(());
+    let (method, uri, _version, _headers, body) = server.request().unwrap().deconstruct();
+
+    assert_eq!(hyper::Method::Post, method);
+    assert_eq!("/yaml/ct_init/17/321", uri.path());
+    assert!(body.concat2().wait().unwrap().is_empty());
 
     assert!(Path::new(LOG_FILE_PATH).exists());
 

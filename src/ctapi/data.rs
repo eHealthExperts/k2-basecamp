@@ -5,7 +5,7 @@ use serde_json;
 use std::slice;
 
 #[allow(non_snake_case)]
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Response {
     dad: u8,
     sad: u8,
@@ -105,9 +105,13 @@ mod tests {
     use super::super::MAP;
     use base64::encode;
     use rand;
-    use rouille::{self, Response};
+    use serde_json;
+    use std::env;
     use std::slice;
+    use std::str;
     use std::u16::MAX;
+    use test_server::{self, hyper};
+    use test_server::futures::{Future, Stream};
 
     fn rand_params() -> (*const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
         let commands: [u8; 1] = [rand::random::<u8>(); 1];
@@ -168,15 +172,12 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::BadRequest);
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-
         MAP.lock().insert(ctn, pn);
-
-        let shutdown = test_server!((request: &Request) {
-            assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
-
-            Response::empty_404()
-        });
 
         data(
             ctn,
@@ -188,117 +189,77 @@ mod tests {
             response_ptr,
         );
 
-        // kill server thread
-        let _ = shutdown.send(());
+        let (_method, uri, _version, _headers, _body) = server.request().unwrap().deconstruct();
+
+        assert_eq!(format!("/ct_data/{}/{}", ctn, pn), uri.path());
     }
 
     #[test]
     fn post_body_contains_parameter() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::BadRequest);
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-
         let slice = unsafe { slice::from_raw_parts(command, lenc as usize) };
-
         MAP.lock().insert(ctn, pn);
-
-        let shutdown = test_server!((request: &Request) {
-            assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
-
-            #[derive(RustcDecodable)]
-            struct Json {
-                dad: u8,
-                sad: u8,
-                lenc: u16,
-                command: String,
-                lenr: u16,
-            }
-
-            let json: Json = rouille::input::json_input(request).unwrap();
-
-            assert_eq!(dad, json.dad);
-            assert_eq!(sad, json.sad);
-            assert_eq!(encode(slice), json.command);
-            assert_eq!(lenc, json.lenc);
-            assert_eq!(lenr, json.lenr);
-
-            Response::empty_404()
-        });
 
         assert_eq!(
             -128,
             data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response)
         );
 
-        // kill server thread
-        let _ = shutdown.send(());
+        #[derive(Deserialize, Debug)]
+        struct Json {
+            dad: u8,
+            sad: u8,
+            lenc: u16,
+            command: String,
+            lenr: u16,
+        }
+
+        let (_method, _uri, _version, _headers, body) = server.request().unwrap().deconstruct();
+        let chunk = body.concat2().wait().unwrap();
+        let content = str::from_utf8(&chunk.as_ref()).unwrap();
+        let json: Json = serde_json::from_str(content).unwrap();
+
+        assert_eq!(dad, json.dad);
+        assert_eq!(sad, json.sad);
+        assert_eq!(encode(slice), json.command);
+        assert_eq!(lenc, json.lenc);
+        assert_eq!(lenr, json.lenr);
     }
 
     #[test]
     fn response_is_mapped_to_parameter() {
-        let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
+        let server = test_server::serve(None);
+        server.reply().status(hyper::Ok).body(
+            "{\"dad\":39,\"sad\":63,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
+        );
 
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
+        let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         MAP.lock().insert(ctn, pn);
 
-        let shutdown = test_server!((request: &Request) {
-            assert_eq!(request.url(), format!("/ct_data/{}/{}", ctn, pn));
+        data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
 
-            #[derive(RustcDecodable)]
-            struct JsonRequest {
-                dad: u8,
-                sad: u8,
-                lenc: u16,
-                command: String,
-                lenr: u16,
-            }
-
-            let json: JsonRequest = rouille::input::json_input(request).unwrap();
-
-            #[allow(non_snake_case)]
-            #[derive(RustcEncodable)]
-            struct JsonResponse {
-                dad: u8,
-                sad: u8,
-                lenr: u16,
-                response: String,
-                responseCode: u16,
-            }
-
-            let response = Response::json(&JsonResponse {
-                dad: json.sad,
-                sad: json.dad,
-                lenr: 5,
-                response: String::from("AQIDBAU="),
-                responseCode: 0
-            });
-
-            response
-        });
-
-        let c_sad = sad.clone();
-        let c_dad = dad.clone();
-
-        let status = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
-
-        assert_eq!(0, status);
-        assert_eq!(dad, c_sad);
-        assert_eq!(sad, c_dad);
+        assert_eq!(dad, 39);
+        assert_eq!(sad, 63);
         assert_eq!(5, lenr);
 
         let slice = unsafe { slice::from_raw_parts(response, lenr as usize) };
         assert_eq!([1, 2, 3, 4, 5], slice);
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::BadRequest);
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-
         MAP.lock().insert(ctn, pn);
-
-        let shutdown = test_server!((request: &Request) {
-            Response::empty_404()
-        });
 
         assert_eq!(
             -128,
@@ -312,20 +273,16 @@ mod tests {
                 response_ptr,
             )
         );
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_response_struct_as_json() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::Ok).body("hello world");
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-
         MAP.lock().insert(ctn, pn);
-
-        let shutdown = test_server!((request: &Request) {
-            Response::text("hello world")
-        });
 
         assert_eq!(
             -128,
@@ -339,20 +296,19 @@ mod tests {
                 response_ptr,
             )
         );
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_response_status_from_valid_json_response_struct() {
+        let server = test_server::serve(None);
+        server
+            .reply()
+            .status(hyper::Ok)
+            .body("{\"dad\":1,\"sad\":1,\"lenr\":1,\"response\":\"a\",\"responseCode\":-11}");
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-
         MAP.lock().insert(ctn, pn);
-
-        let shutdown = test_server!((request: &Request) {
-            Response::text(r#"{"dad":1,"sad":1,"lenr":1,"response":"a","responseCode":-11}"#)
-        });
 
         assert_eq!(
             -11,
@@ -366,8 +322,5 @@ mod tests {
                 response_ptr,
             )
         );
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 }
