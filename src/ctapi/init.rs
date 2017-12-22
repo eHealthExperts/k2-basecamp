@@ -51,7 +51,8 @@ mod tests {
     use super::init;
     use super::super::MAP;
     use rand;
-    use rouille::Response;
+    use std::env;
+    use test_server::{self, hyper};
 
     #[test]
     fn returns_err_htsi_if_no_server() {
@@ -73,81 +74,68 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::BadRequest);
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown = test_server!((request: &Request) {
-            assert_eq!(request.url(), format!("/ct_init/{}/{}", ctn, pn));
-
-            Response::empty_404()
-        });
-
         init(ctn, pn);
 
-        // kill server thread
-        let _ = shutdown.send(());
+        let (_method, uri, _version, _headers, _body) = server.request().unwrap().deconstruct();
+
+        assert_eq!(format!("/ct_init/{}/{}", ctn, pn), uri.path());
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::BadRequest);
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown = test_server!((request: &Request) {
-            Response::empty_404()
-        });
-
         assert_eq!(-128, init(ctn, pn));
         assert_eq!(false, MAP.lock().contains_key(&ctn));
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_status() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::Ok).body("hello world");
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown = test_server!((request: &Request) {
-            Response::text("hello world")
-        });
-
         assert_eq!(-128, init(ctn, pn));
         assert_eq!(false, MAP.lock().contains_key(&ctn));
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_response_status_from_server() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::Ok).body("-11");
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown = test_server!((request: &Request) {
-            Response::text("-11")
-        });
-
         assert_eq!(-11, init(ctn, pn));
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 
     #[test]
     fn returns_ok_and_init_ctn_if_server_returns_ok() {
+        let server = test_server::serve(None);
+        server.reply().status(hyper::Ok).body("0");
+        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        let shutdown = test_server!((request: &Request) {
-             Response::text("0")
-        });
-
         assert_eq!(0, init(ctn, pn));
         assert_eq!(true, MAP.lock().contains_key(&ctn));
-
-        // kill server thread
-        let _ = shutdown.send(());
     }
 }

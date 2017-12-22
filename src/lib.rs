@@ -10,19 +10,14 @@ extern crate log4rs;
 extern crate log;
 #[cfg(test)]
 extern crate rand;
-#[cfg(test)]
-extern crate rouille;
-#[cfg(test)]
-extern crate rustc_serialize;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+#[cfg(test)]
+extern crate test_server;
 extern crate tokio_core;
 
-#[macro_use]
-#[cfg(test)]
-mod macros;
 mod settings;
 mod ctapi;
 mod http;
