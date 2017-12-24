@@ -23,9 +23,9 @@ mod ctapi;
 mod http;
 mod logging;
 
-use ctapi::close::close as close;
-use ctapi::data::data as data;
-use ctapi::init::init as init;
+use ctapi::close::close;
+use ctapi::data::data;
+use ctapi::init::init;
 use ctapi::status::Status;
 use settings::Settings;
 
