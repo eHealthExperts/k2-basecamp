@@ -2,6 +2,7 @@ extern crate libloading;
 extern crate rand;
 extern crate test_server;
 
+use libloading::{Library, Symbol};
 use std::fs;
 use std::path::Path;
 use std::str;
@@ -25,15 +26,17 @@ fn with_config_file() {
     let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
     server.reply().status(hyper::Ok).body("0");
 
-    match libloading::Library::new(LIB_PATH) {
+    match Library::new(LIB_PATH) {
         Ok(lib) => {
-            let init: libloading::Symbol<fn(u16, u16) -> i8> =
+            let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
                 unsafe { lib.get(b"CT_init").unwrap() };
 
             let ctn = rand::random::<u16>();
             let pn = rand::random::<u16>();
 
-            assert_eq!(0, init(ctn, pn));
+            unsafe {
+                assert_eq!(0, init(ctn, pn));
+            }
         }
         _ => assert!(false, format!("loading library from {}", LIB_PATH)),
     }
