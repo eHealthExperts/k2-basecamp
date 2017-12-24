@@ -14,17 +14,17 @@ name = "ctehxk2"
 crate-type = ["cdylib"]
 
 [dependencies]
-antidote = "1.0"
-base64 = "0.9"
-futures = "0.1"
-hyper = "0.11"
-lazy_static = "1.0"
-log = "0.3"
-log4rs = "0.7"
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
-tokio-core = "0.1"
+antidote = "1.0.0"
+base64 = "0.9.0"
+futures = "0.1.17"
+hyper = "0.11.9"
+lazy_static = "1.0.0"
+log = "0.3.8"
+log4rs = "0.7.0"
+serde = "1.0.24"
+serde_derive = "1.0.24"
+serde_json = "1.0.8"
+tokio-core = "0.1.11"
 
 [dependencies.config]
 git = "https://github.com/ChriFo/config-rs"
@@ -33,14 +33,14 @@ default-features = false
 features = ["json", "toml", "yaml"]
 
 [build-dependencies]
-moz-cheddar = "0.4"
+moz-cheddar = "0.4.2"
 
 [dev-dependencies]
-rand = "0.4"
+rand = "0.4.1"
 test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.1.0" }
 
 [target.'cfg(windows)'.build-dependencies]
-winres = "0.1"
+winres = "0.1.4"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
