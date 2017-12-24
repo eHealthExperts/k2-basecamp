@@ -2,7 +2,7 @@ version: 0.14.4-{branch}-{build}
 
 environment:
     global:
-        RUST_BACKTRACE: 1
+        RUST_BACKTRACE: full
         RUST_TEST_THREADS: 1
     matrix:
         - channel: stable
