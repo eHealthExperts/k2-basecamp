@@ -1,5 +1,5 @@
-use self::super::{Status, MAP};
-use self::super::super::http;
+use self::super::MAP;
+use self::super::super::{http, Status};
 use base64::{decode, encode};
 use serde_json;
 use std::slice;

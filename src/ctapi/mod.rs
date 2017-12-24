@@ -1,12 +1,8 @@
-mod close;
-mod data;
-mod init;
-mod status;
+pub mod close;
+pub mod data;
+pub mod init;
+pub mod status;
 
-pub use self::close::close;
-pub use self::data::data;
-pub use self::init::init;
-pub use self::status::Status;
 use antidote::Mutex;
 use std::collections::HashMap;
 

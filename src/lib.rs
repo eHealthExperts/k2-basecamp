@@ -23,6 +23,10 @@ mod ctapi;
 mod http;
 mod logging;
 
+use ctapi::close::close as close;
+use ctapi::data::data as data;
+use ctapi::init::init as init;
+use ctapi::status::Status;
 use settings::Settings;
 
 #[no_mangle]
@@ -30,7 +34,7 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
-    let status = ctapi::init(Settings::ctn_or(ctn), Settings::pn_or(pn));
+    let status = init(Settings::ctn_or(ctn), Settings::pn_or(pn));
 
     debug!("Returning {}", status);
     status.into()
@@ -49,7 +53,7 @@ pub extern "system" fn CT_data(
     logging::init();
 
     debug!("CT_data(ctn: {})", ctn);
-    let status = ctapi::data(
+    let status = data(
         Settings::ctn_or(ctn),
         dad,
         sad,
@@ -68,7 +72,7 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = ctapi::close(Settings::ctn_or(ctn));
+    let status = close(Settings::ctn_or(ctn));
 
     debug!("Returning {}", status);
     status.into()
