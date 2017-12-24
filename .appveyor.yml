@@ -31,6 +31,9 @@ test_script:
     - cd examples/settings-file
     - cargo test --verbose --all
     - cd ../../
+    - cd examples/use-library
+    - cargo test --verbose --all
+    - cd ../../
 
 after_test:
     - cargo build --release --verbose

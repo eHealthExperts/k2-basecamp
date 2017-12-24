@@ -28,6 +28,10 @@ script:
     - rustup run nightly cargo fmt --all
     - cargo test --verbose --all
     - cd ../../
+    - cd examples/use-library
+    - rustup run nightly cargo fmt --all
+    - cargo test --verbose --all
+    - cd ../../
 before_deploy:
     - cargo build --release --verbose
 deploy:
