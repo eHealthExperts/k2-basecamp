@@ -5,4 +5,4 @@ version = "0.1.0"
 [dependencies]
 libloading = "0.4.3"
 rand = "0.4.1"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.1.1" }
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.1.2" }
