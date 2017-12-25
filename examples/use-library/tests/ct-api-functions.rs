@@ -86,10 +86,8 @@ fn has_ct_api_functions() {
 
                 println!("before close");
                 assert_eq!(0, close(ctn));
-                println!("after close");
             }
         }
         _ => assert!(false, format!("loading library from {}", LIB_PATH)),
     }
-    println!("end of test");
 }
