@@ -13,11 +13,10 @@ matrix:
           rust: stable
           env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
-before_install:
+before_script:
     # work-around for travis-ci/travis-ci#6307
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then command curl -sSL https://rvm.io/mpapis.asc | gpg --import -; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then rvm get stable; fi
-before_script:
     - rustup install nightly
     - rustup update
     - rustup run nightly cargo install rustfmt-nightly --force
