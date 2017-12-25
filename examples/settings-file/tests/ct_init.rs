@@ -23,32 +23,34 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
 #[test]
 fn with_config_file() {
-    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
-    server.reply().status(hyper::Ok).body("0");
+    unsafe {
+        match Library::new(LIB_PATH) {
+            Ok(lib) => {
+                let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
+                    lib.get(b"CT_init").unwrap();
 
-    match Library::new(LIB_PATH) {
-        Ok(lib) => {
-            let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
-                unsafe { lib.get(b"CT_init").unwrap() };
+                let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+                server.reply().status(hyper::Ok).body("0");
 
-            let ctn = rand::random::<u16>();
-            let pn = rand::random::<u16>();
+                let ctn = rand::random::<u16>();
+                let pn = rand::random::<u16>();
 
-            unsafe {
                 assert_eq!(0, init(ctn, pn));
+
+                let (method, uri, _version, _headers, body) =
+                    server.request().unwrap().deconstruct();
+
+                assert_eq!(hyper::Method::Post, method);
+                assert_eq!("/yaml/ct_init/17/321", uri.path());
+                assert!(body.concat2().wait().unwrap().is_empty());
+
+                assert!(Path::new(LOG_FILE_PATH).exists());
+
+                let metadata = fs::metadata(LOG_FILE_PATH).unwrap();
+
+                assert!(metadata.len() > 0);
             }
+            _ => assert!(false, format!("loading library from {}", LIB_PATH)),
         }
-        _ => assert!(false, format!("loading library from {}", LIB_PATH)),
     }
-
-    let (method, uri, _version, _headers, body) = server.request().unwrap().deconstruct();
-
-    assert_eq!(hyper::Method::Post, method);
-    assert_eq!("/yaml/ct_init/17/321", uri.path());
-    assert!(body.concat2().wait().unwrap().is_empty());
-
-    assert!(Path::new(LOG_FILE_PATH).exists());
-
-    let metadata = fs::metadata(LOG_FILE_PATH).unwrap();
-    assert!(metadata.len() > 0);
 }
