@@ -45,32 +45,30 @@ fn has_ct_api_functions() {
             let response_ptr: *mut u8 = &mut response[0];
             let mut lenr: u16 = response.len() as u16;
 
-            unsafe {
-                server.reply().status(hyper::Ok).body("0");
+            server.reply().status(hyper::Ok).body("0");
+            let init_response = unsafe { init(ctn, pn) };
+            assert_eq!(0, init_response);
 
-                assert_eq!(0, init(ctn, pn));
+            // response for data
+            server.reply().status(hyper::Ok).body(
+                "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
+            );
+            let data_response = unsafe {
+                data(
+                    ctn,
+                    &mut dad,
+                    &mut sad,
+                    lenc,
+                    commands_ptr,
+                    &mut lenr,
+                    response_ptr,
+                )
+            };
+            assert_eq!(0, data_response);
 
-                server.reply().status(hyper::Ok).body(
-                    "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
-                );
-
-                assert_eq!(
-                    0,
-                    data(
-                        ctn,
-                        &mut dad,
-                        &mut sad,
-                        lenc,
-                        commands_ptr,
-                        &mut lenr,
-                        response_ptr,
-                    )
-                );
-
-                server.reply().status(hyper::Ok).body("0");
-
-                assert_eq!(0, close(ctn));
-            }
+            server.reply().status(hyper::Ok).body("0");
+            let close_response = unsafe { close(ctn) };
+            assert_eq!(0, close_response);
         }
         _ => assert!(false, format!("loading library from {}", LIB_PATH)),
     }
