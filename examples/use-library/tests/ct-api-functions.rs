@@ -21,53 +21,39 @@ fn has_ct_api_functions() {
 
     match Library::new(LIB_PATH) {
         Ok(lib) => {
-            println!("before load init");
             let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
                 unsafe { lib.get(b"CT_init").unwrap() };
-            println!("before load data");
+
             let data: Symbol<
                 unsafe extern "system" fn(u16, *mut u8, *mut u8, u16, *const u8, *mut u16, *mut u8)
                     -> i8,
             > = unsafe { lib.get(b"CT_data").unwrap() };
-            println!("before load close");
+
             let close: Symbol<unsafe extern "system" fn(u16) -> i8> =
                 unsafe { lib.get(b"CT_close").unwrap() };
 
             let ctn = rand::random::<u16>();
-            println!("ctn: {}", ctn);
             let pn = rand::random::<u16>();
-            println!("pn: {}", pn);
             let mut dad = rand::random::<u8>();
-            println!("dad: {}", dad);
             let mut sad = rand::random::<u8>();
-            println!("sad: {}", sad);
 
             let commands: [u8; 1] = [rand::random::<u8>(); 1];
             let commands_ptr: *const u8 = &commands[0];
             let lenc: u16 = commands.len() as u16;
 
-            println!("command: {:?}", commands);
-            println!("lenc: {}", lenc);
-
             let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
             let response_ptr: *mut u8 = &mut response[0];
             let mut lenr: u16 = response.len() as u16;
 
-            println!("lenr: {}", lenr);
-
             unsafe {
-                println!("before init server");
                 server.reply().status(hyper::Ok).body("0");
 
-                println!("before init");
                 assert_eq!(0, init(ctn, pn));
 
-                println!("before data server");
                 server.reply().status(hyper::Ok).body(
                     "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
                 );
 
-                println!("before data");
                 assert_eq!(
                     0,
                     data(
@@ -81,10 +67,8 @@ fn has_ct_api_functions() {
                     )
                 );
 
-                println!("before close server");
                 server.reply().status(hyper::Ok).body("0");
 
-                println!("before close");
                 assert_eq!(0, close(ctn));
             }
         }
