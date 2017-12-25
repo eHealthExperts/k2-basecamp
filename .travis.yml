@@ -1,16 +1,17 @@
 language: rust
 env:
-  global:
-    - RUST_BACKTRACE=full
-    - RUST_TEST_THREADS=1
+    global:
+        - RUST_BACKTRACE=full
+        - RUST_TEST_THREADS=1
 matrix:
-  include:
-    - os: linux
-      rust: stable
-      env: DEPLOY_FILE=target/release/libctehxk2.so
-    - os: osx
-      rust: stable
-      env: DEPLOY_FILE=target/release/libctehxk2.dylib
+    fast_finish: true
+    include:
+        - os: linux
+          rust: stable
+          env: DEPLOY_FILE=target/release/libctehxk2.so
+        - os: osx
+          rust: stable
+          env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
 before_install:
     # work-around for travis-ci/travis-ci#6307
