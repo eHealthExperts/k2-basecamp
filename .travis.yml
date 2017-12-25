@@ -22,15 +22,15 @@ before_script:
     - rustup run nightly cargo install rustfmt-nightly --force
 script:
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cargo build --verbose
     - cd examples/settings-file
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
     - cd examples/use-library
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
 before_deploy:
     - cargo build --release --verbose

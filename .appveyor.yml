@@ -27,12 +27,12 @@ build: off
 build_script: cargo build
 
 test_script:
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd examples/settings-file
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
     - cd examples/use-library
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
 
 after_test:
