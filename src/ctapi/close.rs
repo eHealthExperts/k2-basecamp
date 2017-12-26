@@ -39,7 +39,7 @@ fn handle_ok_status(body: String, ctn: u16) -> Status {
         Status::OK => {
             // Remove CTN
             MAP.lock().remove(&ctn);
-            debug!("Card terminal opened.");
+            debug!("Card terminal closed.");
             status
         }
         _ => status,
