@@ -1,5 +1,5 @@
 use super::settings::Settings;
-use log::LogLevelFilter;
+use log::LevelFilter;
 use log4rs;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -17,6 +17,7 @@ const FILENAME: &str = "libctehxk2.log";
 
 pub fn init() {
     INIT.call_once(|| init_logger());
+    debug!("Logging initialized!");
 }
 
 fn init_logger() {
@@ -48,7 +49,7 @@ fn init_file_logger(mut path: String) -> Config {
         .build(
             Root::builder()
                 .appender(appender_id)
-                .build(LogLevelFilter::Error),
+                .build(LevelFilter::Error),
         )
         .unwrap()
 }
@@ -68,14 +69,14 @@ fn init_stdout_logger() -> Config {
         .build(
             Root::builder()
                 .appender(appender_id)
-                .build(LogLevelFilter::Error),
+                .build(LevelFilter::Error),
         )
         .unwrap()
 }
 
-fn log_level() -> LogLevelFilter {
-    return match LogLevelFilter::from_str(&Settings::log_level()) {
+fn log_level() -> LevelFilter {
+    return match LevelFilter::from_str(&Settings::log_level()) {
         Ok(log_level) => log_level,
-        _ => LogLevelFilter::Error,
+        _ => LevelFilter::Error,
     };
 }
