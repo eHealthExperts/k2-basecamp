@@ -1,32 +1,36 @@
 language: rust
 env:
-  global:
-    - RUST_BACKTRACE=1
-    - RUST_TEST_THREADS=1
+    global:
+        - RUST_BACKTRACE=full
+        - RUST_TEST_THREADS=1
 matrix:
-  include:
-    - os: linux
-      rust: stable
-      env: DEPLOY_FILE=target/release/libctehxk2.so
-    - os: osx
-      rust: stable
-      env: DEPLOY_FILE=target/release/libctehxk2.dylib
+    fast_finish: true
+    include:
+        - os: linux
+          rust: stable
+          env: DEPLOY_FILE=target/release/libctehxk2.so
+        - os: osx
+          rust: stable
+          env: DEPLOY_FILE=target/release/libctehxk2.dylib
 cache: cargo
-before_install:
+before_script:
     # work-around for travis-ci/travis-ci#6307
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then command curl -sSL https://rvm.io/mpapis.asc | gpg --import -; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then rvm get stable; fi
-before_script:
     - rustup install nightly
     - rustup update
     - rustup run nightly cargo install rustfmt-nightly --force
 script:
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cargo build --verbose
     - cd examples/settings-file
     - rustup run nightly cargo fmt --all
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
+    - cd ../../
+    - cd examples/use-library
+    - rustup run nightly cargo fmt --all
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
 before_deploy:
     - cargo build --release --verbose

@@ -5,7 +5,7 @@
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/mr7hc26i3nvddi04/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-The dynamic system library *K2 basecamp* is an implementation of the [CTAPI](doc/CTAPI.pdf) standard.<br/>
+The dynamic system library *K2 basecamp* is an implementation of the [CT-API](doc/CT-API-1.1.1.pdf) standard.<br/>
 [Builds](https://github.com/eHealthExperts/k2-basecamp/releases/latest) are available for Microsoft Windows, (Ubuntu) Linux and macOS.
 
 ## Requirements

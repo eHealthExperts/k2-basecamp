@@ -1,5 +1,5 @@
-use self::super::{Status, MAP};
-use self::super::super::http;
+use self::super::MAP;
+use self::super::super::{http, Status};
 
 pub fn init(ctn: u16, pn: u16) -> Status {
     // Do we know this CTN?

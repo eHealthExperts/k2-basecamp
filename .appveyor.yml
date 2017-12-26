@@ -2,7 +2,7 @@ version: 0.14.4-{branch}-{build}
 
 environment:
     global:
-        RUST_BACKTRACE: 1
+        RUST_BACKTRACE: full
         RUST_TEST_THREADS: 1
     matrix:
         - channel: stable
@@ -27,9 +27,12 @@ build: off
 build_script: cargo build
 
 test_script:
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
     - cd examples/settings-file
-    - cargo test --verbose --all
+    - cargo test --verbose --all -- --nocapture
+    - cd ../../
+    - cd examples/use-library
+    - cargo test --verbose --all -- --nocapture
     - cd ../../
 
 after_test:

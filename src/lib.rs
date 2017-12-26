@@ -23,22 +23,24 @@ mod ctapi;
 mod http;
 mod logging;
 
+use ctapi::close::close;
+use ctapi::data::data;
+use ctapi::init::init;
+use ctapi::status::Status;
 use settings::Settings;
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
-    let status = ctapi::init(Settings::ctn_or(ctn), Settings::pn_or(pn));
+    let status = init(Settings::ctn_or(ctn), Settings::pn_or(pn));
 
     debug!("Returning {}", status);
     status.into()
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "system" fn CT_data(
     ctn: u16,
     dad: *mut u8,
@@ -51,7 +53,7 @@ pub extern "system" fn CT_data(
     logging::init();
 
     debug!("CT_data(ctn: {})", ctn);
-    let status = ctapi::data(
+    let status = data(
         Settings::ctn_or(ctn),
         dad,
         sad,
@@ -66,12 +68,11 @@ pub extern "system" fn CT_data(
 }
 
 #[no_mangle]
-#[allow(non_snake_case)]
 pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = ctapi::close(Settings::ctn_or(ctn));
+    let status = close(Settings::ctn_or(ctn));
 
     debug!("Returning {}", status);
     status.into()
