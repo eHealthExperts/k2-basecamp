@@ -110,8 +110,7 @@ mod tests {
     use std::slice;
     use std::str;
     use std::u16::MAX;
-    use test_server::{self, hyper};
-    use test_server::futures::{Future, Stream};
+    use test_server::{self, http};
 
     fn rand_params() -> (*const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
         let commands: [u8; 1] = [rand::random::<u8>(); 1];
@@ -173,7 +172,7 @@ mod tests {
     #[test]
     fn use_ctn_and_pn_in_request_path() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -189,15 +188,14 @@ mod tests {
             response_ptr,
         );
 
-        let (_method, uri, _version, _headers, _body) = server.request().unwrap().deconstruct();
-
-        assert_eq!(format!("/ct_data/{}/{}", ctn, pn), uri.path());
+        let (parts, _body) = server.request().unwrap().into_parts();
+        assert_eq!(parts.uri, *format!("/ct_data/{}/{}", ctn, pn));
     }
 
     #[test]
     fn post_body_contains_parameter() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -218,10 +216,8 @@ mod tests {
             lenr: u16,
         }
 
-        let (_method, _uri, _version, _headers, body) = server.request().unwrap().deconstruct();
-        let chunk = body.concat2().wait().unwrap();
-        let content = str::from_utf8(&chunk.as_ref()).unwrap();
-        let json: Json = serde_json::from_str(content).unwrap();
+        let (_parts, body) = server.request().unwrap().into_parts();
+        let json: Json = serde_json::from_str(&body).unwrap();
 
         assert_eq!(dad, json.dad);
         assert_eq!(sad, json.sad);
@@ -233,7 +229,7 @@ mod tests {
     #[test]
     fn response_is_mapped_to_parameter() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::Ok).body(
+        server.reply().status(http::StatusCode::OK).body(
             "{\"dad\":39,\"sad\":63,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
         );
 
@@ -255,7 +251,7 @@ mod tests {
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -278,7 +274,10 @@ mod tests {
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_response_struct_as_json() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::Ok).body("hello world");
+        server
+            .reply()
+            .status(http::StatusCode::OK)
+            .body("hello world");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -303,7 +302,7 @@ mod tests {
         let server = test_server::serve(None);
         server
             .reply()
-            .status(hyper::Ok)
+            .status(http::StatusCode::OK)
             .body("{\"dad\":1,\"sad\":1,\"lenr\":1,\"response\":\"a\",\"responseCode\":-11}");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 

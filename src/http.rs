@@ -62,13 +62,12 @@ mod tests {
     use super::{request, Response};
     use rand;
     use std::env;
-    use test_server::{self, hyper};
-    use test_server::futures::{Future, Stream};
+    use test_server::{self, http};
 
     #[test]
     fn request_with_body_is_content_type_json() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let mut body = String::new();
@@ -78,42 +77,40 @@ mod tests {
 
         let _r = request("", Some(body));
 
-        let (_method, _uri, _version, headers, _body) = server.request().unwrap().deconstruct();
-
-        assert_eq!(headers.get_raw("content-type").unwrap(), "application/json");
+        let (parts, _body) = server.request().unwrap().into_parts();
+        assert_eq!(
+            parts.headers.get("content-type").unwrap(),
+            "application/json"
+        );
     }
 
     #[test]
     fn send_request_body_if_given() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let mut body = String::new();
         for _ in 0..10 {
             body.push(rand::random::<u8>() as char);
         }
-        let ref_content = body.as_bytes();
 
         let _r = request("", Some(body.clone()));
 
-        let (_method, _uri, _version, _headers, body) = server.request().unwrap().deconstruct();
-        let content = body.concat2().wait().unwrap();
-
-        assert_eq!(ref_content, content.as_ref());
+        let (_parts, body) = server.request().unwrap().into_parts();
+        assert_eq!(body, body);
     }
 
     #[test]
     fn if_no_json_is_given_send_empty_request_body() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let _r = request("", None);
 
-        let (_method, _uri, _version, _headers, body) = server.request().unwrap().deconstruct();
-
-        assert!(body.concat2().wait().unwrap().is_empty());
+        let (_parts, body) = server.request().unwrap().into_parts();
+        assert_eq!(body, String::from(""));
     }
 
     #[test]
@@ -121,7 +118,7 @@ mod tests {
         let server = test_server::serve(None);
         server
             .reply()
-            .status(hyper::StatusCode::InternalServerError)
+            .status(http::StatusCode::INTERNAL_SERVER_ERROR)
             .body("hello world");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
