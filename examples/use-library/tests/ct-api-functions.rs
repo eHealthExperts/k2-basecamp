@@ -1,8 +1,10 @@
-extern crate libloading;
+#[macro_use]
+extern crate const_cstr;
+extern crate dlopen;
 extern crate rand;
 extern crate test_server;
 
-use libloading::{Library, Symbol};
+use dlopen::raw::Library;
 use std::{env, str};
 use std::u16::MAX;
 use test_server::hyper;
@@ -16,67 +18,52 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
 #[test]
 fn has_ct_api_functions() {
-    unsafe {
-        match Library::new(LIB_PATH) {
-            Ok(lib) => {
-                let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
-                    lib.get(b"CT_init").unwrap();
+    let lib = Library::open(LIB_PATH).expect("Could not open library");
 
-                let data: Symbol<
-                    unsafe extern "system" fn(
-                        u16,
-                        *mut u8,
-                        *mut u8,
-                        u16,
-                        *const u8,
-                        *mut u16,
-                        *mut u8,
-                    ) -> i8,
-                > = lib.get(b"CT_data").unwrap();
+    let init: unsafe extern "C" fn(u16, u16) -> i8 =
+        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
 
-                let close: Symbol<unsafe extern "system" fn(u16) -> i8> =
-                    lib.get(b"CT_close").unwrap();
+    let data: unsafe extern "C" fn(u16, *mut u8, *mut u8, u16, *const u8, *mut u16, *mut u8)
+        -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }.unwrap();
 
-                let ctn = rand::random::<u16>();
-                let pn = rand::random::<u16>();
-                let mut dad = rand::random::<u8>();
-                let mut sad = rand::random::<u8>();
+    let close: unsafe extern "C" fn(u16) -> i8 =
+        unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }.unwrap();
 
-                let commands: [u8; 1] = [rand::random::<u8>(); 1];
-                let commands_ptr: *const u8 = &commands[0];
-                let lenc: u16 = commands.len() as u16;
+    let ctn = rand::random::<u16>();
+    let pn = rand::random::<u16>();
+    let mut dad = rand::random::<u8>();
+    let mut sad = rand::random::<u8>();
 
-                let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
-                let response_ptr: *mut u8 = &mut response[0];
-                let mut lenr: u16 = response.len() as u16;
+    let commands: [u8; 1] = [rand::random::<u8>(); 1];
+    let commands_ptr: *const u8 = &commands[0];
+    let lenc: u16 = commands.len() as u16;
 
-                let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
-                env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
+    let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
+    let response_ptr: *mut u8 = &mut response[0];
+    let mut lenr: u16 = response.len() as u16;
 
-                server.reply().status(hyper::Ok).body("0");
-                assert_eq!(0, init(ctn, pn));
+    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+    env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
 
-                // response for data
-                server.reply().status(hyper::Ok).body(
-                    "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
-                );
-                assert_eq!(
-                    0,
-                    data(
-                        ctn,
-                        &mut dad,
-                        &mut sad,
-                        lenc,
-                        commands_ptr,
-                        &mut lenr,
-                        response_ptr,
-                    )
-                );
+    server.reply().status(hyper::Ok).body("0");
+    assert_eq!(0, unsafe { init(ctn, pn) });
 
-                server.reply().status(hyper::Ok).body("0");
-                assert_eq!(0, close(ctn));
-            }
-            _ => assert!(false, format!("loading library from {}", LIB_PATH)),
-        }
-    }
+    server
+        .reply()
+        .status(hyper::Ok)
+        .body("{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}");
+    assert_eq!(0, unsafe {
+        data(
+            ctn,
+            &mut dad,
+            &mut sad,
+            lenc,
+            commands_ptr,
+            &mut lenr,
+            response_ptr,
+        )
+    });
+
+    server.reply().status(hyper::Ok).body("0");
+    assert_eq!(0, unsafe { close(ctn) });
 }
