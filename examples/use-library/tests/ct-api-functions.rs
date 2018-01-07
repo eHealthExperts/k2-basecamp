@@ -7,7 +7,7 @@ extern crate test_server;
 use dlopen::raw::Library;
 use std::{env, str};
 use std::u16::MAX;
-use test_server::hyper;
+use test_server::http::StatusCode;
 
 #[cfg(target_os = "windows")]
 const LIB_PATH: &str = "../../target/debug/ctehxk2.dll";
@@ -20,13 +20,20 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 fn has_ct_api_functions() {
     let lib = Library::open(LIB_PATH).expect("Could not open library");
 
-    let init: unsafe extern "C" fn(u16, u16) -> i8 =
+    let init: unsafe extern "system" fn(u16, u16) -> i8 =
         unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
 
-    let data: unsafe extern "C" fn(u16, *mut u8, *mut u8, u16, *const u8, *mut u16, *mut u8)
-        -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }.unwrap();
+    let data: unsafe extern "system" fn(
+        u16,
+        *mut u8,
+        *mut u8,
+        u16,
+        *const u8,
+        *mut u16,
+        *mut u8,
+    ) -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }.unwrap();
 
-    let close: unsafe extern "C" fn(u16) -> i8 =
+    let close: unsafe extern "system" fn(u16) -> i8 =
         unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }.unwrap();
 
     let ctn = rand::random::<u16>();
@@ -45,12 +52,12 @@ fn has_ct_api_functions() {
     let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
     env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
 
-    server.reply().status(hyper::Ok).body("0");
+    server.reply().status(StatusCode::OK).body("0");
     assert_eq!(0, unsafe { init(ctn, pn) });
 
     server
         .reply()
-        .status(hyper::Ok)
+        .status(StatusCode::OK)
         .body("{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}");
     assert_eq!(0, unsafe {
         data(
@@ -64,6 +71,6 @@ fn has_ct_api_functions() {
         )
     });
 
-    server.reply().status(hyper::Ok).body("0");
+    server.reply().status(StatusCode::OK).body("0");
     assert_eq!(0, unsafe { close(ctn) });
 }
