@@ -53,7 +53,7 @@ mod tests {
     use super::super::MAP;
     use rand;
     use std::env;
-    use test_server::{self, hyper};
+    use test_server::{self, http};
 
     #[test]
     fn returns_err_htsi_if_no_server() {
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn use_ctn_and_pn_in_request_path() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
@@ -86,15 +86,14 @@ mod tests {
 
         close(ctn);
 
-        let (_method, uri, _version, _headers, _body) = server.request().unwrap().deconstruct();
-
-        assert_eq!(format!("/ct_close/{}/{}", ctn, pn), uri.path());
+        let (parts, _body) = server.request().unwrap().into_parts();
+        assert_eq!(parts.uri, *format!("/ct_close/{}/{}", ctn, pn));
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::BadRequest);
+        server.reply().status(http::StatusCode::BAD_REQUEST);
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
@@ -108,7 +107,10 @@ mod tests {
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_status() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::Ok).body("hello world");
+        server
+            .reply()
+            .status(http::StatusCode::OK)
+            .body("hello world");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
@@ -122,7 +124,7 @@ mod tests {
     #[test]
     fn returns_response_status_from_server() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::Ok).body("-11");
+        server.reply().status(http::StatusCode::OK).body("-11");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
@@ -136,7 +138,7 @@ mod tests {
     #[test]
     fn return_ok_and_close_ctn_if_server_returns_ok() {
         let server = test_server::serve(None);
-        server.reply().status(hyper::Ok).body("0");
+        server.reply().status(http::StatusCode::OK).body("0");
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let ctn = rand::random::<u16>();
