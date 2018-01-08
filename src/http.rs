@@ -4,7 +4,8 @@ use hyper::{Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
 use std::io::{Error, ErrorKind};
 use std::str::{self, FromStr};
-use tokio_core::reactor::Core;
+use std::time::Duration;
+use tokio_core::reactor::{Core, Timeout};
 
 pub struct Response {
     pub status: u16,
@@ -29,7 +30,8 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     let mut body = String::new();
     {
         let mut core = Core::new().unwrap();
-        let client = Client::new(&core.handle());
+        let handle = core.handle();
+        let client = Client::new(&handle);
         let work = client
             .request(request)
             .and_then(|res| {
@@ -38,6 +40,10 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
                     body.push_str(str::from_utf8(&*chunk).unwrap());
                     futures::future::ok(())
                 })
+            })
+            .and_then(|_| {
+                let timeout = Timeout::new(Duration::from_secs(1), &handle).unwrap();
+                timeout.map_err(|e| e.into())
             })
             .map_err(|err| Error::new(ErrorKind::Other, err));
         try!(core.run(work));
