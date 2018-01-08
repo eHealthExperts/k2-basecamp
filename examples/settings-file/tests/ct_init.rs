@@ -1,13 +1,14 @@
-extern crate libloading;
+#[macro_use]
+extern crate const_cstr;
+extern crate dlopen;
 extern crate rand;
 extern crate test_server;
 
-use libloading::{Library, Symbol};
+use dlopen::raw::Library;
 use std::fs;
 use std::path::Path;
 use std::str;
-use test_server::futures::{Future, Stream};
-use test_server::hyper;
+use test_server::http::{Method, StatusCode};
 
 #[cfg(target_os = "windows")]
 const LOG_FILE_PATH: &str = "ctehxk2.log";
@@ -23,34 +24,27 @@ const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
 
 #[test]
 fn with_config_file() {
-    unsafe {
-        match Library::new(LIB_PATH) {
-            Ok(lib) => {
-                let init: Symbol<unsafe extern "system" fn(u16, u16) -> i8> =
-                    lib.get(b"CT_init").unwrap();
+    let lib = Library::open(LIB_PATH).expect("Could not open library");
 
-                let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
-                server.reply().status(hyper::Ok).body("0");
+    let init: unsafe extern "system" fn(u16, u16) -> i8 =
+        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
 
-                let ctn = rand::random::<u16>();
-                let pn = rand::random::<u16>();
+    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+    server.reply().status(StatusCode::OK).body("0");
 
-                assert_eq!(0, init(ctn, pn));
+    let ctn = rand::random::<u16>();
+    let pn = rand::random::<u16>();
 
-                let (method, uri, _version, _headers, body) =
-                    server.request().unwrap().deconstruct();
+    assert_eq!(0, unsafe { init(ctn, pn) });
 
-                assert_eq!(hyper::Method::Post, method);
-                assert_eq!("/yaml/ct_init/17/321", uri.path());
-                assert!(body.concat2().wait().unwrap().is_empty());
+    let (parts, body) = server.request().unwrap().into_parts();
+    assert_eq!(body, String::from(""));
+    assert_eq!(parts.method, Method::POST);
+    assert_eq!(parts.uri, "/yaml/ct_init/17/321");
 
-                assert!(Path::new(LOG_FILE_PATH).exists());
+    assert!(Path::new(LOG_FILE_PATH).exists());
 
-                let metadata = fs::metadata(LOG_FILE_PATH).unwrap();
+    let metadata = fs::metadata(LOG_FILE_PATH).unwrap();
 
-                assert!(metadata.len() > 0);
-            }
-            _ => assert!(false, format!("loading library from {}", LIB_PATH)),
-        }
-    }
+    assert!(metadata.len() > 0);
 }

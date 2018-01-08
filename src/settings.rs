@@ -8,6 +8,7 @@ const CFG_FILE: &str = "libctehxk2";
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
+    timeout: u64,
     base_url: String,
     log_level: String,
     log_path: Option<String>,
@@ -22,6 +23,7 @@ impl Settings {
         s.set_default("base_url", "http://localhost:8080/k2/ctapi/")
             .unwrap();
         s.set_default("log_level", "Error").unwrap();
+        s.set_default("timeout", 1000).unwrap();
 
         s.merge(File::with_name(CFG_FILE).required(false)).unwrap();
         s.merge(Environment::with_prefix("k2")).unwrap();
@@ -77,6 +79,11 @@ impl Settings {
             }
             None => None,
         }
+    }
+
+    pub fn timeout() -> u64 {
+        let s = Settings::new();
+        s.timeout.clone()
     }
 }
 

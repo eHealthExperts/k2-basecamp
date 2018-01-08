@@ -1,10 +1,12 @@
 use super::settings::Settings;
 use futures::{self, Future, Stream};
-use hyper::{Client, Method, Request, Uri};
+use futures::future::Either;
+use hyper::{self, Client, Method, Request, Uri};
 use hyper::header::{ContentLength, ContentType};
 use std::io::{Error, ErrorKind};
 use std::str::{self, FromStr};
-use tokio_core::reactor::Core;
+use std::time::Duration;
+use tokio_core::reactor::{Core, Timeout};
 
 pub struct Response {
     pub status: u16,
@@ -29,18 +31,31 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     let mut body = String::new();
     {
         let mut core = Core::new().unwrap();
-        let client = Client::new(&core.handle());
-        let work = client
-            .request(request)
-            .and_then(|res| {
-                status = res.status().clone().into();
-                res.body().for_each(|chunk| {
-                    body.push_str(str::from_utf8(&*chunk).unwrap());
-                    futures::future::ok(())
-                })
+        let handle = core.handle();
+        let client = Client::new(&handle);
+        let request = client.request(request).and_then(|res| {
+            status = res.status().clone().into();
+            res.body().for_each(|chunk| {
+                body.push_str(str::from_utf8(&*chunk).unwrap());
+                futures::future::ok(())
             })
-            .map_err(|err| Error::new(ErrorKind::Other, err));
-        try!(core.run(work));
+        });
+
+        let timeout = Timeout::new(Duration::from_millis(Settings::timeout()), &handle).unwrap();
+        let work = request.select2(timeout).then(|res| match res {
+            Ok(Either::A((got, _timeout))) => Ok(got),
+            Ok(Either::B((_timeout_error, _get))) => Err(hyper::Error::Io(Error::new(
+                ErrorKind::TimedOut,
+                "Client timed out while connecting",
+            ))),
+            Err(Either::A((get_error, _timeout))) => Err(get_error),
+            Err(Either::B((timeout_error, _get))) => Err(From::from(timeout_error)),
+        });
+
+        try!(
+            core.run(work)
+                .map_err(|err| Error::new(ErrorKind::Other, err))
+        );
     }
 
     debug!("Response status: {}", status);
