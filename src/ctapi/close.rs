@@ -57,6 +57,8 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_no_server() {
+        env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
+
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
