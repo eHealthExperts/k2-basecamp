@@ -49,7 +49,7 @@ fn has_ct_api_functions() {
     let response_ptr: *mut u8 = &mut response[0];
     let mut lenr: u16 = response.len() as u16;
 
-    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+    let server = test_server::serve(Some("127.0.0.1:65432"));
     env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
 
     server.reply().status(StatusCode::OK).body("0");

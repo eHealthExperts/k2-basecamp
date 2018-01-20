@@ -29,7 +29,7 @@ fn with_config_file() {
     let init: unsafe extern "system" fn(u16, u16) -> i8 =
         unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
 
-    let server = test_server::serve(Some(String::from("127.0.0.1:65432")));
+    let server = test_server::serve(Some("127.0.0.1:65432"));
     server.reply().status(StatusCode::OK).body("0");
 
     let ctn = rand::random::<u16>();
