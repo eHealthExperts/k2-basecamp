@@ -30,7 +30,7 @@ In order to configure by using envirnoment variables, the above mentioned keys n
 
 ### Config file
 
-Multiple file formats are supported: `JSON` `TOML` `YAMl`
+Multiple file formats are supported: `JSON` `TOML` `YAML`
 
 Locate a file with the library name and the corresponding file ending, e.g., **ctehxk2.json** for Windows or **libctehxk2.json** for Linux next to the library.
 
