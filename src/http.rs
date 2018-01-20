@@ -112,8 +112,8 @@ mod tests {
 
         let _r = request("", Some(body.clone()));
 
-        let (_parts, body) = server.request().unwrap().into_parts();
-        assert_eq!(body, body);
+        let (_parts, req_body) = server.request().unwrap().into_parts();
+        assert_eq!(body, req_body);
     }
 
     #[test]
