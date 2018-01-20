@@ -175,7 +175,7 @@ mod tests {
 
         let path = Settings::log_path();
 
-        assert_eq!(path, Some(String::from(format!("a{}", MAIN_SEPARATOR))));
+        assert_eq!(path, Some(format!("a{}", MAIN_SEPARATOR)));
     }
 
     #[test]

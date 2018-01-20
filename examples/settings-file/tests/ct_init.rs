@@ -38,7 +38,7 @@ fn with_config_file() {
     assert_eq!(0, unsafe { init(ctn, pn) });
 
     let (parts, body) = server.request().unwrap().into_parts();
-    assert_eq!(body, String::from(""));
+    assert_eq!(body.as_str(), "");
     assert_eq!(parts.method, Method::POST);
     assert_eq!(parts.uri, "/yaml/ct_init/17/321");
 

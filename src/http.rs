@@ -125,7 +125,7 @@ mod tests {
         let _r = request("", None);
 
         let (_parts, body) = server.request().unwrap().into_parts();
-        assert_eq!(body, String::from(""));
+        assert_eq!(body.as_str(), "");
     }
 
     #[test]
