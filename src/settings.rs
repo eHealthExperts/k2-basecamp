@@ -18,17 +18,22 @@ pub struct Settings {
 
 impl Settings {
     fn new() -> Self {
-        let mut s = Config::new();
-
-        s.set_default("base_url", "http://localhost:8080/k2/ctapi/")
+        let mut settings = Config::new();
+        settings
+            .set_default("base_url", "http://localhost:8080/k2/ctapi/")
+            .unwrap()
+            .set_default("log_level", "Error")
+            .unwrap()
+            .set_default("timeout", 5000)
             .unwrap();
-        s.set_default("log_level", "Error").unwrap();
-        s.set_default("timeout", 1000).unwrap();
 
-        s.merge(File::with_name(CFG_FILE).required(false)).unwrap();
-        s.merge(Environment::with_prefix("k2")).unwrap();
+        settings
+            .merge(File::with_name(CFG_FILE).required(false))
+            .unwrap()
+            .merge(Environment::with_prefix("k2"))
+            .unwrap();
 
-        s.try_into().expect("Failed to create configuration")
+        settings.try_into().expect("Failed to create configuration")
     }
 
     pub fn base_url() -> String {
