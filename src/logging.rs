@@ -17,7 +17,6 @@ const FILENAME: &str = "libctehxk2.log";
 
 pub fn init() {
     INIT.call_once(|| init_logger());
-    debug!("Logging initialized!");
 }
 
 fn init_logger() {
@@ -27,6 +26,7 @@ fn init_logger() {
     };
 
     log4rs::init_config(config).unwrap();
+    debug!("Logging initialized!");
 }
 
 fn init_file_logger(mut path: String) -> Config {
