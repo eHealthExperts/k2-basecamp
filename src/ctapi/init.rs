@@ -38,7 +38,7 @@ fn handle_ok_status(body: String, ctn: u16, pn: u16) -> Status {
         Status::OK => {
             // Store CTN
             MAP.lock().insert(ctn, pn);
-            debug!("Card terminal opened.");
+            info!("Card terminal opened.");
             status
         }
         _ => status,
