@@ -19,7 +19,7 @@ pub fn close(ctn: u16) -> Status {
     let response = http::request(&path, None);
     match response {
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!\n{}", why);
             Status::ErrHtsi
         }
         Ok(res) => match res.status {
@@ -35,8 +35,9 @@ pub fn close(ctn: u16) -> Status {
 fn handle_ok_status(body: String, ctn: u16) -> Status {
     let status: Status = match body.parse::<Status>() {
         Ok(status) => status,
-        _ => {
+        Err(why) => {
             error!("Unexpected server reponse body!");
+            debug!("Error:\n{}", why);
             return Status::ErrHtsi;
         }
     };

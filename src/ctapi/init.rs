@@ -12,7 +12,8 @@ pub fn init(ctn: u16, pn: u16) -> Status {
     let response = http::request(&path, None);
     match response {
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!");
+            debug!("{}", why);
             Status::ErrHtsi
         }
         Ok(res) => match res.status {

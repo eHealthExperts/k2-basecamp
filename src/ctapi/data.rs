@@ -67,7 +67,8 @@ pub fn data(
     let res = match response {
         Ok(response) => response,
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!");
+            debug!("{}", why);
             return Status::ErrHtsi;
         }
     };
@@ -80,7 +81,8 @@ pub fn data(
     let json: Response = match serde_json::from_str(&res.body) {
         Ok(json) => json,
         Err(why) => {
-            error!("Failed to parse server response data.\n{}", why);
+            error!("Failed to parse server response data!");
+            debug!("{}", why);
             return Status::ErrHtsi;
         }
     };
@@ -98,7 +100,8 @@ pub fn data(
                     content
                 }
                 Err(why) => {
-                    error!("Failed to extract response.\n{}", why);
+                    error!("Failed to extract response.");
+                    debug!("{}", why);
                     return Status::ErrHtsi;
                 }
             };
