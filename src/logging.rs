@@ -25,8 +25,8 @@ fn init_logger() {
         _ => init_stdout_logger(),
     };
 
-    log4rs::init_config(config).unwrap();
-    debug!("Logging initialized!");
+    log4rs::init_config(config).expect("Failed to initialize logging!");
+    info!("Logging initialized!");
 }
 
 fn init_file_logger(mut path: String) -> Config {
@@ -36,7 +36,7 @@ fn init_file_logger(mut path: String) -> Config {
     let file = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} {l} {M}: {m}{n}")))
         .build(path)
-        .unwrap();
+        .expect("Failed to build file appender!");
 
     Config::builder()
         .appender(Appender::builder().build(appender_id, Box::new(file)))
@@ -51,7 +51,7 @@ fn init_file_logger(mut path: String) -> Config {
                 .appender(appender_id)
                 .build(LevelFilter::Error),
         )
-        .unwrap()
+        .expect("Failed to build config for file logger!")
 }
 
 fn init_stdout_logger() -> Config {
@@ -71,7 +71,7 @@ fn init_stdout_logger() -> Config {
                 .appender(appender_id)
                 .build(LevelFilter::Error),
         )
-        .unwrap()
+        .expect("Failed to build config for stdout logger!")
 }
 
 fn log_level() -> LevelFilter {

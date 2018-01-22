@@ -2,13 +2,19 @@ use self::super::MAP;
 use self::super::super::{http, Status};
 
 pub fn close(ctn: u16) -> Status {
-    // Do we know this CTN?
     if !MAP.lock().contains_key(&ctn) {
         error!("Card terminal has not been opened.");
         return Status::ErrInvalid;
     }
 
-    let pn = MAP.lock().get(&ctn).unwrap().clone();
+    let pn = match MAP.lock().get(&ctn) {
+        Some(pn) => pn.clone(),
+        None => {
+            error!("Failed to extract pn for given ctn!");
+            return Status::ErrHtsi;
+        }
+    };
+
     let path = format!("ct_close/{}/{}", ctn, pn);
     let response = http::request(&path, None);
     match response {
