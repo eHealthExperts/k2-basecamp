@@ -19,7 +19,7 @@ The dynamic system library *K2 basecamp* is an implementation of the [CT-API](do
 | --------- | ---------------------------------------- |
 | base_url  | URL of the REST endpoint of *K2 peak*.<br/>**Default: http://localhost:8080/k2/ctapi** |
 | timeout   | Timeout in ms for each http request. <br/>**Default: 5000** |
-| log_level | Set the verbosity level for logging. Possible values: Off, Error, Debug<br/>**Default: Error** |
+| log_level | Set the verbosity level for logging. Possible values: Off, Error, Info, Debug<br/>**Default: Error** |
 | log_path  | Target folder of the log file.<br/>**Default: Logging to STDOUT** |
 | ctn       | Set card terminal number to use for all requests. *Requires that pn is set!* |
 | pn        | Set port number to use for all requests. *Requires that ctn is set!* |
