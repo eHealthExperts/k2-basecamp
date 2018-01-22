@@ -209,7 +209,7 @@ mod tests {
             response_ptr,
         );
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(parts.uri, *format!("/ct_data/{}/{}", ctn, pn));
     }
 
@@ -237,7 +237,7 @@ mod tests {
             lenr: u16,
         }
 
-        let (_parts, body) = server.request().unwrap().into_parts();
+        let (_parts, body) = server.request().into_parts();
         let json: Json = serde_json::from_str(&body).unwrap();
 
         assert_eq!(dad, json.dad);

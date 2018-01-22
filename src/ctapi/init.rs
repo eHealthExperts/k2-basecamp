@@ -86,7 +86,7 @@ mod tests {
 
         init(ctn, pn);
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(parts.uri, *format!("/ct_init/{}/{}", ctn, pn));
     }
 

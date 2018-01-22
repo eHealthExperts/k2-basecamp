@@ -92,7 +92,7 @@ mod tests {
 
         let _r = request("", Some(body));
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(
             parts.headers.get("content-type").unwrap(),
             "application/json"
@@ -112,7 +112,7 @@ mod tests {
 
         let _r = request("", Some(body.clone()));
 
-        let (_parts, req_body) = server.request().unwrap().into_parts();
+        let (_parts, req_body) = server.request().into_parts();
         assert_eq!(body, req_body);
     }
 
@@ -124,8 +124,8 @@ mod tests {
 
         let _r = request("", None);
 
-        let (_parts, body) = server.request().unwrap().into_parts();
-        assert_eq!(body.as_str(), "");
+        let (_parts, body) = server.request().into_parts();
+        assert_eq!(&body, "");
     }
 
     #[test]
