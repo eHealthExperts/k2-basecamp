@@ -30,18 +30,18 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     let mut status: u16 = 0;
     let mut body = String::new();
     {
-        let mut core = Core::new().unwrap();
+        let mut core = Core::new()?;
         let handle = core.handle();
         let client = Client::new(&handle);
         let request = client.request(request).and_then(|res| {
             status = res.status().clone().into();
             res.body().for_each(|chunk| {
-                body.push_str(str::from_utf8(&*chunk).unwrap());
+                body.push_str(str::from_utf8(&*chunk).expect("Failed to convert chunk!"));
                 futures::future::ok(())
             })
         });
 
-        let timeout = Timeout::new(Duration::from_millis(Settings::timeout()), &handle).unwrap();
+        let timeout = Timeout::new(Duration::from_millis(Settings::timeout()), &handle)?;
         let work = request.select2(timeout).then(|res| match res {
             Ok(Either::A((got, _timeout))) => Ok(got),
             Ok(Either::B((_timeout_error, _get))) => Err(hyper::Error::Io(Error::new(
@@ -92,7 +92,7 @@ mod tests {
 
         let _r = request("", Some(body));
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(
             parts.headers.get("content-type").unwrap(),
             "application/json"
@@ -112,8 +112,8 @@ mod tests {
 
         let _r = request("", Some(body.clone()));
 
-        let (_parts, body) = server.request().unwrap().into_parts();
-        assert_eq!(body, body);
+        let (_parts, req_body) = server.request().into_parts();
+        assert_eq!(body, req_body);
     }
 
     #[test]
@@ -124,8 +124,8 @@ mod tests {
 
         let _r = request("", None);
 
-        let (_parts, body) = server.request().unwrap().into_parts();
-        assert_eq!(body, String::from(""));
+        let (_parts, body) = server.request().into_parts();
+        assert_eq!(&body, "");
     }
 
     #[test]

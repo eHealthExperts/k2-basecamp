@@ -12,7 +12,8 @@ pub fn init(ctn: u16, pn: u16) -> Status {
     let response = http::request(&path, None);
     match response {
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!");
+            debug!("{}", why);
             Status::ErrHtsi
         }
         Ok(res) => match res.status {
@@ -38,7 +39,7 @@ fn handle_ok_status(body: String, ctn: u16, pn: u16) -> Status {
         Status::OK => {
             // Store CTN
             MAP.lock().insert(ctn, pn);
-            debug!("Card terminal opened.");
+            info!("Card terminal opened.");
             status
         }
         _ => status,
@@ -85,7 +86,7 @@ mod tests {
 
         init(ctn, pn);
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(parts.uri, *format!("/ct_init/{}/{}", ctn, pn));
     }
 

@@ -18,17 +18,25 @@ pub struct Settings {
 
 impl Settings {
     fn new() -> Self {
-        let mut s = Config::new();
+        let mut settings = Config::new();
 
-        s.set_default("base_url", "http://localhost:8080/k2/ctapi/")
-            .unwrap();
-        s.set_default("log_level", "Error").unwrap();
-        s.set_default("timeout", 1000).unwrap();
+        // set defaults
+        settings
+            .set_default("base_url", "http://localhost:8080/k2/ctapi/")
+            .expect("Failed to set default for base_url!")
+            .set_default("log_level", "Error")
+            .expect("Failed to set default for log_level!")
+            .set_default("timeout", 5000)
+            .expect("Failed set default for timeout!");
 
-        s.merge(File::with_name(CFG_FILE).required(false)).unwrap();
-        s.merge(Environment::with_prefix("k2")).unwrap();
+        // merge with optional config file and env variables
+        settings
+            .merge(File::with_name(CFG_FILE).required(false))
+            .expect("Failed to merge config file!")
+            .merge(Environment::with_prefix("k2"))
+            .expect("Failed to merge env variables!");
 
-        s.try_into().expect("Failed to create configuration")
+        settings.try_into().expect("Failed to create configuration")
     }
 
     pub fn base_url() -> String {
@@ -175,7 +183,7 @@ mod tests {
 
         let path = Settings::log_path();
 
-        assert_eq!(path, Some(String::from(format!("a{}", MAIN_SEPARATOR))));
+        assert_eq!(path, Some(format!("a{}", MAIN_SEPARATOR)));
     }
 
     #[test]
@@ -185,5 +193,23 @@ mod tests {
         let path = Settings::log_path();
 
         assert!(path.is_none());
+    }
+
+    #[test]
+    fn timeout_returns_env_value() {
+        env::set_var("K2_TIMEOUT", "42");
+
+        let timeout = Settings::timeout();
+
+        assert_eq!(timeout, 42);
+    }
+
+    #[test]
+    fn timeout_return_default_if_no_env() {
+        env::remove_var("K2_TIMEOUT");
+
+        let timeout = Settings::timeout();
+
+        assert_eq!(timeout, 5000);
     }
 }

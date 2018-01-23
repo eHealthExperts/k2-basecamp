@@ -11,7 +11,8 @@ struct Response {
     sad: u8,
     lenr: u16,
     response: String,
-    #[serde(rename = "responseCode")] status: i8,
+    #[serde(rename = "responseCode")]
+    status: i8,
 }
 
 pub fn data(
@@ -53,14 +54,22 @@ pub fn data(
         *safe_lenr
     );
 
-    let pn = MAP.lock().get(&ctn).unwrap().clone();
+    let pn = match MAP.lock().get(&ctn) {
+        Some(pn) => pn.clone(),
+        None => {
+            error!("Failed to extract pn for given ctn!");
+            return Status::ErrHtsi;
+        }
+    };
+
     let path = format!("ct_data/{}/{}", ctn, pn);
 
     let response = http::request(&path, Some(json));
     let res = match response {
         Ok(response) => response,
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!");
+            debug!("{}", why);
             return Status::ErrHtsi;
         }
     };
@@ -73,7 +82,8 @@ pub fn data(
     let json: Response = match serde_json::from_str(&res.body) {
         Ok(json) => json,
         Err(why) => {
-            error!("Failed to parse server response data. {}", why);
+            error!("Failed to parse server response data!");
+            debug!("{}", why);
             return Status::ErrHtsi;
         }
     };
@@ -85,8 +95,17 @@ pub fn data(
             *safe_sad = json.sad;
             *safe_lenr = json.lenr;
 
-            let decoded = decode(&json.response).unwrap();
-            debug!("Decoded response field {:?}", decoded);
+            let decoded = match decode(&json.response) {
+                Ok(content) => {
+                    debug!("Decoded response field {:?}", content);
+                    content
+                }
+                Err(why) => {
+                    error!("Failed to extract response.");
+                    debug!("{}", why);
+                    return Status::ErrHtsi;
+                }
+            };
 
             for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
                 *place = *element;
@@ -190,7 +209,7 @@ mod tests {
             response_ptr,
         );
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(parts.uri, *format!("/ct_data/{}/{}", ctn, pn));
     }
 
@@ -218,7 +237,7 @@ mod tests {
             lenr: u16,
         }
 
-        let (_parts, body) = server.request().unwrap().into_parts();
+        let (_parts, body) = server.request().into_parts();
         let json: Json = serde_json::from_str(&body).unwrap();
 
         assert_eq!(dad, json.dad);

@@ -2,18 +2,24 @@ use self::super::MAP;
 use self::super::super::{http, Status};
 
 pub fn close(ctn: u16) -> Status {
-    // Do we know this CTN?
     if !MAP.lock().contains_key(&ctn) {
         error!("Card terminal has not been opened.");
         return Status::ErrInvalid;
     }
 
-    let pn = MAP.lock().get(&ctn).unwrap().clone();
+    let pn = match MAP.lock().get(&ctn) {
+        Some(pn) => pn.clone(),
+        None => {
+            error!("Failed to extract pn for given ctn!");
+            return Status::ErrHtsi;
+        }
+    };
+
     let path = format!("ct_close/{}/{}", ctn, pn);
     let response = http::request(&path, None);
     match response {
         Err(why) => {
-            error!("{}", why);
+            error!("Request failed!\n{}", why);
             Status::ErrHtsi
         }
         Ok(res) => match res.status {
@@ -29,8 +35,9 @@ pub fn close(ctn: u16) -> Status {
 fn handle_ok_status(body: String, ctn: u16) -> Status {
     let status: Status = match body.parse::<Status>() {
         Ok(status) => status,
-        _ => {
+        Err(why) => {
             error!("Unexpected server reponse body!");
+            debug!("Error:\n{}", why);
             return Status::ErrHtsi;
         }
     };
@@ -39,7 +46,7 @@ fn handle_ok_status(body: String, ctn: u16) -> Status {
         Status::OK => {
             // Remove CTN
             MAP.lock().remove(&ctn);
-            debug!("Card terminal closed.");
+            info!("Card terminal closed.");
             status
         }
         _ => status,
@@ -86,7 +93,7 @@ mod tests {
 
         close(ctn);
 
-        let (parts, _body) = server.request().unwrap().into_parts();
+        let (parts, _body) = server.request().into_parts();
         assert_eq!(parts.uri, *format!("/ct_close/{}/{}", ctn, pn));
     }
 
