@@ -48,7 +48,7 @@ impl FromStr for Status {
     type Err = ParseIntError;
 
     fn from_str(status: &str) -> Result<Self, Self::Err> {
-        let code: i8 = try!(status.parse::<i8>());
+        let code: i8 = status.parse::<i8>()?;
         Ok(From::from(code))
     }
 }

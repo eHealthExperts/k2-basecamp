@@ -14,7 +14,7 @@ pub struct Response {
 }
 
 pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Error> {
-    let mut request = Request::new(Method::Post, try!(uri(path)));
+    let mut request = Request::new(Method::Post, uri(path)?);
     match request_body {
         Some(json) => {
             debug!("Request body: {}", json);
