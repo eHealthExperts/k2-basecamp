@@ -11,8 +11,7 @@ struct Response {
     sad: u8,
     lenr: u16,
     response: String,
-    #[serde(rename = "responseCode")]
-    status: i8,
+    #[serde(rename = "responseCode")] status: i8,
 }
 
 pub fn data(
