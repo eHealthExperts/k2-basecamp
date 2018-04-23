@@ -220,7 +220,8 @@ mod tests {
         env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
 
         let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        let slice = unsafe { slice::from_raw_parts(command, lenc as usize) };
+        let exp_cmd = unsafe { encode(slice::from_raw_parts(command, lenc as usize)) };
+
         MAP.lock().insert(ctn, pn);
 
         assert_eq!(
@@ -242,7 +243,7 @@ mod tests {
 
         assert_eq!(dad, json.dad);
         assert_eq!(sad, json.sad);
-        assert_eq!(encode(slice), json.command);
+        assert_eq!(exp_cmd, json.command);
         assert_eq!(lenc, json.lenc);
         assert_eq!(lenr, json.lenr);
     }
