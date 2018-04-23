@@ -5,8 +5,8 @@ extern crate rand;
 extern crate test_server;
 
 use dlopen::raw::Library;
-use std::{env, str};
 use std::u16::MAX;
+use std::{env, str};
 use test_server::http::StatusCode;
 
 #[cfg(target_os = "windows")]
