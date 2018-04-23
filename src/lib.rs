@@ -5,9 +5,9 @@ extern crate futures;
 extern crate hyper;
 #[macro_use]
 extern crate lazy_static;
+extern crate log4rs;
 #[macro_use]
 extern crate log;
-extern crate log4rs;
 #[cfg(test)]
 extern crate rand;
 extern crate serde;
@@ -76,4 +76,14 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
 
     debug!("Returning {}", status);
     status.into()
+}
+
+pub extern "system" fn env() {
+    println!(
+        "Path used to load config file: {}",
+        std::env::current_dir()
+            .expect("Failed to get current dir!")
+            .to_str()
+            .expect("Failed to create string of path!")
+    );
 }
