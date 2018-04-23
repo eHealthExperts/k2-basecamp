@@ -1,5 +1,5 @@
-use self::super::MAP;
 use self::super::super::{http, Status};
+use self::super::MAP;
 use base64::{decode, encode};
 use serde_json;
 use std::slice;
@@ -120,8 +120,8 @@ pub fn data(
 #[cfg(test)]
 mod tests {
 
-    use super::data;
     use super::super::MAP;
+    use super::data;
     use base64::encode;
     use rand;
     use serde_json;

@@ -1,5 +1,5 @@
-use self::super::MAP;
 use self::super::super::{http, Status};
+use self::super::MAP;
 
 pub fn close(ctn: u16) -> Status {
     if !MAP.lock().contains_key(&ctn) {
@@ -56,8 +56,8 @@ fn handle_ok_status(body: String, ctn: u16) -> Status {
 #[cfg(test)]
 mod tests {
 
-    use super::close;
     use super::super::MAP;
+    use super::close;
     use rand;
     use std::env;
     use test_server::{self, http};

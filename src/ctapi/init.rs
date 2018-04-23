@@ -1,5 +1,5 @@
-use self::super::MAP;
 use self::super::super::{http, Status};
+use self::super::MAP;
 
 pub fn init(ctn: u16, pn: u16) -> Status {
     // Do we know this CTN?
@@ -49,8 +49,8 @@ fn handle_ok_status(body: String, ctn: u16, pn: u16) -> Status {
 #[cfg(test)]
 mod tests {
 
-    use super::init;
     use super::super::MAP;
+    use super::init;
     use rand;
     use std::env;
     use test_server::{self, http};

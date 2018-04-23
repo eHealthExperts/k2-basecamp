@@ -1,8 +1,8 @@
 use super::settings::Settings;
-use futures::{self, Future, Stream};
 use futures::future::Either;
-use hyper::{self, Client, Method, Request, Uri};
+use futures::{self, Future, Stream};
 use hyper::header::{ContentLength, ContentType};
+use hyper::{self, Client, Method, Request, Uri};
 use std::io::{Error, ErrorKind};
 use std::str::{self, FromStr};
 use std::time::Duration;
