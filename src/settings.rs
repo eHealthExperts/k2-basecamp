@@ -22,7 +22,7 @@ impl Settings {
 
         // set defaults
         settings
-            .set_default("base_url", "http://localhost:8080/k2/ctapi/")
+            .set_default("base_url", "http://localhost:8088/k2/ctapi/")
             .expect("Failed to set default for base_url!")
             .set_default("log_level", "Error")
             .expect("Failed to set default for log_level!")
