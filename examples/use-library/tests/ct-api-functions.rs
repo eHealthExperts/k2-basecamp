@@ -7,7 +7,8 @@ extern crate test_server;
 use dlopen::raw::Library;
 use std::u16::MAX;
 use std::{env, str};
-use test_server::http::StatusCode;
+use test_server::actix_web::HttpResponse;
+use test_server::TestServer;
 
 #[cfg(target_os = "windows")]
 const LIB_PATH: &str = "../../target/debug/ctehxk2.dll";
@@ -49,16 +50,21 @@ fn has_ct_api_functions() {
     let response_ptr: *mut u8 = &mut response[0];
     let mut lenr: u16 = response.len() as u16;
 
-    let server = test_server::serve(Some("127.0.0.1:65432"));
-    env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
+    let server = TestServer::new(65432, |req| {
+        let path = req.path();
+        if path.starts_with("/ct_data") {
+            return HttpResponse::Ok().body(
+                "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
+            );
+        }
+        if path.starts_with("/ct_") {
+            return HttpResponse::Ok().body("0");
+        }
+        HttpResponse::BadRequest().into()
+    });
+    env::set_var("K2_BASE_URL", server.url());
 
-    server.reply().status(StatusCode::OK).body("0");
     assert_eq!(0, unsafe { init(ctn, pn) });
-
-    server
-        .reply()
-        .status(StatusCode::OK)
-        .body("{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}");
     assert_eq!(0, unsafe {
         data(
             ctn,
@@ -70,7 +76,5 @@ fn has_ct_api_functions() {
             response_ptr,
         )
     });
-
-    server.reply().status(StatusCode::OK).body("0");
     assert_eq!(0, unsafe { close(ctn) });
 }
