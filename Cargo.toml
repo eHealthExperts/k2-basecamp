@@ -15,20 +15,19 @@ crate-type = ["cdylib"]
 
 [dependencies]
 antidote = "1.0.0"
-base64 = "0.9.0"
-futures = "0.1.17"
-hyper = "0.11.14"
-lazy_static = "1.0.0"
-log = "0.4.1"
+base64 = "0.9.2"
+futures = "0.1.23"
+hyper = "0.11.27"
+lazy_static = "1.0.1"
+log = "0.4.3"
 log4rs = "0.8.0"
-serde = "1.0.27"
-serde_derive = "1.0.27"
-serde_json = "1.0.9"
-tokio-core = "0.1.12"
+serde = "1.0.70"
+serde_derive = "1.0.70"
+serde_json = "1.0.22"
+tokio-core = "0.1.17"
 
 [dependencies.config]
-git = "https://github.com/ChriFo/config-rs"
-branch = "fix/env"
+version = "0.9.0"
 default-features = false
 features = ["json", "toml", "yaml"]
 
@@ -36,11 +35,11 @@ features = ["json", "toml", "yaml"]
 moz-cheddar = "0.4.2"
 
 [dev-dependencies]
-rand = "0.4.2"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.3.2" }
+rand = "0.5.4"
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.2.1" }
 
 [target.'cfg(windows)'.build-dependencies]
-winres = "0.1.5"
+winres = "0.1.6"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
@@ -49,17 +48,3 @@ LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
 ProductVersion = "0.14.9"
-
-[package.metadata.release]
-sign-commit = true
-disable-push = true
-upload-doc = false
-no-dev-version = true
-tag-message = "{{version}}"
-tag-prefix = "v"
-pre-release-commit-message = "{{version}}"
-pre-release-replacements = [
-    {file=".appveyor.yml", search="version: [a-z0-9\\.\\-\\{\\}]+", replace="version: {{version}}-{branch}-{build}"},
-    {file="Cargo.toml", search="FileVersion = \"[0-9\\.]+\"", replace="FileVersion = \"{{version}}\""},
-    {file="Cargo.toml", search="ProductVersion = \"[0-9\\.]+\"", replace="ProductVersion = \"{{version}}\""},
-]
