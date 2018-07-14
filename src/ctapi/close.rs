@@ -1,5 +1,5 @@
-use self::super::MAP;
 use self::super::super::{http, Status};
+use self::super::MAP;
 
 pub fn close(ctn: u16) -> Status {
     if !MAP.lock().contains_key(&ctn) {
@@ -56,11 +56,12 @@ fn handle_ok_status(body: String, ctn: u16) -> Status {
 #[cfg(test)]
 mod tests {
 
-    use super::close;
     use super::super::MAP;
+    use super::close;
     use rand;
     use std::env;
-    use test_server::{self, http};
+    use test_server::actix_web::HttpResponse;
+    use test_server::TestServer;
 
     #[test]
     fn returns_err_htsi_if_no_server() {
@@ -83,9 +84,8 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
-        let server = test_server::serve(None);
-        server.reply().status(http::StatusCode::BAD_REQUEST);
-        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -93,15 +93,14 @@ mod tests {
 
         close(ctn);
 
-        let (parts, _body) = server.request().into_parts();
-        assert_eq!(parts.uri, *format!("/ct_close/{}/{}", ctn, pn));
+        let path = server.received_request().unwrap().path;
+        assert_eq!(path, *format!("/ct_close/{}/{}", ctn, pn));
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
-        let server = test_server::serve(None);
-        server.reply().status(http::StatusCode::BAD_REQUEST);
-        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -113,12 +112,8 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_status() {
-        let server = test_server::serve(None);
-        server
-            .reply()
-            .status(http::StatusCode::OK)
-            .body("hello world");
-        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+        let server = TestServer::new(0, |_| HttpResponse::Ok().body("hello world"));
+        env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -130,9 +125,8 @@ mod tests {
 
     #[test]
     fn returns_response_status_from_server() {
-        let server = test_server::serve(None);
-        server.reply().status(http::StatusCode::OK).body("-11");
-        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+        let server = TestServer::new(0, |_| HttpResponse::Ok().body("-11"));
+        env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -144,9 +138,8 @@ mod tests {
 
     #[test]
     fn return_ok_and_close_ctn_if_server_returns_ok() {
-        let server = test_server::serve(None);
-        server.reply().status(http::StatusCode::OK).body("0");
-        env::set_var("K2_BASE_URL", format!("http://{}", &server.addr()));
+        let server = TestServer::new(0, |_| HttpResponse::Ok().body("0"));
+        env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();

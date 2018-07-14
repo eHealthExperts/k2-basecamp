@@ -3,7 +3,7 @@ name = "settings-file"
 version = "0.1.1"
 
 [dependencies]
-const-cstr = "0.2.1"
-dlopen = "0.1.3"
-rand = "0.4.2"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.3.2" }
+const-cstr = "0.3.0"
+dlopen = "0.1.4"
+rand = "0.5.4"
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.2.1" }

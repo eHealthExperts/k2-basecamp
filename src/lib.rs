@@ -18,10 +18,10 @@ extern crate serde_json;
 extern crate test_server;
 extern crate tokio_core;
 
-mod settings;
 mod ctapi;
 mod http;
 mod logging;
+mod settings;
 
 use ctapi::close::close;
 use ctapi::data::data;
