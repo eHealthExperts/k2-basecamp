@@ -11,7 +11,6 @@ The dynamic system library *K2 basecamp* is an implementation of the [CT-API](do
 ## Requirements
 
 * [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
-* Microsoft Visual C++ Redistributable 2015 or newer (Windows only!)
 
 ## Configuration
 
