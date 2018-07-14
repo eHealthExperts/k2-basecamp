@@ -251,9 +251,8 @@ mod tests {
     #[test]
     fn response_is_mapped_to_parameter() {
         let server = TestServer::new(0, |_| {
-            HttpResponse::Ok().body(
-                "{\"dad\":39,\"sad\":63,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
-            )
+            HttpResponse::Ok()
+                .body(r#"{"dad":39,"sad":63,"lenr":5,"response":"AQIDBAU=","responseCode":0}"#)
         });
         env::set_var("K2_BASE_URL", server.url());
 
@@ -318,7 +317,7 @@ mod tests {
     fn returns_response_status_from_valid_json_response_struct() {
         let server = TestServer::new(0, |_| {
             HttpResponse::Ok()
-                .body("{\"dad\":1,\"sad\":1,\"lenr\":1,\"response\":\"a\",\"responseCode\":-11}")
+                .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
         });
         env::set_var("K2_BASE_URL", server.url());
 
