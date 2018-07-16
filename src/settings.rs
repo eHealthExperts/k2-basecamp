@@ -174,7 +174,7 @@ mod tests {
 
         let url = Settings::base_url();
 
-        assert_eq!(url, "http://localhost:8080/k2/ctapi/");
+        assert_eq!(url, "http://localhost:8088/k2/ctapi/");
     }
 
     #[test]
