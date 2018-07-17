@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.15.0"
+version = "0.15.1"
 description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 license = "MIT"
@@ -43,8 +43,8 @@ winres = "0.1.6"
 
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
-FileVersion = "0.15.0"
+FileVersion = "0.15.1"
 LegalCopyright = "eHealthExperts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
-ProductVersion = "0.15.0"
+ProductVersion = "0.15.1"
