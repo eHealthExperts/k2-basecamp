@@ -92,8 +92,8 @@ impl Settings {
         match s.timeout {
             Some(timeout) => match timeout {
                 0 => None,
-                _ => Some(timeout)
-            }
+                _ => Some(timeout),
+            },
             None => None,
         }
     }

@@ -16,7 +16,9 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
         client_builder.timeout(Duration::from_secs(seconds));
     }
 
-    let client = client_builder.build().expect("Failed to create HTTP client");
+    let client = client_builder
+        .build()
+        .expect("Failed to create HTTP client");
 
     let mut request_builder = client.post(&uri(path));
 
