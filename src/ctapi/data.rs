@@ -129,8 +129,7 @@ mod tests {
     use std::slice;
     use std::str;
     use std::u16::MAX;
-    use test_server::actix_web::HttpResponse;
-    use test_server::TestServer;
+    use test_server::{HttpResponse, TestServer};
 
     fn rand_params() -> (*const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
         let commands: [u8; 1] = [rand::random::<u8>(); 1];
