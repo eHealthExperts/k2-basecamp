@@ -1,8 +1,6 @@
 extern crate antidote;
 extern crate base64;
 extern crate config;
-extern crate futures;
-extern crate hyper;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -10,13 +8,13 @@ extern crate log;
 extern crate log4rs;
 #[cfg(test)]
 extern crate rand;
+extern crate reqwest;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 #[cfg(test)]
 extern crate test_server;
-extern crate tokio_core;
 
 mod ctapi;
 mod http;
