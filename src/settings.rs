@@ -8,7 +8,7 @@ const CFG_FILE: &str = "libctehxk2";
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    timeout: u64,
+    timeout: Option<u64>,
     base_url: String,
     log_level: String,
     log_path: Option<String>,
@@ -25,9 +25,7 @@ impl Settings {
             .set_default("base_url", "http://localhost:8088/k2/ctapi/")
             .expect("Failed to set default for base_url!")
             .set_default("log_level", "Error")
-            .expect("Failed to set default for log_level!")
-            .set_default("timeout", 5000)
-            .expect("Failed set default for timeout!");
+            .expect("Failed to set default for log_level!");
 
         // merge with optional config file and env variables
         settings
@@ -89,9 +87,15 @@ impl Settings {
         }
     }
 
-    pub fn timeout() -> u64 {
+    pub fn timeout() -> Option<u64> {
         let s = Settings::new();
-        s.timeout.clone()
+        match s.timeout {
+            Some(timeout) => match timeout {
+                0 => None,
+                _ => Some(timeout),
+            },
+            None => None,
+        }
     }
 }
 
@@ -201,15 +205,15 @@ mod tests {
 
         let timeout = Settings::timeout();
 
-        assert_eq!(timeout, 42);
+        assert_eq!(timeout, Some(42));
     }
 
     #[test]
-    fn timeout_return_default_if_no_env() {
+    fn timeout_return_none_if_no_env() {
         env::remove_var("K2_TIMEOUT");
 
         let timeout = Settings::timeout();
 
-        assert_eq!(timeout, 5000);
+        assert!(timeout.is_none());
     }
 }

@@ -1,12 +1,8 @@
 use super::settings::Settings;
-use futures::future::Either;
-use futures::{self, Future, Stream};
-use hyper::header::{ContentLength, ContentType};
-use hyper::{self, Client, Method, Request, Uri};
-use std::io::{Error, ErrorKind};
-use std::str::{self, FromStr};
+use reqwest;
+use std::io::Error;
+use std::str;
 use std::time::Duration;
-use tokio_core::reactor::{Core, Timeout};
 
 pub struct Response {
     pub status: u16,
@@ -14,48 +10,31 @@ pub struct Response {
 }
 
 pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Error> {
-    let mut request = Request::new(Method::Post, uri(path)?);
-    match request_body {
-        Some(json) => {
-            debug!("Request body: {}", json);
-            request.headers_mut().set(ContentType::json());
-            request.headers_mut().set(ContentLength(json.len() as u64));
-            request.set_body(json);
-        }
-        _ => {
-            debug!("Empty request body...");
-        }
+    let mut client_builder = reqwest::Client::builder();
+
+    if let Some(seconds) = Settings::timeout() {
+        client_builder.timeout(Duration::from_secs(seconds));
+    }
+
+    let client = client_builder
+        .build()
+        .expect("Failed to create HTTP client");
+
+    let mut request_builder = client.post(&uri(path));
+
+    if let Some(json) = request_body {
+        debug!("Request body: {}", json);
+        request_builder.json(&json);
+    } else {
+        debug!("Empty request body...");
     }
 
     let mut status: u16 = 0;
     let mut body = String::new();
-    {
-        let mut core = Core::new()?;
-        let handle = core.handle();
-        let client = Client::new(&handle);
-        let request = client.request(request).and_then(|res| {
-            status = res.status().clone().into();
-            res.body().for_each(|chunk| {
-                body.push_str(str::from_utf8(&*chunk).expect("Failed to convert chunk!"));
-                futures::future::ok(())
-            })
-        });
 
-        let timeout = Timeout::new(Duration::from_millis(Settings::timeout()), &handle)?;
-        let work = request.select2(timeout).then(|res| match res {
-            Ok(Either::A((got, _timeout))) => Ok(got),
-            Ok(Either::B((_timeout_error, _get))) => Err(hyper::Error::Io(Error::new(
-                ErrorKind::TimedOut,
-                "Client timed out while connecting",
-            ))),
-            Err(Either::A((get_error, _timeout))) => Err(get_error),
-            Err(Either::B((timeout_error, _get))) => Err(From::from(timeout_error)),
-        });
-
-        try!(
-            core.run(work)
-                .map_err(|err| Error::new(ErrorKind::Other, err))
-        );
+    if let Ok(mut response) = request_builder.send() {
+        status = response.status().into();
+        body = response.text().expect("Failed to get response body")
     }
 
     debug!("Response status: {}", status);
@@ -63,12 +42,11 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     Ok(Response { status, body })
 }
 
-fn uri(path: &str) -> Result<Uri, Error> {
+fn uri(path: &str) -> String {
     let mut addr = Settings::base_url();
     addr.push_str(path);
     debug!("Request URL: {}", addr);
-
-    Uri::from_str(&addr).map_err(|err| Error::new(ErrorKind::Other, err))
+    addr
 }
 
 #[cfg(test)]
@@ -77,8 +55,7 @@ mod tests {
     use super::{request, Response};
     use rand;
     use std::env;
-    use test_server::actix_web::HttpResponse;
-    use test_server::TestServer;
+    use test_server::{HttpResponse, TestServer};
 
     #[test]
     fn request_with_body_is_content_type_json() {

@@ -53,8 +53,7 @@ mod tests {
     use super::init;
     use rand;
     use std::env;
-    use test_server::actix_web::HttpResponse;
-    use test_server::TestServer;
+    use test_server::{HttpResponse, TestServer};
 
     #[test]
     fn returns_err_htsi_if_no_server() {
