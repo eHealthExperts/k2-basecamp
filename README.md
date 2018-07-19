@@ -2,7 +2,7 @@
 
 [![Latest](https://img.shields.io/github/release/eHealthExperts/k2-basecamp.svg?label=latest)](https://github.com/eHealthExperts/k2-basecamp/releases/latest)
 [![Travis Build Status](https://travis-ci.org/eHealthExperts/k2-basecamp.svg?branch=master)](https://travis-ci.org/eHealthExperts/k2-basecamp)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/mr7hc26i3nvddi04/branch/master?svg=true)](https://ci.appveyor.com/project/ChriFo/k2-basecamp)
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/pv2sdfhdl5chtphj?svg=true)](https://ci.appveyor.com/project/ehex/k2-basecamp)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 The dynamic system library *K2 basecamp* is an implementation of the [CT-API](doc/CT-API-1.1.1.pdf) standard.<br/>
