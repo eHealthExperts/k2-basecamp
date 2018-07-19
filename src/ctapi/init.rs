@@ -17,16 +17,16 @@ pub fn init(ctn: u16, pn: u16) -> Status {
             Status::ErrHtsi
         }
         Ok(res) => match res.status {
-            200 => handle_ok_status(res.body, ctn, pn),
+            200 => handle_ok_status(&res.body, ctn, pn),
             _ => {
                 error!("Request failed! Server response was not OK!");
-                return Status::ErrHtsi;
+                Status::ErrHtsi
             }
         },
     }
 }
 
-fn handle_ok_status(body: String, ctn: u16, pn: u16) -> Status {
+fn handle_ok_status(body: &str, ctn: u16, pn: u16) -> Status {
     let status: Status = match body.parse::<Status>() {
         Ok(status) => status,
         _ => {

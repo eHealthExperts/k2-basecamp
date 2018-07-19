@@ -55,7 +55,7 @@ pub fn data(
     );
 
     let pn = match MAP.lock().get(&ctn) {
-        Some(pn) => pn.clone(),
+        Some(pn) => *pn,
         None => {
             error!("Failed to extract pn for given ctn!");
             return Status::ErrHtsi;

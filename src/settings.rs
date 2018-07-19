@@ -40,7 +40,7 @@ impl Settings {
     pub fn base_url() -> String {
         let s = Settings::new();
         let mut url = s.base_url.clone();
-        if !url.trim().ends_with("/") {
+        if !url.trim().ends_with('/') {
             url.push_str("/");
         }
         url

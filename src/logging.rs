@@ -15,13 +15,14 @@ const FILENAME: &str = "ctehxk2.log";
 #[cfg(not(target_os = "windows"))]
 const FILENAME: &str = "libctehxk2.log";
 
+#[cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
 pub fn init() {
     INIT.call_once(|| init_logger());
 }
 
 fn init_logger() {
     let config = match Settings::log_path() {
-        Some(path) => init_file_logger(String::from(path)),
+        Some(path) => init_file_logger(path),
         _ => init_stdout_logger(),
     };
 
@@ -75,8 +76,8 @@ fn init_stdout_logger() -> Config {
 }
 
 fn log_level() -> LevelFilter {
-    return match LevelFilter::from_str(&Settings::log_level()) {
+    match LevelFilter::from_str(&Settings::log_level()) {
         Ok(log_level) => log_level,
         _ => LevelFilter::Error,
-    };
+    }
 }
