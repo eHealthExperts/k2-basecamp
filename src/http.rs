@@ -1,5 +1,6 @@
 use super::settings::Settings;
 use reqwest;
+use serde_json::Value;
 use std::io::Error;
 use std::str;
 use std::time::Duration;
@@ -9,11 +10,11 @@ pub struct Response {
     pub body: String,
 }
 
-pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Error> {
+pub fn request(path: &str, request_body: Option<Value>) -> Result<Response, Error> {
     let mut client_builder = reqwest::Client::builder();
 
     if let Some(seconds) = Settings::timeout() {
-        client_builder.timeout(Duration::from_secs(seconds));
+        client_builder = client_builder.timeout(Duration::from_secs(seconds));
     }
 
     let client = client_builder
@@ -23,8 +24,8 @@ pub fn request(path: &str, request_body: Option<String>) -> Result<Response, Err
     let mut request_builder = client.post(&uri(path));
 
     if let Some(json) = request_body {
-        debug!("Request body: {}", json);
-        request_builder.json(&json);
+        debug!("Request body: {:?}", json);
+        request_builder = request_builder.json(&json);
     } else {
         debug!("Empty request body...");
     }
@@ -53,23 +54,20 @@ fn uri(path: &str) -> String {
 mod tests {
 
     use super::{request, Response};
-    use rand;
+    use rand::distributions::Alphanumeric;
+    use rand::{self, Rng};
+    use serde_json::{self, Value};
     use std::env;
-    use test_server::{HttpResponse, TestServer};
+    use test_server::{self, HttpResponse};
 
     #[test]
     fn request_with_body_is_content_type_json() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
-        let mut body = String::new();
-        for _ in 0..10 {
-            body.push(rand::random::<u8>() as char);
-        }
+        let _ = request("", Some(json!({ "body": create_rand_string(100) })));
+        let request = server.requests.next().unwrap();
 
-        let _r = request("", Some(body));
-
-        let request = server.received_request().unwrap();
         assert_eq!(
             Some(&String::from("application/json")),
             request.headers.get("content-type")
@@ -77,44 +75,46 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn send_request_body_if_given() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
-        let mut body = String::new();
-        for _ in 0..10 {
-            body.push(rand::random::<u8>() as char);
-        }
+        let body = json!({ "body": create_rand_string(100) });
 
-        let _r = request("", Some(body.clone()));
+        let _ = request("", Some(body.clone()));
+        let request = server.requests.next().unwrap();
+        let json: Value = serde_json::from_str(&request.body).unwrap();
 
-        let request = server.received_request().unwrap();
-        assert_eq!(body, request.body);
+        assert_eq!(body, json);
     }
 
     #[test]
-    #[ignore]
     fn if_no_json_is_given_send_empty_request_body() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
-        let _r = request("", None);
+        let _ = request("", None);
+        let request = server.requests.next().unwrap();
 
-        let request = server.received_request().unwrap();
         assert!(request.body.is_empty());
     }
 
     #[test]
     fn response_contains_status_and_body() {
-        let server = TestServer::new(0, |_| {
+        let server = test_server::new(0, |_| {
             HttpResponse::InternalServerError().body("hello world")
         });
         env::set_var("K2_BASE_URL", server.url());
-
         let response: Response = request("", None).unwrap();
 
         assert_eq!(response.status, 500);
         assert_eq!(response.body, "hello world");
+    }
+
+    fn create_rand_string(size: usize) -> String {
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(size)
+            .collect::<String>()
     }
 }
