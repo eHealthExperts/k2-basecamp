@@ -1,6 +1,6 @@
 use super::settings::Settings;
 use reqwest;
-use std::collections::HashMap;
+use serde_json::Value;
 use std::io::Error;
 use std::str;
 use std::time::Duration;
@@ -10,7 +10,7 @@ pub struct Response {
     pub body: String,
 }
 
-pub fn request(path: &str, request_body: Option<HashMap<&str, String>>) -> Result<Response, Error> {
+pub fn request(path: &str, request_body: Option<Value>) -> Result<Response, Error> {
     let mut client_builder = reqwest::Client::builder();
 
     if let Some(seconds) = Settings::timeout() {
@@ -57,7 +57,6 @@ mod tests {
     use rand::distributions::Alphanumeric;
     use rand::{self, Rng};
     use serde_json::{self, Value};
-    use std::collections::HashMap;
     use std::env;
     use test_server::{self, HttpResponse};
 
@@ -66,10 +65,7 @@ mod tests {
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
-        let mut body = HashMap::new();
-        body.insert("body", create_rand_string(100));
-
-        let _ = request("", Some(body));
+        let _ = request("", Some(json!({ "body": create_rand_string(100) })));
         let request = server.requests.next().unwrap();
 
         assert_eq!(
@@ -83,14 +79,13 @@ mod tests {
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
-        let mut body = HashMap::new();
-        body.insert("body", create_rand_string(100));
+        let body = json!({ "body": create_rand_string(100) });
 
         let _ = request("", Some(body.clone()));
         let request = server.requests.next().unwrap();
         let json: Value = serde_json::from_str(&request.body).unwrap();
 
-        assert_eq!(json!(body), json);
+        assert_eq!(body, json);
     }
 
     #[test]

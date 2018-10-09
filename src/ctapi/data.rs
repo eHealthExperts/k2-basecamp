@@ -2,7 +2,6 @@ use self::super::super::{http, Status};
 use self::super::MAP;
 use base64::{decode, encode};
 use serde_json;
-use std::collections::HashMap;
 use std::slice;
 
 #[allow(non_snake_case)]
@@ -54,12 +53,13 @@ pub fn data(
     let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
-    let mut json: HashMap<&str, String> = HashMap::new();
-    json.insert("dad", format!("{}", *safe_dad));
-    json.insert("sad", format!("{}", *safe_sad));
-    json.insert("lenc", format!("{}", lenc));
-    json.insert("command", encode(safe_command));
-    json.insert("lenr", format!("{}", *safe_lenr));
+    let json = json!({
+        "dad": *safe_dad,
+        "sad": *safe_sad,
+        "lenc": lenc,
+        "command": encode(safe_command),
+        "lenr": *safe_lenr
+    });
 
     let path = format!("ct_data/{}/{}", ctn, pn);
     let response = http::request(&path, Some(json));
@@ -209,11 +209,11 @@ mod tests {
         let body = server.requests.next().unwrap().body;
         let json: Value = serde_json::from_str(&body).unwrap();
 
-        assert_eq!(*json.get("dad").unwrap(), json!(format!("{}", dad)));
-        assert_eq!(*json.get("sad").unwrap(), json!(format!("{}", sad)));
+        assert_eq!(*json.get("dad").unwrap(), json!(dad));
+        assert_eq!(*json.get("sad").unwrap(), json!(sad));
         assert_eq!(*json.get("command").unwrap(), json!(format!("{}", exp_cmd)));
-        assert_eq!(*json.get("lenc").unwrap(), json!(format!("{}", lenc)));
-        assert_eq!(*json.get("lenr").unwrap(), json!(format!("{}", lenr)));
+        assert_eq!(*json.get("lenc").unwrap(), json!(lenc));
+        assert_eq!(*json.get("lenr").unwrap(), json!(lenr));
     }
 
     #[test]
