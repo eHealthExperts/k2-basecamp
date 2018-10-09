@@ -45,15 +45,6 @@ pub fn data(
     let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
-    let json = format!(
-        "{{\"dad\":{},\"sad\":{},\"lenc\":{},\"command\":\"{}\",\"lenr\":{}}}",
-        *safe_dad,
-        *safe_sad,
-        lenc,
-        encode(safe_command),
-        *safe_lenr
-    );
-
     let pn = match MAP.lock().get(&ctn) {
         Some(pn) => pn.clone(),
         None => {
@@ -61,6 +52,12 @@ pub fn data(
             return Status::ErrHtsi;
         }
     };
+    let mut json: HashMap<&str, String> = HashMap::new();
+    json.insert("dad", format!("{}", *safe_dad));
+    json.insert("sad", format!("{}", *safe_sad));
+    json.insert("lenc", format!("{}", lenc));
+    json.insert("command", encode(safe_command));
+    json.insert("lenr", format!("{}", *safe_lenr));
 
     let path = format!("ct_data/{}/{}", ctn, pn);
 
