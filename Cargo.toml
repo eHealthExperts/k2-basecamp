@@ -1,6 +1,6 @@
 [package]
 name = "k2_basecamp"
-version = "0.15.2"
+version = "0.15.3"
 description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
 license = "MIT"
