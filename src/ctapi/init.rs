@@ -53,7 +53,7 @@ mod tests {
     use super::init;
     use rand;
     use std::env;
-    use test_server::{HttpResponse, TestServer};
+    use test_server::{self, HttpResponse};
 
     #[test]
     fn returns_err_htsi_if_no_server() {
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
@@ -85,13 +85,13 @@ mod tests {
 
         init(ctn, pn);
 
-        let path = server.received_request().unwrap().path;
+        let path = server.requests.next().unwrap().path;
         assert_eq!(path, *format!("/ct_init/{}/{}", ctn, pn));
     }
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_status() {
-        let server = TestServer::new(0, |_| HttpResponse::Ok().body("hello world"));
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"));
         env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn returns_response_status_from_server() {
-        let server = TestServer::new(0, |_| HttpResponse::Ok().body("-11"));
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("-11"));
         env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn returns_ok_and_init_ctn_if_server_returns_ok() {
-        let server = TestServer::new(0, |_| HttpResponse::Ok().body("0"));
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("0"));
         env::set_var("K2_BASE_URL", server.url());
 
         let ctn = rand::random::<u16>();
