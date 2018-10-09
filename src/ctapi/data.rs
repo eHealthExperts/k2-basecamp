@@ -2,6 +2,7 @@ use self::super::super::{http, Status};
 use self::super::MAP;
 use base64::{decode, encode};
 use serde_json;
+use std::collections::HashMap;
 use std::slice;
 
 #[allow(non_snake_case)]
@@ -29,6 +30,14 @@ pub fn data(
         return Status::ErrInvalid;
     }
 
+    let pn = match MAP.lock().get(&ctn) {
+        Some(pn) => *pn,
+        None => {
+            error!("Failed to extract pn for given ctn!");
+            return Status::ErrHtsi;
+        }
+    };
+
     let safe_dad: &mut u8 = unsafe { &mut *dad };
     debug!("dad: {}", safe_dad);
 
@@ -45,13 +54,6 @@ pub fn data(
     let safe_response = unsafe { slice::from_raw_parts_mut(response, *safe_lenr as usize) };
     debug!("response with {} slices formed", safe_response.len());
 
-    let pn = match MAP.lock().get(&ctn) {
-        Some(pn) => pn.clone(),
-        None => {
-            error!("Failed to extract pn for given ctn!");
-            return Status::ErrHtsi;
-        }
-    };
     let mut json: HashMap<&str, String> = HashMap::new();
     json.insert("dad", format!("{}", *safe_dad));
     json.insert("sad", format!("{}", *safe_sad));
@@ -60,7 +62,6 @@ pub fn data(
     json.insert("lenr", format!("{}", *safe_lenr));
 
     let path = format!("ct_data/{}/{}", ctn, pn);
-
     let response = http::request(&path, Some(json));
     let res = match response {
         Ok(response) => response,
@@ -121,30 +122,11 @@ mod tests {
     use super::data;
     use base64::encode;
     use rand;
-    use serde_json;
+    use serde_json::{self, Value};
     use std::env;
     use std::slice;
-    use std::str;
     use std::u16::MAX;
-    use test_server::{HttpResponse, TestServer};
-
-    fn rand_params() -> (*const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
-        let commands: [u8; 1] = [rand::random::<u8>(); 1];
-        let commands_ptr: *const u8 = &commands[0];
-        let lenc: u16 = commands.len() as u16;
-
-        let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
-        let response_ptr: *mut u8 = &mut response[0];
-        let lenr: u16 = response.len() as u16;
-
-        let dad = rand::random::<u8>();
-        let sad = rand::random::<u8>();
-
-        let ctn = rand::random::<u16>();
-        let pn = rand::random::<u16>();
-
-        (commands_ptr, lenc, response_ptr, lenr, dad, sad, ctn, pn)
-    }
+    use test_server::{self, HttpResponse};
 
     #[test]
     fn returns_err_invalid_if_terminal_closed() {
@@ -189,7 +171,7 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -205,14 +187,13 @@ mod tests {
             response_ptr,
         );
 
-        let path = server.received_request().unwrap().path;
+        let path = server.requests.next().unwrap().path;
         assert_eq!(path, *format!("/ct_data/{}/{}", ctn, pn));
     }
 
     #[test]
-    #[ignore]
     fn post_body_contains_parameter() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
         let (command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -225,28 +206,19 @@ mod tests {
             data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response)
         );
 
-        #[derive(Deserialize, Debug)]
-        struct Json {
-            dad: u8,
-            sad: u8,
-            lenc: u16,
-            command: String,
-            lenr: u16,
-        }
+        let body = server.requests.next().unwrap().body;
+        let json: Value = serde_json::from_str(&body).unwrap();
 
-        let body = server.received_request().unwrap().body;
-        let json: Json = serde_json::from_str(&body).unwrap();
-
-        assert_eq!(dad, json.dad);
-        assert_eq!(sad, json.sad);
-        assert_eq!(exp_cmd, json.command);
-        assert_eq!(lenc, json.lenc);
-        assert_eq!(lenr, json.lenr);
+        assert_eq!(*json.get("dad").unwrap(), json!(format!("{}", dad)));
+        assert_eq!(*json.get("sad").unwrap(), json!(format!("{}", sad)));
+        assert_eq!(*json.get("command").unwrap(), json!(format!("{}", exp_cmd)));
+        assert_eq!(*json.get("lenc").unwrap(), json!(format!("{}", lenc)));
+        assert_eq!(*json.get("lenr").unwrap(), json!(format!("{}", lenr)));
     }
 
     #[test]
     fn response_is_mapped_to_parameter() {
-        let server = TestServer::new(0, |_| {
+        let server = test_server::new(0, |_| {
             HttpResponse::Ok()
                 .body(r#"{"dad":39,"sad":63,"lenr":5,"response":"AQIDBAU=","responseCode":0}"#)
         });
@@ -267,7 +239,7 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_server_response_is_not_200() {
-        let server = TestServer::new(0, |_| HttpResponse::BadRequest().into());
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -289,7 +261,7 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_response_struct_as_json() {
-        let server = TestServer::new(0, |_| HttpResponse::Ok().body("hello world"));
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"));
         env::set_var("K2_BASE_URL", server.url());
 
         let (commands_ptr, lenc, response_ptr, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -311,7 +283,7 @@ mod tests {
 
     #[test]
     fn returns_response_status_from_valid_json_response_struct() {
-        let server = TestServer::new(0, |_| {
+        let server = test_server::new(0, |_| {
             HttpResponse::Ok()
                 .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
         });
@@ -332,5 +304,23 @@ mod tests {
                 response_ptr,
             )
         );
+    }
+
+    fn rand_params() -> (*const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
+        let commands: [u8; 1] = [rand::random::<u8>(); 1];
+        let commands_ptr: *const u8 = &commands[0];
+        let lenc: u16 = commands.len() as u16;
+
+        let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
+        let response_ptr: *mut u8 = &mut response[0];
+        let lenr: u16 = response.len() as u16;
+
+        let dad = rand::random::<u8>();
+        let sad = rand::random::<u8>();
+
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+
+        (commands_ptr, lenc, response_ptr, lenr, dad, sad, ctn, pn)
     }
 }
