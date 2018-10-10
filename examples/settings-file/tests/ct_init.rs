@@ -8,8 +8,7 @@ use dlopen::raw::Library;
 use std::fs;
 use std::path::Path;
 use std::str;
-use test_server::actix_web::HttpResponse;
-use test_server::TestServer;
+use test_server::HttpResponse;
 
 #[cfg(target_os = "windows")]
 const LOG_FILE_PATH: &str = "ctehxk2.log";
@@ -30,14 +29,14 @@ fn with_config_file() {
     let init: unsafe extern "system" fn(u16, u16) -> i8 =
         unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
 
-    let server = TestServer::new(65432, |_| HttpResponse::Ok().body("0"));
+    let server = test_server::new(65432, |_| HttpResponse::Ok().body("0"));
 
     let ctn = rand::random::<u16>();
     let pn = rand::random::<u16>();
 
     assert_eq!(0, unsafe { init(ctn, pn) });
 
-    let request = server.received_request().unwrap();
+    let request = server.requests.next().unwrap();
 
     //assert_eq!(body, "");
     assert_eq!(request.method, "POST");

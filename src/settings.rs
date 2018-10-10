@@ -31,7 +31,7 @@ impl Settings {
         settings
             .merge(File::with_name(CFG_FILE).required(false))
             .expect("Failed to merge config file!")
-            .merge(Environment::with_prefix("k2"))
+            .merge(Environment::with_prefix("k2").ignore_empty(true))
             .expect("Failed to merge env variables!");
 
         settings.try_into().expect("Failed to create configuration")
