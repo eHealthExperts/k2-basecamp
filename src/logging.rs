@@ -15,19 +15,16 @@ const FILENAME: &str = "ctehxk2.log";
 #[cfg(not(target_os = "windows"))]
 const FILENAME: &str = "libctehxk2.log";
 
-#[cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
 pub fn init() {
-    INIT.call_once(|| init_logger());
-}
+    INIT.call_once(|| {
+        let config = match Settings::log_path() {
+            Some(path) => init_file_logger(path),
+            _ => init_stdout_logger(),
+        };
 
-fn init_logger() {
-    let config = match Settings::log_path() {
-        Some(path) => init_file_logger(path),
-        _ => init_stdout_logger(),
-    };
-
-    log4rs::init_config(config).expect("Failed to initialize logging!");
-    info!("Logging initialized!");
+        log4rs::init_config(config).expect("Failed to initialize logging!");
+        info!("Logging initialized!");
+    })
 }
 
 fn init_file_logger(mut path: String) -> Config {
