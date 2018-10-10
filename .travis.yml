@@ -22,19 +22,23 @@ before_script:
         fi
     - rustup component add rustfmt-preview
     - rustup component add clippy-preview
+    - cargo install -f cargo-audit
 script:
-    - cargo clippy --release -- -Dclippy
+    - cargo audit
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cargo build --verbose
     - cd examples/settings-file
-    - cargo clippy --release -- -Dclippy
+    - cargo audit
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cd ../../
     - cd examples/use-library
-    - cargo clippy --release -- -Dclippy
+    - cargo audit
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cd ../../
 before_deploy:
