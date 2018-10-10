@@ -21,16 +21,22 @@ before_script:
             ulimit -n 2048;
         fi
     - rustup component add rustfmt-preview
+    - rustup component add clippy-preview
+    - cargo install -f cargo-audit
 script:
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cargo build --verbose
+    - cargo audit
     - cd examples/settings-file
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cd ../../
     - cd examples/use-library
     - cargo fmt --all -- --check
+    - cargo clippy --all-targets -- -D warnings
     - cargo test --verbose --all -- --nocapture
     - cd ../../
 before_deploy:

@@ -211,7 +211,7 @@ mod tests {
 
         assert_eq!(*json.get("dad").unwrap(), json!(dad));
         assert_eq!(*json.get("sad").unwrap(), json!(sad));
-        assert_eq!(*json.get("command").unwrap(), json!(format!("{}", exp_cmd)));
+        assert_eq!(*json.get("command").unwrap(), json!(exp_cmd.to_string()));
         assert_eq!(*json.get("lenc").unwrap(), json!(lenc));
         assert_eq!(*json.get("lenr").unwrap(), json!(lenr));
     }

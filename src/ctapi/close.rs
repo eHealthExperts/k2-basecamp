@@ -8,7 +8,7 @@ pub fn close(ctn: u16) -> Status {
     }
 
     let pn = match MAP.lock().get(&ctn) {
-        Some(pn) => pn.clone(),
+        Some(pn) => *pn,
         None => {
             error!("Failed to extract pn for given ctn!");
             return Status::ErrHtsi;
@@ -23,16 +23,16 @@ pub fn close(ctn: u16) -> Status {
             Status::ErrHtsi
         }
         Ok(res) => match res.status {
-            200 => handle_ok_status(res.body, ctn),
+            200 => handle_ok_status(&res.body, ctn),
             _ => {
                 error!("Request failed! Server response was not OK!");
-                return Status::ErrHtsi;
+                Status::ErrHtsi
             }
         },
     }
 }
 
-fn handle_ok_status(body: String, ctn: u16) -> Status {
+fn handle_ok_status(body: &str, ctn: u16) -> Status {
     let status: Status = match body.parse::<Status>() {
         Ok(status) => status,
         Err(why) => {
