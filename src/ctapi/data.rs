@@ -168,8 +168,6 @@ mod tests {
 
     #[test]
     fn post_body_contains_parameter() {
-        super::super::super::logging::init();
-
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
 
