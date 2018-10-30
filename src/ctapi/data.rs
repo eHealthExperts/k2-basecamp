@@ -45,7 +45,7 @@ pub fn data(
     debug!("lenc: {}", lenc);
 
     let safe_command = unsafe { slice::from_raw_parts(command, lenc as usize) };
-    debug!("command: {:?}", safe_command);
+    debug!("command: {:?}", HEXLOWER.encode(safe_command));
 
     let safe_lenr: &mut u16 = unsafe { &mut *lenr };
     debug!("lenr: {}", safe_lenr);
