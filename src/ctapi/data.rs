@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn returns_err_invalid_if_terminal_closed() {
-        let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, _pn) = rand_params();
+        let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, _) = rand_params();
 
         assert_eq!(
             -1,
@@ -148,7 +148,7 @@ mod tests {
 
         assert_eq!(
             -128,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,)
+            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response)
         )
     }
 
