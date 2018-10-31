@@ -1,6 +1,6 @@
 extern crate antidote;
-extern crate base64;
 extern crate config;
+extern crate data_encoding;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
