@@ -22,11 +22,11 @@ mod http;
 mod logging;
 mod settings;
 
-use ctapi::close::close;
-use ctapi::data::data;
-use ctapi::init::init;
-use ctapi::status::Status;
-use settings::Settings;
+use crate::ctapi::close::close;
+use crate::ctapi::data::data;
+use crate::ctapi::init::init;
+use crate::ctapi::status::Status;
+use crate::settings::Settings;
 
 #[no_mangle]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
