@@ -1,3 +1,8 @@
+trigger:
+  branches:
+    include:
+    - refs/heads/*
+    - refs/tags/*
 variables:
   CHANNEL: stable
   RUST_BACKTRACE: full
