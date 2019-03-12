@@ -1,3 +1,7 @@
+variables:
+  CHANNEL: stable
+  RUST_BACKTRACE: full
+  RUST_TEST_THREADS: 1
 name: cargo
 pool:
   vmImage:  $[ variables['HOST_IMAGE'] ]
@@ -5,19 +9,15 @@ strategy:
   matrix:
     i686-pc-windows-msvc:
       HOST_IMAGE: vs2017-win2016
-      CHANNEL: stable
       ARTIFACT: ctehxk2-x86.dll
     x86_64-pc-windows-msvc:
       HOST_IMAGE: vs2017-win2016
-      CHANNEL: stable
       ARTIFACT: ctehxk2-x64.dll
     x86_64-apple-darwin:
       HOST_IMAGE: macos-10.13
-      CHANNEL: stable
       ARTIFACT: libctehxk2.dylib
     x86_64-unknown-linux-gnu:
       HOST_IMAGE: ubuntu-16.04
-      CHANNEL: stable
       ARTIFACT: libctehxk2.so
 steps:
   - powershell: Invoke-WebRequest -Uri https://win.rustup.rs/ -OutFile rustup-init.exe
@@ -45,12 +45,12 @@ steps:
       rustup component add rustfmt-preview
       rustup component add clippy-preview
       cargo install -f cargo-audit
-    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install Clippy, Rustfmt and Audit
   - script: |
       cargo fmt --all -- --check
       cargo clippy --all-targets -- -D warnings
-    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo fmt and cargo clippy
   - script: |
       cargo test --verbose --all -- --nocapture
@@ -60,7 +60,7 @@ steps:
     displayName: run cargo build
   - script: |
       cargo audit
-    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: run cargo audit
   - task: CopyFiles@2
     inputs:
