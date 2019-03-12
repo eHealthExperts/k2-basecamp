@@ -736,7 +736,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "k2_basecamp"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "antidote 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "config 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
