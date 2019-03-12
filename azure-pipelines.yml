@@ -2,7 +2,6 @@ variables:
   CHANNEL: stable
   RUST_BACKTRACE: full
   RUST_TEST_THREADS: 1
-name: cargo
 pool:
   vmImage:  $[ variables['HOST_IMAGE'] ]
 strategy:
@@ -67,11 +66,11 @@ steps:
     inputs:
       gitHubConnection: eHealthExperts
       repositoryName: 'eHealthExperts/k2-basecamp'
-      action: 'create'
+      action: 'edit'
       tagSource: 'auto'
       assetUploadMode: 'replace'
       isDraft: false
       isPreRelease: false
       addChangeLog: false
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    displayName: 'Release to GitHub'
+    condition: succeeded()
+    displayName: 'Edit GitHub Release'
