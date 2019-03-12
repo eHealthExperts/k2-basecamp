@@ -24,6 +24,8 @@ strategy:
       HOST_IMAGE: ubuntu-16.04
       ARTIFACT: libctehxk2.so
 steps:
+  - script: |
+      set
   - powershell: Invoke-WebRequest -Uri https://win.rustup.rs/ -OutFile rustup-init.exe
     condition: and(succeeded(), eq(variables['Agent.OS'],'Windows_NT'))
     displayName: Install rustup [Windows]
