@@ -72,10 +72,9 @@ steps:
       gitHubConnection: eHealthExperts
       repositoryName: 'eHealthExperts/k2-basecamp'
       action: 'edit'
-      tagSource: 'auto'
       assetUploadMode: 'replace'
       isDraft: false
       isPreRelease: false
       addChangeLog: false
-    condition: succeeded()
+    condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'refs/tags/'))
     displayName: 'Edit GitHub Release'
