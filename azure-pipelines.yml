@@ -1,3 +1,8 @@
+trigger:
+  branches:
+    include:
+    - refs/heads/*
+    - refs/tags/*
 variables:
   CHANNEL: stable
   RUST_BACKTRACE: full
@@ -66,11 +71,11 @@ steps:
     inputs:
       gitHubConnection: eHealthExperts
       repositoryName: 'eHealthExperts/k2-basecamp'
+      tag: $(Build.SourceBranchName)
       action: 'edit'
-      tagSource: 'auto'
       assetUploadMode: 'replace'
       isDraft: false
       isPreRelease: false
       addChangeLog: false
-    condition: succeeded()
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     displayName: 'Edit GitHub Release'
