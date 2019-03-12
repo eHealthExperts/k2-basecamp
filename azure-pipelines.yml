@@ -48,20 +48,17 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install Clippy, Rustfmt and Audit
   - script: |
+      cargo audit
       cargo fmt --all -- --check
       cargo clippy --all-targets -- -D warnings
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Run cargo fmt and cargo clippy
+    displayName: Run cargo audit, fmt and clippy
   - script: |
       cargo test --verbose --all -- --nocapture
     displayName: Run cargo test
   - script: |
-      cargo build --verbose
-    displayName: run cargo build
-  - script: |
-      cargo audit
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: run cargo audit
+      cargo build --release
+    displayName: Run cargo build
   - task: CopyFiles@2
     inputs:
       contents: '$(System.DefaultWorkingDirectory)/target/release/$ARTIFACT'
