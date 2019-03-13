@@ -23,6 +23,9 @@ strategy:
     x86_64-unknown-linux-gnu:
       HOST_IMAGE: ubuntu-16.04
       ARTIFACT: libctehxk2.so
+      RUSTFLAGS: '-C link-dead-code'
+      KCOV_TARBALL: v36.tar.gz
+      KCOV_DIR: kcov-36
 steps:
   - powershell: Invoke-WebRequest -Uri https://win.rustup.rs/ -OutFile rustup-init.exe
     condition: and(succeeded(), eq(variables['Agent.OS'],'Windows_NT'))
@@ -40,33 +43,95 @@ steps:
       export PATH=$PATH:~/.cargo/bin
       echo "##vso[task.setvariable variable=PATH;]$PATH"
     condition: and(succeeded(), ne(variables['Agent.OS'],'Windows_NT'))
-    displayName: Install rustup and toolchain [Linux & OSX]
+    displayName: Install rustup and toolchain [Linux & macOS]
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y --fix-missing pkg-config
+      sudo apt-get install -y binutils-dev build-essential cmake libcurl4-openssl-dev libdw-dev libiberty-dev ninja-build python zlib1g-dev
+      wget https://github.com/SimonKagstrom/kcov/archive/$KCOV_TARBALL
+      tar xzf $KCOV_TARBALL
+      cd $KCOV_DIR
+      mkdir build
+      cd build
+      cmake -G 'Ninja' ..
+      cmake --build .
+      sudo cmake --build . --target install
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: Install kcov [Linux]
+  - script: |
+      rustup component add rustfmt-preview
+      rustup component add clippy-preview
+      cargo install cargo-audit
+      cargo install cargo-kcov
+      cargo install cargo-junit
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: Install cargo plugins [Linux]
   - script: |
       rustc -V
       cargo -V
     displayName: Check rustc and cargo versions
   - script: |
-      rustup component add rustfmt-preview
-      rustup component add clippy-preview
-      cargo install -f cargo-audit
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Install Clippy, Rustfmt and Audit
-  - script: |
       cargo audit
       cargo fmt --all -- --check
       cargo clippy --all-targets -- -D warnings
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Run cargo audit, fmt and clippy
+    displayName: Run cargo audit, fmt and clippy [Linux]
   - script: |
-      cargo test --verbose --all -- --nocapture
-    displayName: Run cargo test
+      cargo junit --name target/junit.xml
+    displayName: Run cargo junit [Linux]
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+  - script: |
+      cargo test --all -- --nocapture
+    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
+    displayName: Run cargo test [macOS & Windows]
+  - script: |
+      cargo-kcov kcov -v --no-clean-rebuild --all -o target/cov
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: Run cargo-kcov [Linux]
+  - task: cobertura-transform@0
+    inputs:
+      cobertura3FilePath: '$(System.DefaultWorkingDirectory)/target/cov/kcov-merged/cobertura.xml'
+      cobertura4FilePath: '$(System.DefaultWorkingDirectory)/target/cov/kcov-merged/cobertura4.xml'
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: 'Transform Cobertura Format From 3 to 4 [Linux]'
+  - script: |
+      bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: 'Publish coverage to Codecov'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: cobertura
+      summaryFileLocation: '$(Build.SourcesDirectory)/target/cov/kcov-merged/cobertura4.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/target/cov/kcov-merged/'
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: 'Publish code coverage results [Linux]'
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: 'junit.xml'
+      searchFolder: $(Build.SourcesDirectory)/target/
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: 'Publish unit test results'
   - script: |
       cargo build --release
     displayName: Run cargo build
-  - task: CopyFiles@2
+  - task: PowerShell@2
     inputs:
-      contents: '$(System.DefaultWorkingDirectory)/target/release/$(ARTIFACT)'
-      targetFolder: $(Build.ArtifactStagingDirectory)
+      targetType: inline
+      workingDirectory: '$(System.DefaultWorkingDirectory)/target/release/'
+      script: |
+        Rename-Item -Path "ctehxk2.dll" -NewName $(ARTIFACT)
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Windows_NT'))
+    displayName: Rename release artifact [Windows]
+  - task: PowerShell@2
+    inputs:
+      targetType: inline
+      workingDirectory: '$(System.DefaultWorkingDirectory)/target/release/'
+      script: |
+        cp $(ARTIFACT) $(Build.ArtifactStagingDirectory)/$(ARTIFACT)
+    condition: succeeded()
+    displayName: 'Prepare release artifact'
+  - task: PublishBuildArtifacts@1
   - task: GithubRelease@0
     inputs:
       gitHubConnection: eHealthExperts
@@ -78,4 +143,4 @@ steps:
       isPreRelease: false
       addChangeLog: false
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    displayName: 'Edit GitHub Release'
+    displayName: 'Edit GitHub release'
