@@ -1,5 +1,5 @@
-use self::super::super::{http, Status};
-use self::super::MAP;
+use crate::ctapi::MAP;
+use crate::{http, Status, CONFIG};
 use data_encoding::{BASE64, HEXLOWER};
 use serde_json;
 use std::slice;
@@ -16,7 +16,7 @@ struct Response {
 }
 
 pub fn data(
-    ctn: u16,
+    mut ctn: u16,
     dad: *mut u8,
     sad: *mut u8,
     lenc: u16,
@@ -24,6 +24,11 @@ pub fn data(
     lenr: *mut u16,
     response: *mut u8,
 ) -> Status {
+    if let Some(ctn_from_cfg) = CONFIG.ctn {
+        debug!("Use ctn '{}' from configuration", ctn_from_cfg);
+        ctn = ctn_from_cfg;
+    }
+
     if !MAP.lock().contains_key(&ctn) {
         error!("Card terminal has not been opened.");
         return Status::ErrInvalid;

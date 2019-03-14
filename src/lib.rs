@@ -37,7 +37,7 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
-    let status = init(Settings::ctn_or(ctn), Settings::pn_or(pn));
+    let status = init(ctn, pn);
 
     debug!("Returning {}", status);
     status.into()
@@ -56,15 +56,7 @@ pub extern "system" fn CT_data(
     logging::init();
 
     debug!("CT_data(ctn: {})", ctn);
-    let status = data(
-        Settings::ctn_or(ctn),
-        dad,
-        sad,
-        lenc,
-        command,
-        lenr,
-        response,
-    );
+    let status = data(ctn, dad, sad, lenc, command, lenr, response);
 
     debug!("Returning {}", status);
     status.into()
@@ -75,7 +67,7 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = close(Settings::ctn_or(ctn));
+    let status = close(ctn);
 
     debug!("Returning {}", status);
     status.into()

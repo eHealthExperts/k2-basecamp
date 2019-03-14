@@ -1,7 +1,13 @@
-use self::super::super::{http, Status};
-use self::super::MAP;
+use crate::ctapi::MAP;
+use crate::{http, Status, CONFIG};
 
-pub fn init(ctn: u16, pn: u16) -> Status {
+pub fn init(mut ctn: u16, mut pn: u16) -> Status {
+    if let (Some(ctn_from_cfg), Some(pn_from_cfg)) = (CONFIG.ctn, CONFIG.pn) {
+        debug!("Use ctn '{}' and pn '{}' from configuration", ctn_from_cfg, pn_from_cfg);
+        ctn = ctn_from_cfg;
+        pn = pn_from_cfg;
+    }
+
     // Do we know this CTN?
     if MAP.lock().contains_key(&ctn) {
         error!("Card terminal has already been opened.");
