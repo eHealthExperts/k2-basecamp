@@ -1,4 +1,4 @@
-use super::settings::Settings;
+use crate::CONFIG;
 use log::LevelFilter;
 use log4rs;
 use log4rs::append::console::ConsoleAppender;
@@ -17,7 +17,7 @@ const FILENAME: &str = "libctehxk2.log";
 
 pub fn init() {
     INIT.call_once(|| {
-        let config = match Settings::log_path() {
+        let config = match CONFIG.log_path.clone() {
             Some(path) => init_file_logger(path),
             _ => init_stdout_logger(),
         };
@@ -73,7 +73,7 @@ fn init_stdout_logger() -> Config {
 }
 
 fn log_level() -> LevelFilter {
-    match LevelFilter::from_str(&Settings::log_level()) {
+    match LevelFilter::from_str(&CONFIG.log_level) {
         Ok(log_level) => log_level,
         _ => LevelFilter::Error,
     }

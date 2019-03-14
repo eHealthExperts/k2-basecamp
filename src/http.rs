@@ -1,7 +1,7 @@
-use super::settings::Settings;
+use crate::CONFIG;
+use failure::Error;
 use reqwest;
 use serde_json::Value;
-use std::io::Error;
 use std::str;
 use std::time::Duration;
 
@@ -13,8 +13,10 @@ pub struct Response {
 pub fn request(path: &str, request_body: Option<Value>) -> Result<Response, Error> {
     let mut client_builder = reqwest::Client::builder();
 
-    if let Some(seconds) = Settings::timeout() {
+    if let Some(seconds) = CONFIG.timeout {
         client_builder = client_builder.timeout(Duration::from_secs(seconds));
+    } else {
+        client_builder = client_builder.timeout(None);
     }
 
     let client = client_builder
@@ -44,10 +46,10 @@ pub fn request(path: &str, request_body: Option<Value>) -> Result<Response, Erro
 }
 
 fn uri(path: &str) -> String {
-    let mut addr = Settings::base_url();
+    let mut addr = CONFIG.base_url.clone();
     addr.push_str(path);
     debug!("Request URL: {}", addr);
-    addr
+    addr.to_string()
 }
 
 #[cfg(test)]
