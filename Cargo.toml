@@ -35,7 +35,7 @@ features = ["json", "toml", "yaml"]
 rand = "0.6.5"
 spectral = "0.6.0"
 tempfile = "3.0.7"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.5.4" }
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "0.5.5" }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.8"
