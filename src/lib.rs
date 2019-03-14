@@ -28,6 +28,10 @@ use crate::ctapi::init::init;
 use crate::ctapi::status::Status;
 use crate::settings::Settings;
 
+lazy_static! {
+    pub(crate) static ref CONFIG: Settings = Settings::new().expect("Failed to get configuration!");
+}
+
 #[no_mangle]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
