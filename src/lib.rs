@@ -2,6 +2,8 @@ extern crate antidote;
 extern crate config;
 extern crate data_encoding;
 #[macro_use]
+extern crate failure;
+#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
@@ -14,6 +16,8 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+#[cfg(test)]
+extern crate spectral;
 #[cfg(test)]
 extern crate test_server;
 
