@@ -275,7 +275,9 @@ mod tests {
 
         let unused_ctn = rand::random::<u16>();
 
-        let _ = data(unused_ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,);
+        let _ = data(
+            unused_ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,
+        );
 
         let path = server.requests.next().unwrap().path;
         assert_eq!(path, *format!("/ct_data/{}/{}", ctn, pn));
