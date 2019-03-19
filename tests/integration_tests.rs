@@ -10,14 +10,14 @@ use std::{env, str};
 use test_server::HttpResponse;
 
 #[cfg(target_os = "windows")]
-const LIB_PATH: &str = "../../target/debug/ctehxk2.dll";
+const LIB_PATH: &str = "./target/debug/ctehxk2.dll";
 #[cfg(target_os = "linux")]
-const LIB_PATH: &str = "../../target/debug/libctehxk2.so";
+const LIB_PATH: &str = "./target/debug/libctehxk2.so";
 #[cfg(target_os = "macos")]
-const LIB_PATH: &str = "../../target/debug/libctehxk2.dylib";
+const LIB_PATH: &str = "./target/debug/libctehxk2.dylib";
 
 #[test]
-fn has_ct_api_functions() {
+fn use_ct_api_functions() {
     let lib = Library::open(LIB_PATH).expect("Could not open library");
 
     let init: unsafe extern "system" fn(u16, u16) -> i8 =

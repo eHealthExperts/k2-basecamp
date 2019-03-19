@@ -77,6 +77,9 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo audit, fmt and clippy [Linux]
   - script: |
+      cargo build
+    displayName: Run cargo build
+  - script: |
       cargo junit --name target/junit.xml
     displayName: Run cargo junit [Linux]
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))

@@ -1,9 +1,0 @@
-[package]
-name = "settings-file"
-version = "0.1.1"
-
-[dependencies]
-const-cstr = "0.3.0"
-dlopen = "0.1.5"
-rand = "0.5.5"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "v0.5.2" }

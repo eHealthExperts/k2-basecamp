@@ -1,23 +1,25 @@
 use config::{Config, Environment, File};
-use std::path::MAIN_SEPARATOR;
+use failure::Error;
+use reqwest::Url;
+use std::path::{Path, MAIN_SEPARATOR};
 
 #[cfg(target_os = "windows")]
 const CFG_FILE: &str = "ctehxk2";
 #[cfg(not(target_os = "windows"))]
 const CFG_FILE: &str = "libctehxk2";
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct Settings {
-    timeout: Option<u64>,
-    base_url: String,
-    log_level: String,
-    log_path: Option<String>,
-    ctn: Option<u16>,
-    pn: Option<u16>,
+    pub timeout: Option<u64>,
+    pub base_url: String,
+    pub log_level: String,
+    pub log_path: Option<String>,
+    pub ctn: Option<u16>,
+    pub pn: Option<u16>,
 }
 
 impl Settings {
-    fn new() -> Self {
+    pub fn init() -> Result<Self, Error> {
         let mut settings = Config::new();
 
         // set defaults
@@ -31,189 +33,390 @@ impl Settings {
         settings
             .merge(File::with_name(CFG_FILE).required(false))
             .expect("Failed to merge config file!")
-            .merge(Environment::with_prefix("k2").ignore_empty(true))
+            .merge(Environment::with_prefix("K2").ignore_empty(true))
             .expect("Failed to merge env variables!");
 
-        settings.try_into().expect("Failed to create configuration")
-    }
+        // force trailing slash for base_url
+        if let Ok(mut url) = settings.get::<String>("base_url") {
+            let _ = Url::parse(&url)?; // check url
 
-    pub fn base_url() -> String {
-        let s = Settings::new();
-        let mut url = s.base_url.clone();
-        if !url.trim().ends_with('/') {
-            url.push_str("/");
-        }
-        url
-    }
-
-    pub fn ctn_or(fallback: u16) -> u16 {
-        let s = Settings::new();
-        match s.pn {
-            Some(_pn) => match s.ctn {
-                Some(ctn) => ctn,
-                None => fallback,
-            },
-            None => fallback,
-        }
-    }
-
-    pub fn pn_or(fallback: u16) -> u16 {
-        let s = Settings::new();
-        match s.ctn {
-            Some(_ctn) => match s.pn {
-                Some(pn) => pn,
-                None => fallback,
-            },
-            None => fallback,
-        }
-    }
-
-    pub fn log_level() -> String {
-        let s = Settings::new();
-        s.log_level.clone()
-    }
-
-    pub fn log_path() -> Option<String> {
-        let s = Settings::new();
-        match s.log_path {
-            Some(mut path) => {
-                if !path.trim().ends_with(MAIN_SEPARATOR) {
-                    path.push(MAIN_SEPARATOR);
-                }
-
-                Some(path)
+            if !url.trim().ends_with('/') {
+                url.push_str("/");
+                let _ = settings.set("base_url", url);
             }
-            None => None,
         }
-    }
 
-    pub fn timeout() -> Option<u64> {
-        let s = Settings::new();
-        match s.timeout {
-            Some(timeout) => match timeout {
-                0 => None,
-                _ => Some(timeout),
-            },
-            None => None,
+        // force trailing slash for log_path
+        if let Ok(Some(mut path)) = settings.get::<Option<String>>("log_path") {
+            if !Path::new(&path).exists() {
+                return Err(format_err!("log_path does not exists"));
+            }
+
+            if !path.trim().ends_with(MAIN_SEPARATOR) {
+                path.push(MAIN_SEPARATOR);
+                let _ = settings.set("log_path", Some(path));
+            }
         }
+
+        // enforce a value for pn and ctn
+        if let (Ok(Some(_)), Ok(Some(_))) = (
+            settings.get::<Option<u16>>("ctn"),
+            settings.get::<Option<u16>>("pn"),
+        ) {
+            // ok
+        } else {
+            let _ = settings.set("ctn", None::<String>);
+            let _ = settings.set("pn", None::<String>);
+        }
+
+        settings.try_into().map_err(failure::Error::from)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Settings;
+    use super::*;
+    use rand;
+    use spectral::assert_that;
     use std::env;
+    use std::fs::File;
+    use std::io::Write;
     use std::path::MAIN_SEPARATOR;
+    use tempfile::tempdir;
+    use test_server::helper::random_string;
 
     #[test]
-    fn ctn_or_return_env_value_if_pn_is_set_too() {
-        env::set_var("K2_CTN", "2");
-        env::set_var("K2_PN", "4");
+    fn default_configuration() {
+        let default = Settings::init();
 
-        let ctn = Settings::ctn_or(1);
-
-        assert_eq!(ctn, 2);
+        assert_eq!(
+            default.ok(),
+            Some(Settings {
+                timeout: None,
+                base_url: String::from("http://localhost:8088/k2/ctapi/"),
+                log_level: String::from("Error"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
     }
 
     #[test]
-    fn ctn_or_return_given_value_if_pn_not_set() {
-        env::remove_var("K2_CTN");
-        env::remove_var("K2_PN");
+    fn env_variables_overrides() {
+        let timeout = u64::from(rand::random::<u32>()); // panics with u64 random
+        env::set_var("K2_TIMEOUT", format!("{}", timeout));
 
-        let ctn = Settings::ctn_or(1);
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: String::from("http://localhost:8088/k2/ctapi/"),
+                log_level: String::from("Error"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
 
-        assert_eq!(ctn, 1);
+        let base_url = String::from("ftp://unknown.de/");
+        env::set_var("K2_BASE_URL", base_url.clone());
 
-        env::set_var("K2_CTN", "2");
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: base_url.clone(),
+                log_level: String::from("Error"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
 
-        let ctn = Settings::ctn_or(1);
+        let log_level = random_string(10);
+        env::set_var("K2_LOG_LEVEL", log_level.clone());
 
-        assert_eq!(ctn, 1);
-    }
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: base_url.clone(),
+                log_level: log_level.clone(),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
 
-    #[test]
-    fn pn_or_return_env_value_if_ctn_is_set_too() {
-        env::set_var("K2_CTN", "2");
-        env::set_var("K2_PN", "4");
+        let config_file_folder_path = tempdir().unwrap().into_path();
+        let log_path = format!(
+            "{}{}",
+            config_file_folder_path.to_str().unwrap(),
+            MAIN_SEPARATOR
+        );
+        env::set_var("K2_LOG_PATH", log_path.clone());
 
-        let pn = Settings::pn_or(1);
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: base_url.clone(),
+                log_level: log_level.clone(),
+                log_path: Some(log_path.clone()),
+                ctn: None,
+                pn: None,
+            })
+        );
 
-        assert_eq!(pn, 4);
-    }
+        let ctn = rand::random::<u16>();
+        env::set_var("K2_CTN", format!("{}", ctn));
 
-    #[test]
-    fn pn_or_return_given_value_if_ctn_not_set() {
-        env::remove_var("K2_CTN");
-        env::remove_var("K2_PN");
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: base_url.clone(),
+                log_level: log_level.clone(),
+                log_path: Some(log_path.clone()),
+                ctn: None,
+                pn: None,
+            })
+        );
 
-        let pn = Settings::pn_or(1);
+        let pn = rand::random::<u16>();
+        env::set_var("K2_PN", format!("{}", pn));
 
-        assert_eq!(pn, 1);
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(timeout),
+                base_url: base_url.clone(),
+                log_level: log_level.clone(),
+                log_path: Some(log_path.clone()),
+                ctn: Some(ctn),
+                pn: Some(pn),
+            })
+        );
 
-        env::set_var("K2_PN", "2");
-
-        let pn = Settings::pn_or(1);
-
-        assert_eq!(pn, 1);
-    }
-
-    #[test]
-    fn base_url_return_env_value() {
-        env::set_var("K2_BASE_URL", "a/");
-
-        let url = Settings::base_url();
-
-        assert_eq!(url, "a/");
-
-        env::set_var("K2_BASE_URL", "1");
-
-        let url = Settings::base_url();
-
-        assert_eq!(url, "1/");
-    }
-
-    #[test]
-    fn base_url_return_default_value_if_no_env() {
         env::remove_var("K2_BASE_URL");
-
-        let url = Settings::base_url();
-
-        assert_eq!(url, "http://localhost:8088/k2/ctapi/");
-    }
-
-    #[test]
-    fn log_path_returns_env_value() {
-        env::set_var("K2_LOG_PATH", "a");
-
-        let path = Settings::log_path();
-
-        assert_eq!(path, Some(format!("a{}", MAIN_SEPARATOR)));
-    }
-
-    #[test]
-    fn log_path_return_none_if_no_env() {
+        env::remove_var("K2_CTN");
+        env::remove_var("K2_LOG_LEVEL");
         env::remove_var("K2_LOG_PATH");
-
-        let path = Settings::log_path();
-
-        assert!(path.is_none());
-    }
-
-    #[test]
-    fn timeout_returns_env_value() {
-        env::set_var("K2_TIMEOUT", "42");
-
-        let timeout = Settings::timeout();
-
-        assert_eq!(timeout, Some(42));
-    }
-
-    #[test]
-    fn timeout_return_none_if_no_env() {
+        env::remove_var("K2_PN");
         env::remove_var("K2_TIMEOUT");
+    }
 
-        let timeout = Settings::timeout();
+    #[test]
+    fn config_file_overrides() {
+        let config_file_folder = tempdir().unwrap();
+        let config_file_folder_path = tempdir().unwrap().into_path();
+        let log_path = format!(
+            "{}{}",
+            config_file_folder_path.to_str().unwrap(),
+            MAIN_SEPARATOR
+        );
 
-        assert!(timeout.is_none());
+        let config_file_path = config_file_folder.path().join(format!("{}.json", CFG_FILE));
+        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let _ = env::set_current_dir(config_file_folder.path().to_owned());
+
+        let config = json!({
+            "log_level": "debug",
+            "log_path": log_path,
+            "base_url": "http://localhost:5050/",
+            "timeout": 1000,
+            "ctn": 9,
+            "pn": 12,
+        });
+
+        writeln!(config_file, "{}", config).unwrap();
+
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: config["timeout"].as_u64(),
+                base_url: String::from(config["base_url"].as_str().unwrap()),
+                log_level: String::from(config["log_level"].as_str().unwrap()),
+                log_path: Some(String::from(config["log_path"].as_str().unwrap())),
+                ctn: Some(
+                    config["ctn"]
+                        .as_u64()
+                        .unwrap()
+                        .to_string()
+                        .parse::<u16>()
+                        .unwrap()
+                ),
+                pn: Some(
+                    config["pn"]
+                        .as_u64()
+                        .unwrap()
+                        .to_string()
+                        .parse::<u16>()
+                        .unwrap()
+                ),
+            })
+        );
+    }
+
+    #[test]
+    fn env_variable_beats_config_file() {
+        let config_file_folder = tempdir().unwrap();
+        let config_file_path = config_file_folder.path().join(format!("{}.yaml", CFG_FILE));
+        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let _ = env::set_current_dir(config_file_folder.path().to_owned());
+
+        let config = "
+timeout: 300
+log_level: debug
+";
+
+        writeln!(config_file, "{}", config).unwrap();
+
+        env::set_var("K2_LOG_LEVEL", "trace");
+
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(300),
+                base_url: String::from("http://localhost:8088/k2/ctapi/"),
+                log_level: String::from("trace"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
+
+        env::remove_var("K2_LOG_LEVEL");
+    }
+
+    #[test]
+    fn force_trailing_slash_for_base_url() {
+        let url = "http://127.0.0.1";
+        env::set_var("K2_BASE_URL", url);
+
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: None,
+                base_url: format!("{}/", url),
+                log_level: String::from("Error"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
+
+        env::remove_var("K2_BASE_URL");
+    }
+
+    #[test]
+    fn force_trailing_slash_for_log_path() {
+        let path = tempdir().unwrap().into_path();;
+        let path_str = path.to_str().unwrap();
+        env::set_var("K2_LOG_PATH", path_str);
+
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: None,
+                base_url: String::from("http://localhost:8088/k2/ctapi/"),
+                log_level: String::from("Error"),
+                log_path: Some(format!("{}{}", path_str, MAIN_SEPARATOR)),
+                ctn: None,
+                pn: None,
+            })
+        );
+
+        env::remove_var("K2_LOG_PATH");
+    }
+
+    #[test]
+    fn read_config_from_ini_file() {
+        let config_file_folder = tempdir().unwrap();
+        let config_file_path = config_file_folder.path().join(format!("{}.ini", CFG_FILE));
+        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let _ = env::set_current_dir(config_file_folder.path().to_owned());
+
+        let config = "
+timeout = 300
+log_level = \"debug\"
+";
+
+        writeln!(config_file, "{}", config).unwrap();
+
+        assert_eq!(
+            Settings::init().ok(),
+            Some(Settings {
+                timeout: Some(300),
+                base_url: String::from("http://localhost:8088/k2/ctapi/"),
+                log_level: String::from("debug"),
+                log_path: None,
+                ctn: None,
+                pn: None,
+            })
+        );
+    }
+
+    #[test]
+    fn error_with_wrong_log_path() {
+        let path = random_string(100);
+        env::set_var("K2_LOG_PATH", path);
+
+        assert!(Settings::init().is_err());
+
+        env::remove_var("K2_LOG_PATH");
+    }
+
+    #[test]
+    fn error_with_wrong_base_url() {
+        let url = random_string(100);
+        env::set_var("K2_BASE_URL", url);
+
+        assert!(Settings::init().is_err());
+
+        env::remove_var("K2_BASE_URL");
+    }
+
+    #[test]
+    fn enforce_ctn_and_pn_were_set() {
+        let mut settings = Settings::init().unwrap();
+        assert_that(&settings)
+            .map(|val| &val.ctn)
+            .is_equal_to(&None);
+        assert_that(&settings).map(|val| &val.pn).is_equal_to(&None);
+
+        let ctn = rand::random::<u16>();
+        env::set_var("K2_CTN", format!("{}", ctn));
+
+        settings = Settings::init().unwrap();
+        assert_that(&settings)
+            .map(|val| &val.ctn)
+            .is_equal_to(&None);
+        assert_that(&settings).map(|val| &val.pn).is_equal_to(&None);
+
+        env::remove_var("K2_CTN");
+
+        let pn = rand::random::<u16>();
+        env::set_var("K2_PN", format!("{}", pn));
+
+        settings = Settings::init().unwrap();
+        assert_that(&settings)
+            .map(|val| &val.ctn)
+            .is_equal_to(&None);
+        assert_that(&settings).map(|val| &val.pn).is_equal_to(&None);
+
+        env::set_var("K2_CTN", format!("{}", ctn));
+
+        settings = Settings::init().unwrap();
+        assert_that(&settings)
+            .map(|val| &val.ctn)
+            .is_equal_to(&Some(ctn));
+        assert_that(&settings)
+            .map(|val| &val.pn)
+            .is_equal_to(&Some(pn));
+
+        env::remove_var("K2_CTN");
+        env::remove_var("K2_PN");
     }
 }

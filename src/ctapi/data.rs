@@ -1,6 +1,7 @@
-use self::super::super::{http, Status};
-use self::super::MAP;
+use crate::ctapi::MAP;
+use crate::{http, Status, CONFIG};
 use data_encoding::{BASE64, HEXLOWER};
+use failure::Error;
 use serde_json;
 use std::slice;
 
@@ -16,25 +17,27 @@ struct Response {
 }
 
 pub fn data(
-    ctn: u16,
+    mut ctn: u16,
     dad: *mut u8,
     sad: *mut u8,
     lenc: u16,
     command: *const u8,
     lenr: *mut u16,
     response: *mut u8,
-) -> Status {
-    if !MAP.lock().contains_key(&ctn) {
-        error!("Card terminal has not been opened.");
-        return Status::ErrInvalid;
+) -> Result<Status, Error> {
+    if let Some(ctn_from_cfg) = CONFIG.read().ctn {
+        debug!("Use ctn '{}' from configuration", ctn_from_cfg);
+        ctn = ctn_from_cfg;
     }
 
-    let pn = match MAP.lock().get(&ctn) {
+    if !MAP.read().contains_key(&ctn) {
+        error!("Card terminal has not been opened.");
+        return Ok(Status::ERR_INVALID);
+    }
+
+    let pn = match MAP.read().get(&ctn) {
+        None => return Err(format_err!("Failed to extract pn for given ctn!")),
         Some(pn) => *pn,
-        None => {
-            error!("Failed to extract pn for given ctn!");
-            return Status::ErrHtsi;
-        }
     };
 
     let safe_dad: &mut u8 = unsafe { &mut *dad };
@@ -62,67 +65,50 @@ pub fn data(
     });
 
     let path = format!("ct_data/{}/{}", ctn, pn);
-    let response = http::request(&path, Some(json));
-    let res = match response {
-        Ok(response) => response,
+    let response = http::request(&path, Some(json))?;
+
+    match serde_json::from_str::<Response>(&response) {
         Err(why) => {
-            error!("Request failed!");
             debug!("{}", why);
-            return Status::ErrHtsi;
+            Err(format_err!("Unexpected server response found in body!"))
         }
-    };
+        Ok(json) => {
+            let status = Status::from_i8(json.status);
+            if let Status::OK = status {
+                let decoded = match BASE64.decode(&json.response.into_bytes()) {
+                    Ok(content) => {
+                        debug!("Decoded response field: {:?}", HEXLOWER.encode(&content));
+                        content
+                    }
+                    Err(why) => {
+                        debug!("{}", why);
+                        return Err(format_err!("Failed to extract response."));
+                    }
+                };
 
-    if res.status != 200 {
-        error!("Request failed! Server response was not OK!");
-        return Status::ErrHtsi;
-    }
-
-    let json: Response = match serde_json::from_str(&res.body) {
-        Ok(json) => json,
-        Err(why) => {
-            error!("Failed to parse server response data!");
-            debug!("{}", why);
-            return Status::ErrHtsi;
-        }
-    };
-
-    let status: Status = json.status.into();
-    match status {
-        Status::OK => {
-            *safe_dad = json.dad;
-            *safe_sad = json.sad;
-            *safe_lenr = json.lenr;
-
-            let decoded = match BASE64.decode(&json.response.into_bytes()) {
-                Ok(content) => {
-                    debug!("Decoded response field: {:?}", HEXLOWER.encode(&content));
-                    content
+                for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
+                    *place = *element;
                 }
-                Err(why) => {
-                    error!("Failed to extract response.");
-                    debug!("{}", why);
-                    return Status::ErrHtsi;
-                }
-            };
 
-            for (place, element) in safe_response.iter_mut().zip(decoded.iter()) {
-                *place = *element;
+                *safe_dad = json.dad;
+                *safe_sad = json.sad;
+                *safe_lenr = json.lenr;
             }
-
-            status
+            Ok(status)
         }
-        _ => status,
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::super::MAP;
     use super::data;
+    use crate::ctapi::MAP;
+    use crate::{Settings, Status, CONFIG};
     use data_encoding::BASE64;
     use rand;
     use serde_json::{self, Value};
+    use std::collections::HashMap;
     use std::env;
     use std::slice;
     use std::u16::MAX;
@@ -133,60 +119,59 @@ mod tests {
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, _) = rand_params();
 
         assert_eq!(
-            -1,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,)
-        )
+            Some(Status::ERR_INVALID),
+            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).ok()
+        );
     }
 
     #[test]
-    fn returns_err_htsi_if_no_server() {
+    fn returns_err_if_no_server() {
         env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
+        MAP.write().insert(ctn, pn);
 
-        MAP.lock().insert(ctn, pn);
+        assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response).is_err());
 
-        assert_eq!(
-            -128,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response)
-        )
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
     fn use_ctn_and_pn_in_request_path() {
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.lock().insert(ctn, pn);
+        MAP.write().insert(ctn, pn);
 
-        data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
+        let _ = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
 
         let path = server.requests.next().unwrap().path;
         assert_eq!(path, *format!("/ct_data/{}/{}", ctn, pn));
+
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
     fn post_body_contains_parameter() {
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (command, command_ptr, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) =
             rand_params();
+        MAP.write().insert(ctn, pn);
 
-        MAP.lock().insert(ctn, pn);
-
-        assert_eq!(
-            -128,
-            data(
-                ctn,
-                &mut dad,
-                &mut sad,
-                lenc,
-                command_ptr,
-                &mut lenr,
-                response
-            )
+        let _ = data(
+            ctn,
+            &mut dad,
+            &mut sad,
+            lenc,
+            command_ptr,
+            &mut lenr,
+            response,
         );
 
         let body = server.requests.next().unwrap().body;
@@ -200,6 +185,8 @@ mod tests {
         );
         assert_eq!(*json.get("lenc").unwrap(), json!(lenc));
         assert_eq!(*json.get("lenr").unwrap(), json!(lenr));
+
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
@@ -209,11 +196,12 @@ mod tests {
                 .body(r#"{"dad":39,"sad":63,"lenr":2,"response":"kAA=","responseCode":0}"#)
         });
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.lock().insert(ctn, pn);
+        MAP.write().insert(ctn, pn);
 
-        data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
+        let _ = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
 
         assert_eq!(dad, 39);
         assert_eq!(sad, 63);
@@ -221,34 +209,36 @@ mod tests {
 
         let slice = unsafe { slice::from_raw_parts(response, lenr as usize) };
         assert_eq!([144, 0], slice);
+
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
-    fn returns_err_htsi_if_server_response_is_not_200() {
+    fn returns_err_if_server_response_is_not_200() {
         let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.lock().insert(ctn, pn);
+        MAP.write().insert(ctn, pn);
 
-        assert_eq!(
-            -128,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,)
-        );
+        assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
+
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
-    fn returns_err_htsi_if_server_response_not_contains_response_struct_as_json() {
+    fn returns_err_if_server_response_not_contains_response_struct_as_json() {
         let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"));
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.lock().insert(ctn, pn);
+        MAP.write().insert(ctn, pn);
 
-        assert_eq!(
-            -128,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,)
-        );
+        assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
+
+        env::remove_var("K2_BASE_URL");
     }
 
     #[test]
@@ -258,14 +248,43 @@ mod tests {
                 .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
         });
         env::set_var("K2_BASE_URL", server.url());
+        init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.lock().insert(ctn, pn);
+        MAP.write().insert(ctn, pn);
 
         assert_eq!(
-            -11,
-            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,)
+            Some(Status::ERR_MEMORY),
+            data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).ok()
         );
+
+        env::remove_var("K2_BASE_URL");
+    }
+
+    #[test]
+    fn use_ctn_and_pn_from_config() {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+        env::set_var("K2_BASE_URL", server.url());
+
+        let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
+        env::set_var("K2_CTN", format!("{}", ctn));
+        env::set_var("K2_PN", format!("{}", pn));
+        init_config_clear_map();
+
+        MAP.write().insert(ctn, pn);
+
+        let unused_ctn = rand::random::<u16>();
+
+        let _ = data(
+            unused_ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,
+        );
+
+        let path = server.requests.next().unwrap().path;
+        assert_eq!(path, *format!("/ct_data/{}/{}", ctn, pn));
+
+        env::remove_var("K2_BASE_URL");
+        env::remove_var("K2_CTN");
+        env::remove_var("K2_PN");
     }
 
     fn rand_params() -> (Vec<u8>, *const u8, u16, *mut u8, u16, u8, u8, u16, u16) {
@@ -298,5 +317,15 @@ mod tests {
             ctn,
             pn,
         )
+    }
+
+    fn init_config_clear_map() {
+        let mut config_guard = CONFIG.write();
+        *config_guard = Settings::init().unwrap();
+        drop(config_guard);
+
+        let mut map_guard = MAP.write();
+        *map_guard = HashMap::new();
+        drop(map_guard);
     }
 }
