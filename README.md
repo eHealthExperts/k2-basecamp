@@ -2,6 +2,7 @@
 
 [![Latest](https://img.shields.io/github/release/eHealthExperts/k2-basecamp.svg?label=latest)](https://github.com/eHealthExperts/k2-basecamp/releases/latest)
 [![Build Status](https://dev.azure.com/ehex/K2-Basecamp/_apis/build/status/eHealthExperts.k2-basecamp)](https://dev.azure.com/ehex/K2-Basecamp/_build/latest?definitionId=1)
+[![Coverage](https://codecov.io/gh/eHealthExperts/k2-basecamp/branch/master/graph/badge.svg)](https://codecov.io/gh/eHealthExperts/k2-basecamp)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 The dynamic system library *K2 basecamp* is an implementation of the [CT-API](doc/CT-API-1.1.1.pdf) standard.<br/>
