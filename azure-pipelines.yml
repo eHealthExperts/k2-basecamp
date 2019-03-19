@@ -58,6 +58,7 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo audit, fmt and clippy
   - script: |
+      cargo build
       cargo test --verbose --all -- --nocapture
     displayName: Run cargo test
   - script: |
