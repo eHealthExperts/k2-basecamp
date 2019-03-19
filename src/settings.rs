@@ -312,8 +312,9 @@ log_level: debug
 
     #[test]
     fn force_trailing_slash_for_log_path() {
-        let path = "/tmp";
-        env::set_var("K2_LOG_PATH", path);
+        let path = tempdir().unwrap().into_path();;
+        let path_str = path.to_str().unwrap();
+        env::set_var("K2_LOG_PATH", path_str);
 
         assert_eq!(
             Settings::init().ok(),
@@ -321,7 +322,7 @@ log_level: debug
                 timeout: None,
                 base_url: String::from("http://localhost:8088/k2/ctapi/"),
                 log_level: String::from("Error"),
-                log_path: Some(format!("{}/", path)),
+                log_path: Some(format!("{}{}", path_str, MAIN_SEPARATOR)),
                 ctn: None,
                 pn: None,
             })
