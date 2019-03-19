@@ -28,7 +28,7 @@ In order to configure by using envirnoment variables, the above mentioned keys n
 
 ### Config file
 
-Multiple file formats are supported: `JSON` `TOML` `YAML`
+Multiple file formats are supported: `INI` `JSON` `YAML`
 
 Locate a file with the library name and the corresponding file ending, e.g., **ctehxk2.json** for Windows or **libctehxk2.json** for Linux in the working directory.
 
@@ -40,7 +40,5 @@ Use the above mentioned keys in the syntax of the desired file format, e.g., for
 	"base_url": "http://localhost:5050"
 }
 ```
-
-Please have also a look into this [example](examples/settings-file). 
 
 :exclamation: Both - environment variables and a config file - can coexist where as the environment variables will have higher priority.

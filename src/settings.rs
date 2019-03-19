@@ -19,7 +19,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new() -> Result<Self, Error> {
+    pub fn init() -> Result<Self, Error> {
         let mut settings = Config::new();
 
         // set defaults
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn default_configuration() {
-        let default = Settings::new();
+        let default = Settings::init();
 
         assert_eq!(
             default.ok(),
@@ -108,7 +108,7 @@ mod tests {
         env::set_var("K2_TIMEOUT", format!("{}", timeout));
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: String::from("http://localhost:8088/k2/ctapi/"),
@@ -123,7 +123,7 @@ mod tests {
         env::set_var("K2_BASE_URL", base_url.clone());
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: base_url.clone(),
@@ -138,7 +138,7 @@ mod tests {
         env::set_var("K2_LOG_LEVEL", log_level.clone());
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: base_url.clone(),
@@ -158,7 +158,7 @@ mod tests {
         env::set_var("K2_LOG_PATH", log_path.clone());
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: base_url.clone(),
@@ -173,7 +173,7 @@ mod tests {
         env::set_var("K2_CTN", format!("{}", ctn));
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: base_url.clone(),
@@ -188,7 +188,7 @@ mod tests {
         env::set_var("K2_PN", format!("{}", pn));
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
                 base_url: base_url.clone(),
@@ -233,7 +233,7 @@ mod tests {
         writeln!(config_file, "{}", config).unwrap();
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: config["timeout"].as_u64(),
                 base_url: String::from(config["base_url"].as_str().unwrap()),
@@ -276,7 +276,7 @@ log_level: debug
         env::set_var("K2_LOG_LEVEL", "trace");
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(300),
                 base_url: String::from("http://localhost:8088/k2/ctapi/"),
@@ -296,7 +296,7 @@ log_level: debug
         env::set_var("K2_BASE_URL", url);
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: None,
                 base_url: format!("{}/", url),
@@ -316,7 +316,7 @@ log_level: debug
         env::set_var("K2_LOG_PATH", path);
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: None,
                 base_url: String::from("http://localhost:8088/k2/ctapi/"),
@@ -331,9 +331,9 @@ log_level: debug
     }
 
     #[test]
-    fn read_config_from_toml_file() {
+    fn read_config_from_ini_file() {
         let config_file_folder = tempdir().unwrap();
-        let config_file_path = config_file_folder.path().join(format!("{}.toml", CFG_FILE));
+        let config_file_path = config_file_folder.path().join(format!("{}.ini", CFG_FILE));
         let mut config_file = File::create(config_file_path.clone()).unwrap();
         let _ = env::set_current_dir(config_file_folder.path().to_owned());
 
@@ -345,7 +345,7 @@ log_level = \"debug\"
         writeln!(config_file, "{}", config).unwrap();
 
         assert_eq!(
-            Settings::new().ok(),
+            Settings::init().ok(),
             Some(Settings {
                 timeout: Some(300),
                 base_url: String::from("http://localhost:8088/k2/ctapi/"),
@@ -362,7 +362,7 @@ log_level = \"debug\"
         let path = random_string(100);
         env::set_var("K2_LOG_PATH", path);
 
-        assert!(Settings::new().is_err());
+        assert!(Settings::init().is_err());
 
         env::remove_var("K2_LOG_PATH");
     }
@@ -372,14 +372,14 @@ log_level = \"debug\"
         let url = random_string(100);
         env::set_var("K2_BASE_URL", url);
 
-        assert!(Settings::new().is_err());
+        assert!(Settings::init().is_err());
 
         env::remove_var("K2_BASE_URL");
     }
 
     #[test]
     fn enforce_ctn_and_pn_were_set() {
-        let mut settings = Settings::new().unwrap();
+        let mut settings = Settings::init().unwrap();
         assert_that(&settings)
             .map(|val| &val.ctn)
             .is_equal_to(&None);
@@ -388,7 +388,7 @@ log_level = \"debug\"
         let ctn = rand::random::<u16>();
         env::set_var("K2_CTN", format!("{}", ctn));
 
-        settings = Settings::new().unwrap();
+        settings = Settings::init().unwrap();
         assert_that(&settings)
             .map(|val| &val.ctn)
             .is_equal_to(&None);
@@ -399,7 +399,7 @@ log_level = \"debug\"
         let pn = rand::random::<u16>();
         env::set_var("K2_PN", format!("{}", pn));
 
-        settings = Settings::new().unwrap();
+        settings = Settings::init().unwrap();
         assert_that(&settings)
             .map(|val| &val.ctn)
             .is_equal_to(&None);
@@ -407,7 +407,7 @@ log_level = \"debug\"
 
         env::set_var("K2_CTN", format!("{}", ctn));
 
-        settings = Settings::new().unwrap();
+        settings = Settings::init().unwrap();
         assert_that(&settings)
             .map(|val| &val.ctn)
             .is_equal_to(&Some(ctn));

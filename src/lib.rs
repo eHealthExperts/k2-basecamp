@@ -1,13 +1,14 @@
 extern crate antidote;
+extern crate chrono;
 extern crate config;
 extern crate data_encoding;
 #[macro_use]
 extern crate failure;
+extern crate fern;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate log4rs;
 #[cfg(test)]
 extern crate rand;
 extern crate reqwest;
@@ -31,9 +32,12 @@ use crate::ctapi::data::data;
 use crate::ctapi::init::init;
 use crate::ctapi::status::Status;
 use crate::settings::Settings;
+use antidote::RwLock;
+use std::panic;
 
 lazy_static! {
-    pub(crate) static ref CONFIG: Settings = Settings::new().expect("Failed to get configuration!");
+    pub(crate) static ref CONFIG: RwLock<Settings> =
+        RwLock::new(Settings::init().expect("Failed to init configuration!"));
 }
 
 #[no_mangle]
@@ -41,10 +45,17 @@ pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {
     logging::init();
 
     debug!("CT_init(ctn: {}, pn: {})", ctn, pn);
-    let status = init(ctn, pn);
+    let status: i8 = match init(ctn, pn) {
+        Ok(status) => status.value(),
+        Err(why) => {
+            error!("Failure during CT_init!");
+            debug!("{}", why);
+            Status::ERR_HTSI.value()
+        }
+    };
 
     debug!("Returning {}", status);
-    status.into()
+    status
 }
 
 #[no_mangle]
@@ -59,11 +70,38 @@ pub extern "system" fn CT_data(
 ) -> i8 {
     logging::init();
 
+    if dad.is_null() {
+        error!("Null pointer passed into CT_data() as dad");
+        return Status::ERR_HTSI.value();
+    }
+
+    if sad.is_null() {
+        error!("Null pointer passed into CT_data() as sad");
+        return Status::ERR_HTSI.value();
+    }
+
+    if lenr.is_null() {
+        error!("Null pointer passed into CT_data() as lenr");
+        return Status::ERR_HTSI.value();
+    }
+
+    if response.is_null() {
+        error!("Null pointer passed into CT_data() as response");
+        return Status::ERR_HTSI.value();
+    }
+
     debug!("CT_data(ctn: {})", ctn);
-    let status = data(ctn, dad, sad, lenc, command, lenr, response);
+    let status: i8 = match data(ctn, dad, sad, lenc, command, lenr, response) {
+        Ok(status) => status.value(),
+        Err(why) => {
+            error!("Failure during CT_data!");
+            debug!("{}", why);
+            Status::ERR_HTSI.value()
+        }
+    };
 
     debug!("Returning {}", status);
-    status.into()
+    status
 }
 
 #[no_mangle]
@@ -71,8 +109,21 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = close(ctn);
+    let status = match panic::catch_unwind(|| close(ctn)) {
+        Ok(result) => match result {
+            Ok(status) => status.value(),
+            Err(why) => {
+                error!("Failure during CT_close!");
+                debug!("{}", why);
+                Status::ERR_HTSI.value()
+            }
+        },
+        Err(_) => {
+            error!("Caught panic!");
+            Status::ERR_HTSI.value()
+        }
+    };
 
     debug!("Returning {}", status);
-    status.into()
+    status
 }
