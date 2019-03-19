@@ -91,14 +91,21 @@ pub extern "system" fn CT_data(
     }
 
     debug!("CT_data(ctn: {})", ctn);
-    let status: i8 = match data(ctn, dad, sad, lenc, command, lenr, response) {
-        Ok(status) => status.value(),
-        Err(why) => {
-            error!("Failure during CT_data!");
-            debug!("{}", why);
-            Status::ERR_HTSI.value()
-        }
-    };
+    let status: i8 =
+        match panic::catch_unwind(|| data(ctn, dad, sad, lenc, command, lenr, response)) {
+            Ok(result) => match result {
+                Ok(status) => status.value(),
+                Err(why) => {
+                    error!("Failure during CT_data!");
+                    debug!("{}", why);
+                    Status::ERR_HTSI.value()
+                }
+            },
+            Err(_) => {
+                error!("Caught panic!");
+                Status::ERR_HTSI.value()
+            }
+        };
 
     debug!("Returning {}", status);
     status
@@ -109,17 +116,11 @@ pub extern "system" fn CT_close(ctn: u16) -> i8 {
     logging::init();
 
     debug!("CT_close(ctn: {})", ctn);
-    let status = match panic::catch_unwind(|| close(ctn)) {
-        Ok(result) => match result {
-            Ok(status) => status.value(),
-            Err(why) => {
-                error!("Failure during CT_close!");
-                debug!("{}", why);
-                Status::ERR_HTSI.value()
-            }
-        },
-        Err(_) => {
-            error!("Caught panic!");
+    let status = match close(ctn) {
+        Ok(status) => status.value(),
+        Err(why) => {
+            error!("Failure during CT_close!");
+            debug!("{}", why);
             Status::ERR_HTSI.value()
         }
     };
