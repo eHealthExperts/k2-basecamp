@@ -1,7 +1,3 @@
-extern crate antidote;
-extern crate chrono;
-extern crate config;
-extern crate data_encoding;
 #![deny(unused_features)]
 #![deny(deprecated)]
 #![warn(unused_variables)]
@@ -11,23 +7,14 @@ extern crate data_encoding;
 
 #[macro_use]
 extern crate failure;
-extern crate fern;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[cfg(test)]
-extern crate rand;
-extern crate reqwest;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-#[cfg(test)]
-extern crate spectral;
-#[cfg(test)]
-extern crate test_server;
 
 mod ctapi;
 mod http;
