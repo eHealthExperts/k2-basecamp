@@ -26,7 +26,7 @@ pub fn init(mut ctn: u16, mut pn: u16) -> Result<Status, Error> {
             let status = Status::from_i8(status);
             if let Status::OK = status {
                 // Store CTN
-                MAP.write().insert(ctn, pn);
+                let _ = MAP.write().insert(ctn, pn);
                 info!("Card terminal opened.");
             }
 
@@ -70,7 +70,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(Some(Status::ERR_INVALID), init(ctn, pn).ok());
     }

@@ -23,14 +23,14 @@ impl Settings {
         let mut settings = Config::new();
 
         // set defaults
-        settings
+        let _ = settings
             .set_default("base_url", "http://localhost:8088/k2/ctapi/")
             .expect("Failed to set default for base_url!")
             .set_default("log_level", "Error")
             .expect("Failed to set default for log_level!");
 
         // merge with optional config file and env variables
-        settings
+        let _ = settings
             .merge(File::with_name(CFG_FILE).required(false))
             .expect("Failed to merge config file!")
             .merge(Environment::with_prefix("K2").ignore_empty(true))
