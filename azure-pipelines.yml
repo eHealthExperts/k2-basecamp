@@ -100,7 +100,7 @@ steps:
   - script: |
       bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: 'Publish coverage to Codecov'
+    displayName: 'Publish coverage to Codecov [Linux]'
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: cobertura
@@ -114,7 +114,7 @@ steps:
       testResultsFiles: 'junit.xml'
       searchFolder: $(Build.SourcesDirectory)/target/
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: 'Publish unit test results'
+    displayName: 'Publish unit test results [Linux]'
   - script: |
       RUSTFLAGS='' cargo build --release
     displayName: Run cargo build
