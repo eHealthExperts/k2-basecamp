@@ -116,8 +116,13 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Publish unit test results [Linux]'
   - script: |
+      cargo build --release
+    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
+    displayName: Run cargo build [macOS & Windows]
+  - script: |
       RUSTFLAGS='' cargo build --release
-    displayName: Run cargo build
+    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
+    displayName: Run cargo build [Linux]
   - task: PowerShell@2
     inputs:
       targetType: inline
