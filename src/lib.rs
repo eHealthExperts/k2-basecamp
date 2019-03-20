@@ -2,6 +2,13 @@ extern crate antidote;
 extern crate chrono;
 extern crate config;
 extern crate data_encoding;
+#![deny(unused_features)]
+#![deny(deprecated)]
+#![warn(unused_variables)]
+#![warn(unused_imports)]
+#![warn(dead_code)]
+#![warn(missing_copy_implementations)]
+
 #[macro_use]
 extern crate failure;
 extern crate fern;
