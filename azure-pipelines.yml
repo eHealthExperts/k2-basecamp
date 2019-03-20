@@ -116,7 +116,7 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Publish unit test results'
   - script: |
-      cargo build --release
+      RUSTFLAGS='' cargo build --release
     displayName: Run cargo build
   - task: PowerShell@2
     inputs:
