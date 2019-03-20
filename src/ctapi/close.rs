@@ -26,7 +26,7 @@ pub fn close(mut ctn: u16) -> Result<Status, Error> {
             let status = Status::from_i8(status);
             if let Status::OK = status {
                 // Remove CTN
-                MAP.write().remove(&ctn);
+                let _ = MAP.write().remove(&ctn);
                 info!("Card terminal closed.");
             }
 
@@ -58,7 +58,7 @@ mod tests {
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
 
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(close(ctn).is_err());
 
@@ -80,7 +80,7 @@ mod tests {
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let _ = close(ctn);
 
@@ -100,7 +100,7 @@ mod tests {
         env::set_var("K2_PN", format!("{}", pn));
         init_config_clear_map();
 
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let unused_ctn = rand::random::<u16>();
 
@@ -122,7 +122,7 @@ mod tests {
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(close(ctn).is_err());
         assert_eq!(true, MAP.read().contains_key(&ctn));
@@ -136,7 +136,7 @@ mod tests {
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(close(ctn).is_err());
         assert_eq!(true, MAP.read().contains_key(&ctn));
@@ -152,7 +152,7 @@ mod tests {
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(Some(Status::ERR_MEMORY), close(ctn).ok());
         assert_eq!(true, MAP.read().contains_key(&ctn));
@@ -168,7 +168,7 @@ mod tests {
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(Some(Status::OK), close(ctn).ok());
         assert_eq!(false, MAP.read().contains_key(&ctn));

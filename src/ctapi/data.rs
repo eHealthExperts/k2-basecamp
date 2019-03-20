@@ -130,7 +130,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response).is_err());
 
@@ -144,7 +144,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let _ = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
 
@@ -162,7 +162,7 @@ mod tests {
 
         let (command, command_ptr, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) =
             rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let _ = data(
             ctn,
@@ -199,7 +199,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let _ = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
 
@@ -220,7 +220,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
 
@@ -234,7 +234,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
 
@@ -251,7 +251,7 @@ mod tests {
         init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(
             Some(Status::ERR_MEMORY),
@@ -271,7 +271,7 @@ mod tests {
         env::set_var("K2_PN", format!("{}", pn));
         init_config_clear_map();
 
-        MAP.write().insert(ctn, pn);
+        let _ = MAP.write().insert(ctn, pn);
 
         let unused_ctn = rand::random::<u16>();
 
