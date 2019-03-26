@@ -15,7 +15,9 @@ lazy_static! {
 }
 
 pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error> {
-    let mut request_builder = CLIENT.post(&format!("{}{}", CONFIG.read().base_url, path));
+    let url = format!("{}{}", CONFIG.read().base_url, path);
+    debug!("Request URL: {}", url);
+    let mut request_builder = CLIENT.post(&url);
 
     if let Some(json) = request_body {
         debug!("Request body: {:?}", json);
