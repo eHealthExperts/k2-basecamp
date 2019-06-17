@@ -8,43 +8,40 @@ variables:
   RUST_BACKTRACE: full
   RUST_TEST_THREADS: 1
 pool:
-  vmImage:  $[ variables['HOST_IMAGE'] ]
+  vmImage: $(VM_IMAGE)
 strategy:
   matrix:
     i686-pc-windows-msvc:
-      HOST_IMAGE: vs2017-win2016
+      TARGET: i686-pc-windows-msvc
+      VM_IMAGE: vs2017-win2016
       ARTIFACT: ctehxk2-x86.dll
     x86_64-pc-windows-msvc:
-      HOST_IMAGE: vs2017-win2016
+      TARGET: x86_64-pc-windows-msvc
+      VM_IMAGE: vs2017-win2016
       ARTIFACT: ctehxk2-x64.dll
     x86_64-apple-darwin:
-      HOST_IMAGE: macos-10.13
+      TARGET: x86_64-apple-darwin
+      VM_IMAGE: macos-10.13
       ARTIFACT: libctehxk2.dylib
     x86_64-unknown-linux-gnu:
-      HOST_IMAGE: ubuntu-16.04
+      TARGET: x86_64-unknown-linux-gnu
+      VM_IMAGE: ubuntu-16.04
       ARTIFACT: libctehxk2.so
       RUSTFLAGS: '-C link-dead-code'
       KCOV_TARBALL: v36.tar.gz
       KCOV_DIR: kcov-36
 steps:
-  - powershell: Invoke-WebRequest -Uri https://win.rustup.rs/ -OutFile rustup-init.exe
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Windows_NT'))
-    displayName: Install rustup [Windows]
-  - script: |
-      set TARGET=%SYSTEM_JOBDISPLAYNAME%
-      rustup-init.exe -y --default-host %TARGET% --default-toolchain %CHANNEL%
-      set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-      echo "##vso[task.setvariable variable=PATH;]%PATH%"
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Windows_NT'))
-    displayName: Install toolchain [Windows]
-  - script: |
-      export TARGET=$SYSTEM_JOBDISPLAYNAME
-      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-host $TARGET --default-toolchain $CHANNEL
-      export PATH=$PATH:~/.cargo/bin
-      echo "##vso[task.setvariable variable=PATH;]$PATH"
-    condition: and(succeeded(), ne(variables['Agent.OS'],'Windows_NT'))
-    displayName: Install rustup and toolchain [Linux & macOS]
-  - script: |
+  - bash: |
+      set -x
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path --default-toolchain none
+      echo "##vso[task.prependpath]$HOME/.cargo/bin"
+    displayName: Install rustup
+  - bash: |
+      set -x
+      rustup toolchain install --no-self-update $CHANNEL-$TARGET
+      rustup default $CHANNEL-$TARGET
+    displayName: Select toolchain
+  - bash: |
       sudo apt-get update
       sudo apt-get install -y --fix-missing pkg-config
       sudo apt-get install -y binutils-dev build-essential cmake libcurl4-openssl-dev libdw-dev libiberty-dev ninja-build python zlib1g-dev
@@ -58,7 +55,7 @@ steps:
       sudo cmake --build . --target install
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install kcov [Linux]
-  - script: |
+  - bash: |
       rustup component add rustfmt-preview
       rustup component add clippy-preview
       cargo install cargo-audit
@@ -66,28 +63,28 @@ steps:
       cargo install cargo-junit
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install cargo plugins [Linux]
-  - script: |
+  - bash: |
       rustc -V
       cargo -V
     displayName: Check rustc and cargo versions
-  - script: |
+  - bash: |
       cargo audit
       cargo fmt --all -- --check
       cargo clippy --all-targets -- -D warnings
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo audit, fmt and clippy [Linux]
-  - script: |
+  - bash: |
       cargo build
     displayName: Run cargo build
-  - script: |
+  - bash: |
       cargo junit --name target/junit.xml
     displayName: Run cargo junit [Linux]
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-  - script: |
+  - bash: |
       cargo test --all -- --nocapture
     condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
     displayName: Run cargo test [macOS & Windows]
-  - script: |
+  - bash: |
       cargo-kcov kcov -v --no-clean-rebuild --all -o target/cov
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo-kcov [Linux]
@@ -97,7 +94,7 @@ steps:
       cobertura4FilePath: '$(System.DefaultWorkingDirectory)/target/cov/kcov-merged/cobertura4.xml'
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Transform Cobertura Format From 3 to 4 [Linux]'
-  - script: |
+  - bash: |
       bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Publish coverage to Codecov [Linux]'
@@ -115,11 +112,11 @@ steps:
       searchFolder: $(Build.SourcesDirectory)/target/
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Publish unit test results [Linux]'
-  - script: |
+  - bash: |
       cargo build --release
     condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
     displayName: Run cargo build [macOS & Windows]
-  - script: |
+  - bash: |
       RUSTFLAGS='' cargo build --release
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo build [Linux]
@@ -142,7 +139,7 @@ steps:
   - task: PublishBuildArtifacts@1
   - task: GithubRelease@0
     inputs:
-      gitHubConnection: eHealthExperts
+      gitHubConnection: 'basecamp@ehex'
       repositoryName: 'eHealthExperts/k2-basecamp'
       tag: $(Build.SourceBranchName)
       action: 'edit'
