@@ -1,10 +1,8 @@
 #[macro_use]
 extern crate const_cstr;
-extern crate dlopen;
-extern crate rand;
-extern crate test_server;
 
 use dlopen::raw::Library;
+use failure::Error;
 use std::u16::MAX;
 use std::{env, str};
 use test_server::HttpResponse;
@@ -17,11 +15,11 @@ const LIB_PATH: &str = "./target/debug/libctehxk2.so";
 const LIB_PATH: &str = "./target/debug/libctehxk2.dylib";
 
 #[test]
-fn use_ct_api_functions() {
-    let lib = Library::open(LIB_PATH).expect("Could not open library");
+fn use_ct_api_functions() -> Result<(), Error> {
+    let lib = Library::open(LIB_PATH)?;
 
     let init: unsafe extern "system" fn(u16, u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }.unwrap();
+        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }?;
 
     let data: unsafe extern "system" fn(
         u16,
@@ -31,10 +29,10 @@ fn use_ct_api_functions() {
         *const u8,
         *mut u16,
         *mut u8,
-    ) -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }.unwrap();
+    ) -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }?;
 
     let close: unsafe extern "system" fn(u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }.unwrap();
+        unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }?;
 
     let ctn = rand::random::<u16>();
     let pn = rand::random::<u16>();
@@ -60,7 +58,7 @@ fn use_ct_api_functions() {
             return HttpResponse::Ok().body("0");
         }
         HttpResponse::BadRequest().into()
-    });
+    })?;
     env::set_var("K2_BASE_URL", server.url());
 
     assert_eq!(0, unsafe { init(ctn, pn) });
@@ -76,4 +74,6 @@ fn use_ct_api_functions() {
         )
     });
     assert_eq!(0, unsafe { close(ctn) });
+
+    Ok(())
 }

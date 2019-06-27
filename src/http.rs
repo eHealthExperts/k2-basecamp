@@ -38,13 +38,14 @@ mod tests {
 
     use super::request;
     use crate::{Settings, CONFIG};
+    use failure::Error;
     use serde_json::{self, Value};
     use std::env;
     use test_server::{self, helper, HttpResponse};
 
     #[test]
-    fn request_with_body_is_content_type_json() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn request_with_body_is_content_type_json() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -57,11 +58,13 @@ mod tests {
         );
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn send_request_body_if_given() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn send_request_body_if_given() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -74,11 +77,13 @@ mod tests {
         assert_eq!(body, json);
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn if_no_json_is_given_send_empty_request_body() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn if_no_json_is_given_send_empty_request_body() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -88,6 +93,8 @@ mod tests {
         assert!(request.body.is_empty());
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     fn init_config() {

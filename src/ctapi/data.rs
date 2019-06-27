@@ -106,6 +106,7 @@ mod tests {
     use crate::ctapi::MAP;
     use crate::{Settings, Status, CONFIG};
     use data_encoding::BASE64;
+    use failure::Error;
     use rand;
     use serde_json::{self, Value};
     use std::collections::HashMap;
@@ -138,8 +139,8 @@ mod tests {
     }
 
     #[test]
-    fn use_ctn_and_pn_in_request_path() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -152,11 +153,13 @@ mod tests {
         assert_eq!(path, *format!("/ct_data/{}/{}", ctn, pn));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn post_body_contains_parameter() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn post_body_contains_parameter() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -175,7 +178,7 @@ mod tests {
         );
 
         let body = server.requests.next().unwrap().body;
-        let json: Value = serde_json::from_str(&body).unwrap();
+        let json: Value = serde_json::from_str(&body)?;
 
         assert_eq!(*json.get("dad").unwrap(), json!(dad));
         assert_eq!(*json.get("sad").unwrap(), json!(sad));
@@ -187,14 +190,16 @@ mod tests {
         assert_eq!(*json.get("lenr").unwrap(), json!(lenr));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn response_is_mapped_to_parameter() {
+    fn response_is_mapped_to_parameter() -> Result<(), Error> {
         let server = test_server::new(0, |_| {
             HttpResponse::Ok()
                 .body(r#"{"dad":39,"sad":63,"lenr":2,"response":"kAA=","responseCode":0}"#)
-        });
+        })?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -211,11 +216,13 @@ mod tests {
         assert_eq!([144, 0], slice);
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_err_if_server_response_is_not_200() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -225,11 +232,13 @@ mod tests {
         assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_err_if_server_response_not_contains_response_struct_as_json() {
-        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"));
+    fn returns_err_if_server_response_not_contains_response_struct_as_json() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -239,14 +248,16 @@ mod tests {
         assert!(data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response,).is_err());
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_response_status_from_valid_json_response_struct() {
+    fn returns_response_status_from_valid_json_response_struct() -> Result<(), Error> {
         let server = test_server::new(0, |_| {
             HttpResponse::Ok()
                 .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
-        });
+        })?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -259,11 +270,13 @@ mod tests {
         );
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn use_ctn_and_pn_from_config() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn use_ctn_and_pn_from_config() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
@@ -285,6 +298,8 @@ mod tests {
         env::remove_var("K2_BASE_URL");
         env::remove_var("K2_CTN");
         env::remove_var("K2_PN");
+
+        Ok(())
     }
 
     fn rand_params() -> (Vec<u8>, *const u8, u16, *mut u8, u16, u8, u8, u16, u16) {

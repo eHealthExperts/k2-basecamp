@@ -45,6 +45,7 @@ mod tests {
     use super::init;
     use crate::ctapi::MAP;
     use crate::{Settings, Status, CONFIG};
+    use failure::Error;
     use rand;
     use std::collections::HashMap;
     use std::env;
@@ -76,8 +77,8 @@ mod tests {
     }
 
     #[test]
-    fn use_ctn_and_pn_in_request_path() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -90,11 +91,13 @@ mod tests {
         assert_eq!(path, *format!("/ct_init/{}/{}", ctn, pn));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn use_ctn_and_pn_from_config() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn use_ctn_and_pn_from_config() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         let ctn = rand::random::<u16>();
         env::set_var("K2_CTN", format!("{}", ctn));
@@ -113,11 +116,13 @@ mod tests {
         env::remove_var("K2_BASE_URL");
         env::remove_var("K2_CTN");
         env::remove_var("K2_PN");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_err_if_server_response_is_not_200() {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into());
+    fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -128,11 +133,13 @@ mod tests {
         assert_eq!(false, MAP.read().contains_key(&ctn));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_err_if_server_response_not_contains_status() {
-        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"));
+    fn returns_err_if_server_response_not_contains_status() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -143,11 +150,13 @@ mod tests {
         assert_eq!(false, MAP.read().contains_key(&ctn));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_response_status_from_server() {
-        let server = test_server::new(0, |_| HttpResponse::Ok().body("-11"));
+    fn returns_response_status_from_server() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("-11"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -157,11 +166,13 @@ mod tests {
         assert_eq!(Some(Status::ERR_MEMORY), init(ctn, pn).ok());
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     #[test]
-    fn returns_ok_and_init_ctn_if_server_returns_ok() {
-        let server = test_server::new(0, |_| HttpResponse::Ok().body("0"));
+    fn returns_ok_and_init_ctn_if_server_returns_ok() -> Result<(), Error> {
+        let server = test_server::new(0, |_| HttpResponse::Ok().body("0"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -172,6 +183,8 @@ mod tests {
         assert_eq!(true, MAP.read().contains_key(&ctn));
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
     }
 
     fn init_config_clear_map() {
