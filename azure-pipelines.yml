@@ -43,7 +43,7 @@ steps:
       sudo apt-get install -y --fix-missing pkg-config
       sudo apt-get install -y libssl-dev pkg-config cmake zlib1g-dev
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Install kcov [Linux]
+    displayName: Install needed packages [Linux]
   - bash: |
       rustup component add rustfmt-preview
       rustup component add clippy-preview
@@ -74,9 +74,9 @@ steps:
     condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
     displayName: Run cargo test [macOS & Windows]
   - bash: |
-      taskset -c 0 cargo tarpaulin -f -v --force-clean --ignore-tests --ignore-panics --out Xml --all;
+      cargo tarpaulin --release --out Xml
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Run cargo-kcov [Linux]
+    displayName: Run cargo tarpaulin [Linux]
   - bash: |
       bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
@@ -97,7 +97,7 @@ steps:
     displayName: 'Publish unit test results [Linux]'
   - bash: |
       cargo build --release
-    condition: and(succeeded())
+    condition: succeeded()
     displayName: Run cargo build
   - task: PowerShell@2
     inputs:
