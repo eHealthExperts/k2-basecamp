@@ -27,9 +27,6 @@ strategy:
       TARGET: x86_64-unknown-linux-gnu
       VM_IMAGE: ubuntu-16.04
       ARTIFACT: libctehxk2.so
-      RUSTFLAGS: '-C link-dead-code'
-      KCOV_TARBALL: v36.tar.gz
-      KCOV_DIR: kcov-36
 steps:
   - bash: |
       set -x
@@ -44,22 +41,14 @@ steps:
   - bash: |
       sudo apt-get update
       sudo apt-get install -y --fix-missing pkg-config
-      sudo apt-get install -y binutils-dev build-essential cmake libcurl4-openssl-dev libdw-dev libiberty-dev ninja-build python zlib1g-dev
-      wget https://github.com/SimonKagstrom/kcov/archive/$KCOV_TARBALL
-      tar xzf $KCOV_TARBALL
-      cd $KCOV_DIR
-      mkdir build
-      cd build
-      cmake -G 'Ninja' ..
-      cmake --build .
-      sudo cmake --build . --target install
+      sudo apt-get install -y libssl-dev pkg-config cmake zlib1g-dev
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install kcov [Linux]
   - bash: |
       rustup component add rustfmt-preview
       rustup component add clippy-preview
       cargo install cargo-audit
-      cargo install cargo-kcov
+      cargo install cargo-tarpaulin
       cargo install cargo-junit
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Install cargo plugins [Linux]
@@ -85,15 +74,9 @@ steps:
     condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
     displayName: Run cargo test [macOS & Windows]
   - bash: |
-      cargo-kcov kcov -v --no-clean-rebuild --all -o target/cov
+      taskset -c 0 cargo tarpaulin -f -v --force-clean --ignore-tests --ignore-panics --out Xml --all;
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: Run cargo-kcov [Linux]
-  - task: cobertura-transform@0
-    inputs:
-      cobertura3FilePath: '$(System.DefaultWorkingDirectory)/target/cov/kcov-merged/cobertura.xml'
-      cobertura4FilePath: '$(System.DefaultWorkingDirectory)/target/cov/kcov-merged/cobertura4.xml'
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: 'Transform Cobertura Format From 3 to 4 [Linux]'
   - bash: |
       bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
@@ -101,8 +84,8 @@ steps:
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: cobertura
-      summaryFileLocation: '$(Build.SourcesDirectory)/target/cov/kcov-merged/cobertura4.xml'
-      reportDirectory: '$(Build.SourcesDirectory)/target/cov/kcov-merged/'
+      summaryFileLocation: '$(Build.SourcesDirectory)/cobertura.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/target/debug/'
     condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
     displayName: 'Publish code coverage results [Linux]'
   - task: PublishTestResults@2
@@ -114,12 +97,8 @@ steps:
     displayName: 'Publish unit test results [Linux]'
   - bash: |
       cargo build --release
-    condition: and(succeeded(), ne(variables['Agent.OS'],'Linux'))
-    displayName: Run cargo build [macOS & Windows]
-  - bash: |
-      RUSTFLAGS='' cargo build --release
-    condition: and(succeeded(), eq(variables['Agent.OS'],'Linux'))
-    displayName: Run cargo build [Linux]
+    condition: and(succeeded())
+    displayName: Run cargo build
   - task: PowerShell@2
     inputs:
       targetType: inline
