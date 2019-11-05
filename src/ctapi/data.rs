@@ -196,10 +196,10 @@ mod tests {
 
     #[test]
     fn response_is_mapped_to_parameter() -> Result<(), Error> {
-        let server = test_server::new(0, ||
+        let server = test_server::new(0, || {
             HttpResponse::Ok()
                 .body(r#"{"dad":39,"sad":63,"lenr":2,"response":"kAA=","responseCode":0}"#)
-        )?;
+        })?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -254,10 +254,10 @@ mod tests {
 
     #[test]
     fn returns_response_status_from_valid_json_response_struct() -> Result<(), Error> {
-        let server = test_server::new(0, ||
+        let server = test_server::new(0, || {
             HttpResponse::Ok()
                 .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
-        )?;
+        })?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 

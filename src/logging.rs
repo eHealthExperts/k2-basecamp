@@ -1,9 +1,6 @@
 use crate::CONFIG;
 use log::LevelFilter;
-use std::{
-    str::FromStr,
-    sync::Once,
-};
+use std::{str::FromStr, sync::Once};
 
 static INIT: Once = Once::new();
 
