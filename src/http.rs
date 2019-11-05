@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn request_with_body_is_content_type_json() -> Result<(), Error> {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
+        let server = test_server::new(0, HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -64,7 +64,7 @@ mod tests {
 
     #[test]
     fn send_request_body_if_given() -> Result<(), Error> {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
+        let server = test_server::new(0, HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn if_no_json_is_given_send_empty_request_body() -> Result<(), Error> {
-        let server = test_server::new(0, |_| HttpResponse::BadRequest().into())?;
+        let server = test_server::new(0, HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
