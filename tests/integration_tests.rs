@@ -5,7 +5,7 @@ use dlopen::raw::Library;
 use failure::Error;
 use std::u16::MAX;
 use std::{env, str};
-use test_server::HttpResponse;
+use test_server::{HttpRequest, HttpResponse};
 
 #[cfg(target_os = "windows")]
 const LIB_PATH: &str = "./target/debug/ctehxk2.dll";
@@ -47,7 +47,7 @@ fn use_ct_api_functions() -> Result<(), Error> {
     let response_ptr: *mut u8 = &mut response[0];
     let mut lenr: u16 = response.len() as u16;
 
-    let server = test_server::new(65432, |req| {
+    let server = test_server::new(65432, |req: HttpRequest| {
         let path = req.path();
         if path.starts_with("/ct_data") {
             return HttpResponse::Ok().body(
