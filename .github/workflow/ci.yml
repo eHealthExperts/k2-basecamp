@@ -1,0 +1,51 @@
+name: Continuous Integration
+
+on: [push]
+
+env:
+  RUST_BACKTRACE: full
+
+jobs:
+  ci:
+    name: Build and test
+    runs-on: "${{ matrix.os }}-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    - name: Check formatting
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu'
+      with:
+        command: fmt
+        args: --all -- --check
+    - name: Check linting
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu'
+      with:
+        command: clippy
+        args: --all-targets -- -D warnings
+    - name: Build release
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release
+    - name: Run tests
+      uses: actions-rs/cargo@v1
+      if: matrix.os != 'ubuntu'
+      with:
+        command: test
+    - name: Run tests
+      run: |
+        cargo install cargo-tarpaulin
+        cargo tarpaulin --all -v --out Xml
+        bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+      if: matrix.os == 'ubuntu'
