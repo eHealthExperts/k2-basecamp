@@ -312,7 +312,7 @@ log_level: debug
 
     #[test]
     fn force_trailing_slash_for_log_path() {
-        let path = tempdir().unwrap().into_path();;
+        let path = tempdir().unwrap().into_path();
         let path_str = path.to_str().unwrap();
         env::set_var("K2_LOG_PATH", path_str);
 
