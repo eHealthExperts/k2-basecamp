@@ -4,6 +4,7 @@ on: [push]
 
 env:
   RUST_BACKTRACE: full
+  RUST_TEST_THREADS: 1
 
 jobs:
   ci:
