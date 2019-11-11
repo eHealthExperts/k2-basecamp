@@ -1,7 +1,7 @@
 use config::{Config, Environment, File};
 use failure::Error;
-use reqwest::Url;
 use std::path::{Path, MAIN_SEPARATOR};
+use url::Url;
 
 #[cfg(target_os = "windows")]
 const CFG_FILE: &str = "ctehxk2";

@@ -1,35 +1,41 @@
 use crate::CONFIG;
 use failure::Error;
-use reqwest::{self, Client, StatusCode};
 use serde_json::Value;
-use std::time::Duration;
 
-lazy_static! {
-    static ref CLIENT: Client = Client::builder()
-        .timeout(match CONFIG.read().timeout {
-            Some(timeout) => Some(Duration::from_secs(timeout)),
-            None => None,
-        })
-        .build()
-        .expect("Failed to create HTTP client!");
+fn req_configure(req: &mut ureq::Request) {
+    req.set("Content-Type", "application/json");
+
+    if let Some(timeout) = CONFIG.read().timeout {
+        req.timeout_connect(timeout);
+        req.timeout_read(timeout);
+        req.timeout_write(timeout);
+    }
 }
 
 pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error> {
     let url = format!("{}{}", CONFIG.read().base_url, path);
     debug!("Request URL: {}", url);
-    let mut request_builder = CLIENT.post(&url);
+    let mut request = ureq::post(&url);
+    req_configure(&mut request);
 
-    if let Some(json) = request_body {
-        debug!("Request body: {:?}", json);
-        request_builder = request_builder.json(&json);
+    let response = match request_body {
+        Some(json) => {
+            debug!("Request body: {:?}", json);
+            request.send_json(json)
+        }
+        _ => {
+            debug!("Empty request body...");
+            request.call()
+        }
+    };
+
+    if response.ok() {
+        Ok(response.into_string()?)
     } else {
-        debug!("Empty request body...");
-    }
-
-    let mut response = request_builder.send()?;
-    match response.status() {
-        StatusCode::OK => Ok(response.text()?),
-        s => Err(format_err!("Request failed with status code {}", s)),
+        Err(format_err!(
+            "Request failed with status code {}",
+            response.status()
+        ))
     }
 }
 
