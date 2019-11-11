@@ -120,6 +120,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn returns_err_htsi_if_server_response_is_not_200() -> Result<(), Error> {
         let server = test_server::new(0, HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -131,6 +132,8 @@ mod tests {
 
         assert!(close(ctn).is_err());
         assert_eq!(true, MAP.read().contains_key(&ctn));
+
+        env::remove_var("K2_BASE_URL");
 
         Ok(())
     }
