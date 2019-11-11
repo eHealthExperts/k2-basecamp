@@ -47,6 +47,6 @@ jobs:
     - name: Run tests
       run: |
         cargo install cargo-tarpaulin
-        cargo tarpaulin --all -v --out Xml
+        taskset -c 0 cargo tarpaulin --all -v --out Xml
         bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
       if: matrix.os == 'ubuntu'
