@@ -16,30 +16,30 @@ crate-type = ["cdylib"]
 
 [dependencies]
 antidote = "1.0.0"
-chrono = "0.4.9"
+chrono = "0.4.10"
 data-encoding = "2.1.2"
 failure = "0.1.6"
 fern = "0.5.9"
 lazy_static = "1.4.0"
 log = "0.4.8"
-serde = "1.0.102"
-serde_derive = "1.0.102"
-serde_json = "1.0.41"
-ureq = { version = "0.11.2", features = ["json"] }
-url = "2.1.0"
+serde = "1.0.104"
+serde_derive = "1.0.104"
+serde_json = "1.0.44"
+ureq = { version = "0.11.3", features = ["json"] }
+url = "2.1.1"
 
 [dependencies.config]
-version = "0.9.3"
+version = "0.10.1"
 default-features = false
 features = ["ini", "json", "yaml"]
 
 [dev-dependencies]
 const-cstr = "0.3.0"
 dlopen = "0.1.8"
-rand = "0.7.2"
+rand = "0.7.3"
 spectral = "0.6.0"
 tempfile = "3.1.0"
-test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "0.7.0" }
+test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "0.8.0" }
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.11"

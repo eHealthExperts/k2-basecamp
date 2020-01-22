@@ -47,7 +47,7 @@ fn use_ct_api_functions() -> Result<(), Error> {
     let response_ptr: *mut u8 = &mut response[0];
     let mut lenr: u16 = response.len() as u16;
 
-    let server = test_server::new(65432, |req: HttpRequest| {
+    let server = test_server::new("127.0.0.1:0", |req: HttpRequest| {
         let path = req.path();
         if path.starts_with("/ct_data") {
             return HttpResponse::Ok().body(

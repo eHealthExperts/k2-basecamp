@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -85,8 +85,8 @@ mod tests {
 
         let _ = close(ctn);
 
-        let path = server.requests.next().unwrap().path;
-        assert_eq!(path, *format!("/ct_close/{}/{}", ctn, pn));
+        let req = server.requests.next().unwrap();
+        assert_eq!(req.uri().path(), &format!("/ct_close/{}/{}", ctn, pn));
 
         env::remove_var("K2_BASE_URL");
 
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn use_ctn_and_pn_from_config() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         let ctn = rand::random::<u16>();
         env::set_var("K2_CTN", format!("{}", ctn));
@@ -109,8 +109,8 @@ mod tests {
 
         let _ = close(unused_ctn);
 
-        let path = server.requests.next().unwrap().path;
-        assert_eq!(path, *format!("/ct_close/{}/{}", ctn, pn));
+        let req = server.requests.next().unwrap();
+        assert_eq!(req.uri().path(), &format!("/ct_close/{}/{}", ctn, pn));
 
         env::remove_var("K2_BASE_URL");
         env::remove_var("K2_CTN");
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     #[ignore]
     fn returns_err_htsi_if_server_response_is_not_200() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn returns_err_htsi_if_server_response_not_contains_status() -> Result<(), Error> {
-        let server = test_server::new(0, || HttpResponse::Ok().body("hello world"))?;
+        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn returns_response_status_from_server() -> Result<(), Error> {
-        let server = test_server::new(0, || HttpResponse::Ok().body("-11"))?;
+        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("-11"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn return_ok_and_close_ctn_if_server_returns_ok() -> Result<(), Error> {
-        let server = test_server::new(0, || HttpResponse::Ok().body("0"))?;
+        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("0"))?;
         env::set_var("K2_BASE_URL", server.url());
         init_config_clear_map();
 

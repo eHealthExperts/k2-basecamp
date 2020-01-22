@@ -45,13 +45,12 @@ mod tests {
     use super::request;
     use crate::{Settings, CONFIG};
     use failure::Error;
-    use serde_json::{self, Value};
     use std::env;
     use test_server::{self, helper, HttpResponse};
 
     #[test]
     fn request_with_body_is_content_type_json() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -59,8 +58,8 @@ mod tests {
         let request = server.requests.next().unwrap();
 
         assert_eq!(
-            Some(&String::from("application/json")),
-            request.headers.get("content-type")
+            "application/json",
+            request.headers().get("content-type").unwrap()
         );
 
         env::remove_var("K2_BASE_URL");
@@ -70,7 +69,7 @@ mod tests {
 
     #[test]
     fn send_request_body_if_given() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
@@ -78,9 +77,8 @@ mod tests {
 
         let _ = request("", Some(body.clone()));
         let request = server.requests.next().unwrap();
-        let json: Value = serde_json::from_str(&request.body).unwrap();
 
-        assert_eq!(body, json);
+        assert_eq!(serde_json::to_vec(&body).unwrap(), &request.body()[..]);
 
         env::remove_var("K2_BASE_URL");
 
@@ -89,14 +87,14 @@ mod tests {
 
     #[test]
     fn if_no_json_is_given_send_empty_request_body() -> Result<(), Error> {
-        let server = test_server::new(0, HttpResponse::BadRequest)?;
+        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
 
         let _ = request("", None);
         let request = server.requests.next().unwrap();
 
-        assert!(request.body.is_empty());
+        assert_eq!(b"", &request.body()[..]);
 
         env::remove_var("K2_BASE_URL");
 

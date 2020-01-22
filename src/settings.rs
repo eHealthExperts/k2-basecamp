@@ -191,9 +191,9 @@ mod tests {
             Settings::init().ok(),
             Some(Settings {
                 timeout: Some(timeout),
-                base_url: base_url.clone(),
-                log_level: log_level.clone(),
-                log_path: Some(log_path.clone()),
+                base_url,
+                log_level,
+                log_path: Some(log_path),
                 ctn: Some(ctn),
                 pn: Some(pn),
             })
@@ -218,7 +218,7 @@ mod tests {
         );
 
         let config_file_path = config_file_folder.path().join(format!("{}.json", CFG_FILE));
-        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let mut config_file = File::create(config_file_path).unwrap();
         let _ = env::set_current_dir(config_file_folder.path().to_owned());
 
         let config = json!({
@@ -263,7 +263,7 @@ mod tests {
     fn env_variable_beats_config_file() {
         let config_file_folder = tempdir().unwrap();
         let config_file_path = config_file_folder.path().join(format!("{}.yaml", CFG_FILE));
-        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let mut config_file = File::create(config_file_path).unwrap();
         let _ = env::set_current_dir(config_file_folder.path().to_owned());
 
         let config = "
@@ -335,7 +335,7 @@ log_level: debug
     fn read_config_from_ini_file() {
         let config_file_folder = tempdir().unwrap();
         let config_file_path = config_file_folder.path().join(format!("{}.ini", CFG_FILE));
-        let mut config_file = File::create(config_file_path.clone()).unwrap();
+        let mut config_file = File::create(config_file_path).unwrap();
         let _ = env::set_current_dir(config_file_folder.path().to_owned());
 
         let config = "
