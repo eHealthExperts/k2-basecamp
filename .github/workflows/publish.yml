@@ -6,35 +6,63 @@ on:
       - "*"
 
 jobs:
-  release:
+  create-release:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+    - shell: bash
+      run: |
+        echo '${{ steps.create-release.outputs.upload_url }}' > upload-url.txt
+    - name: Save GitHub release upload URL for next job
+      uses: actions/upload-artifact@v1
+      with:
+        name: upload-url
+        path: upload-url.txt
+  create-assets:
+    needs:
+      - 'create-release'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-latest, windows-latest, ubuntu.latest]
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-msvc
+          - i686-pc-windows-msvc
         include:
-          - os: "ubuntu-latest"
-            target: "x86_64-unknown-linux-gnu"
-            asset: "libctehxk2.so"
-          - os: "macOS-latest"
-            target: "x86_64-apple-darwin"
-            asset: "libctehxk2.dylib"
-          - os: "windows-latest"
-            target: "i686-pc-windows-msvc"
-            asset: "ctehxk2-x86.dll"
-          - os: "windows-latest"
-            target: "x86_64-pc-windows-msvc"
-            asset: "ctehxk2-x64.dll"
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            asset_path: ./target/release/libctehxk2.so
+            asset_name: libctehxk2.so
+          - os: macOS-latest
+            target: x86_64-apple-darwin
+            asset_path: ./target/release/libctehxk2.dylib
+            asset_name: libctehxk2.dylib
+          - os: windows-latest
+            target: i686-pc-windows-msvc
+            asset_path: ./target/release/ctehxk2.dll
+            asset_name: ctehxk2-x86.dll
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset_path: ./target/release/ctehxk2.dll
+            asset_name: ctehxk2-x64.dll
     steps:
       - uses: actions/checkout@v2
-      - id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch GitHub Release upload URL
+        uses: actions/download-artifact@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: ${{ github.ref }}
+          name: upload-url
+      - name: Set up environment variables
+        shell: bash
+        run: echo "::set-env name=upload_url::$(cat upload-url/upload-url.txt)"
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -45,20 +73,11 @@ jobs:
         with:
           command: build
           args: --release
-      - id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: ${{ github.ref }}
-          draft: false
-          prerelease: false
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/release/${{ matrix.asset }}
-          asset_name: ${{ matrix.asset }}
+          upload_url: ${{ env.upload_url }}
+          asset_path: ${{ matrix.asset_path }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream
