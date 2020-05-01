@@ -8,7 +8,8 @@ const CFG_FILE: &str = "ctehxk2";
 #[cfg(not(target_os = "windows"))]
 const CFG_FILE: &str = "libctehxk2";
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Deserialize)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Settings {
     pub timeout: Option<u64>,
     pub base_url: String,
@@ -76,7 +77,6 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand;
     use spectral::assert_that;
     use std::env;
     use std::fs::File;
@@ -86,6 +86,7 @@ mod tests {
     use test_server::helper::random_string;
 
     #[test]
+    #[serial]
     fn default_configuration() {
         let default = Settings::init();
 
@@ -103,6 +104,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn env_variables_overrides() {
         let timeout = u64::from(rand::random::<u32>()); // panics with u64 random
         env::set_var("K2_TIMEOUT", format!("{}", timeout));
@@ -208,6 +210,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn config_file_overrides() {
         let config_file_folder = tempdir().unwrap();
         let config_file_folder_path = tempdir().unwrap().into_path();
@@ -260,6 +263,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn env_variable_beats_config_file() {
         let config_file_folder = tempdir().unwrap();
         let config_file_path = config_file_folder.path().join(format!("{}.yaml", CFG_FILE));
@@ -291,6 +295,7 @@ log_level: debug
     }
 
     #[test]
+    #[serial]
     fn force_trailing_slash_for_base_url() {
         let url = "http://127.0.0.1";
         env::set_var("K2_BASE_URL", url);
@@ -311,6 +316,7 @@ log_level: debug
     }
 
     #[test]
+    #[serial]
     fn force_trailing_slash_for_log_path() {
         let path = tempdir().unwrap().into_path();
         let path_str = path.to_str().unwrap();
@@ -332,6 +338,7 @@ log_level: debug
     }
 
     #[test]
+    #[serial]
     fn read_config_from_ini_file() {
         let config_file_folder = tempdir().unwrap();
         let config_file_path = config_file_folder.path().join(format!("{}.ini", CFG_FILE));
@@ -359,6 +366,7 @@ log_level = \"debug\"
     }
 
     #[test]
+    #[serial]
     fn error_with_wrong_log_path() {
         let path = random_string(100);
         env::set_var("K2_LOG_PATH", path);
@@ -369,6 +377,7 @@ log_level = \"debug\"
     }
 
     #[test]
+    #[serial]
     fn error_with_wrong_base_url() {
         let url = random_string(100);
         env::set_var("K2_BASE_URL", url);
@@ -379,6 +388,7 @@ log_level = \"debug\"
     }
 
     #[test]
+    #[serial]
     fn enforce_ctn_and_pn_were_set() {
         let mut settings = Settings::init().unwrap();
         assert_that(&settings)

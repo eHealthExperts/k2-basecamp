@@ -1,5 +1,5 @@
 [package]
-name = "k2_basecamp"
+name = "ctehxk2"
 version = "0.15.9"
 description = "CTAPI adpater for the gematik Konnektor"
 authors = ["Christian Fochler <fochler@ehealhtexperts.de>"]
@@ -11,21 +11,20 @@ build = "build.rs"
 edition = "2018"
 
 [lib]
-name = "ctehxk2"
 crate-type = ["cdylib"]
 
 [dependencies]
 antidote = "1.0.0"
-chrono = "0.4.10"
-data-encoding = "2.1.2"
-failure = "0.1.6"
-fern = "0.5.9"
+chrono = "0.4.11"
+data-encoding = "2.2.0"
+failure = "0.1.7"
+fern = "0.6.0"
 lazy_static = "1.4.0"
 log = "0.4.8"
-serde = "1.0.104"
-serde_derive = "1.0.104"
-serde_json = "1.0.44"
-ureq = { version = "0.11.3", features = ["json"] }
+serde = "1.0.106"
+serde_derive = "1.0.106"
+serde_json = "1.0.52"
+ureq = { version = "0.12.1", features = ["json"] }
 url = "2.1.1"
 
 [dependencies.config]
@@ -36,7 +35,9 @@ features = ["ini", "json", "yaml"]
 [dev-dependencies]
 const-cstr = "0.3.0"
 dlopen = "0.1.8"
+futures-timer = "3.0.2"
 rand = "0.7.3"
+serial_test = "0.4.0"
 spectral = "0.6.0"
 tempfile = "3.1.0"
 test-server = { git = "https://github.com/ChriFo/test-server-rs", tag = "0.8.0" }
@@ -47,7 +48,7 @@ winres = "0.1.11"
 [package.metadata.winres]
 FileDescription = "K2 adapter for CTAPI"
 FileVersion = "0.15.9"
-LegalCopyright = "eHealthExperts GmbH. All rights reserved."
+LegalCopyright = "eHealth Experts GmbH. All rights reserved."
 OriginalFilename = "ctehxk2.dll"
 ProductName = "K2 basecamp"
 ProductVersion = "0.15.9"

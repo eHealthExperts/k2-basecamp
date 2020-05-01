@@ -2,11 +2,11 @@ use crate::ctapi::MAP;
 use crate::{http, Status, CONFIG};
 use data_encoding::{BASE64, HEXLOWER};
 use failure::Error;
-use serde_json;
 use std::slice;
 
 #[allow(non_snake_case)]
-#[derive(Deserialize, Debug)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive(Deserialize)]
 struct Response {
     dad: u8,
     sad: u8,
@@ -73,7 +73,7 @@ pub fn data(
             Err(format_err!("Unexpected server response found in body!"))
         }
         Ok(json) => {
-            let status = Status::from_i8(json.status);
+            let status = Status::from(json.status);
             if let Status::OK = status {
                 let decoded = match BASE64.decode(&json.response.into_bytes()) {
                     Ok(content) => {
@@ -102,18 +102,36 @@ pub fn data(
 #[cfg(test)]
 mod tests {
 
-    use super::data;
+    use super::{data, Response};
     use crate::ctapi::MAP;
     use crate::{Settings, Status, CONFIG};
     use data_encoding::BASE64;
     use failure::Error;
-    use rand;
     use serde_json::{self, Value};
     use std::collections::HashMap;
     use std::env;
     use std::slice;
     use std::u16::MAX;
     use test_server::{self, HttpResponse};
+
+    #[test]
+    fn deserialize_response() {
+        let res: Result<Response, _> = serde_json::from_str(
+            "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
+        );
+
+        assert!(res.is_ok());
+        assert_eq!(
+            res.unwrap(),
+            Response {
+                dad: 1,
+                sad: 1,
+                lenr: 5,
+                response: "AQIDBAU=".to_string(),
+                status: 0
+            }
+        );
+    }
 
     #[test]
     fn returns_err_invalid_if_terminal_closed() {
@@ -126,6 +144,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_if_no_server() {
         env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
         init_config_clear_map();
@@ -139,6 +158,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -158,6 +178,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn post_body_contains_parameter() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -195,6 +216,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn response_is_mapped_to_parameter() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || {
             HttpResponse::Ok()
@@ -221,6 +243,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -237,6 +260,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_if_server_response_not_contains_response_struct_as_json() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
@@ -253,6 +277,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_response_status_from_valid_json_response_struct() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || {
             HttpResponse::Ok()
@@ -275,6 +300,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn use_ctn_and_pn_from_config() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());

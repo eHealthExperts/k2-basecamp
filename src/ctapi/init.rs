@@ -22,8 +22,8 @@ pub fn init(mut ctn: u16, mut pn: u16) -> Result<Status, Error> {
     let response = http::request(&path, None)?;
 
     match response.parse::<i8>() {
-        Ok(status) => {
-            let status = Status::from_i8(status);
+        Ok(status_code) => {
+            let status = Status::from(status_code);
             if let Status::OK = status {
                 // Store CTN
                 let _ = MAP.write().insert(ctn, pn);
@@ -46,12 +46,12 @@ mod tests {
     use crate::ctapi::MAP;
     use crate::{Settings, Status, CONFIG};
     use failure::Error;
-    use rand;
     use std::collections::HashMap;
     use std::env;
     use test_server::{self, HttpResponse};
 
     #[test]
+    #[serial]
     fn returns_err_if_no_server() {
         env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
         init_config_clear_map();
@@ -65,6 +65,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_invalid_if_already_open() {
         init_config_clear_map();
 
@@ -77,6 +78,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -96,6 +98,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn use_ctn_and_pn_from_config() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -121,6 +124,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -138,6 +142,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_err_if_server_response_not_contains_status() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
@@ -155,6 +160,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_response_status_from_server() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("-11"))?;
         env::set_var("K2_BASE_URL", server.url());
@@ -171,6 +177,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn returns_ok_and_init_ctn_if_server_returns_ok() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("0"))?;
         env::set_var("K2_BASE_URL", server.url());

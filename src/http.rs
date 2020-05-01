@@ -2,21 +2,18 @@ use crate::CONFIG;
 use failure::Error;
 use serde_json::Value;
 
-fn req_configure(req: &mut ureq::Request) {
-    req.set("Content-Type", "application/json");
-
-    if let Some(timeout) = CONFIG.read().timeout {
-        req.timeout_connect(timeout);
-        req.timeout_read(timeout);
-        req.timeout_write(timeout);
-    }
-}
-
 pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error> {
     let url = format!("{}{}", CONFIG.read().base_url, path);
     debug!("Request URL: {}", url);
     let mut request = ureq::post(&url);
-    req_configure(&mut request);
+
+    request.set("Content-Type", "application/json");
+
+    if let Some(timeout) = CONFIG.read().timeout {
+        request.timeout_connect(timeout * 1000);
+        request.timeout_read(timeout * 1000);
+        request.timeout_write(timeout * 1000);
+    }
 
     let response = match request_body {
         Some(json) => {
@@ -30,7 +27,7 @@ pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error>
     };
 
     if response.ok() {
-        Ok(response.into_string()?)
+        response.into_string().map_err(Error::from)
     } else {
         Err(format_err!(
             "Request failed with status code {}",
@@ -45,10 +42,11 @@ mod tests {
     use super::request;
     use crate::{Settings, CONFIG};
     use failure::Error;
-    use std::env;
+    use std::{env, time::Duration};
     use test_server::{self, helper, HttpResponse};
 
     #[test]
+    #[serial]
     fn request_with_body_is_content_type_json() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -68,6 +66,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn send_request_body_if_given() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -86,6 +85,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn if_no_json_is_given_send_empty_request_body() -> Result<(), Error> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
@@ -97,6 +97,35 @@ mod tests {
         assert_eq!(b"", &request.body()[..]);
 
         env::remove_var("K2_BASE_URL");
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn http_is_using_timeout_from_config() -> Result<(), Error> {
+        let server = test_server::new("127.0.0.1:0", || async {
+            futures_timer::Delay::new(Duration::from_secs(5)).await;
+            HttpResponse::Ok().body("foobar")
+        })?;
+        env::set_var("K2_BASE_URL", server.url());
+        env::set_var("K2_TIMEOUT", "6");
+        init_config();
+
+        let res = request("", None)?;
+        assert_eq!(res, "foobar");
+
+        env::set_var("K2_TIMEOUT", "1");
+        init_config();
+
+        let res = request("", None).err();
+        assert_eq!(
+            format!("{}", res.unwrap()),
+            "Request failed with status code 500"
+        );
+
+        env::remove_var("K2_BASE_URL");
+        env::remove_var("K2_TIMEOUT");
 
         Ok(())
     }
