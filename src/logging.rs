@@ -1,9 +1,8 @@
 use crate::CONFIG;
 use log::LevelFilter;
-use std::str::FromStr;
-use std::sync::{Once, ONCE_INIT};
+use std::{str::FromStr, sync::Once};
 
-static INIT: Once = ONCE_INIT;
+static INIT: Once = Once::new();
 
 #[cfg(target_os = "windows")]
 const FILENAME: &str = "ctehxk2.log";
