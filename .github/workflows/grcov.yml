@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           override: true
       - name: Build and test sources
         run: |
@@ -21,6 +21,7 @@ jobs:
           cargo test;
         env:
           CARGO_INCREMENTAL: '0'
+          RUSTC_BOOTSTRAP: '1'
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off'
       - name: Collect hit files, install grcov and create coveralls report
         run: |
