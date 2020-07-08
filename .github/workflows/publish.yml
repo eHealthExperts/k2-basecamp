@@ -68,7 +68,7 @@ jobs:
           profile: minimal
           toolchain: stable
           target: ${{ matrix.target }}
-          override: true
+          default: true
       - uses: actions-rs/cargo@v1
         with:
           command: build
