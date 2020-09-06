@@ -1,11 +1,10 @@
 use config::{Config, Environment, File};
-use failure::Error;
 use std::path::{Path, MAIN_SEPARATOR};
 use url::Url;
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 const CFG_FILE: &str = "ctehxk2";
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 const CFG_FILE: &str = "libctehxk2";
 
 #[derive(Deserialize)]
@@ -20,7 +19,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn init() -> Result<Self, Error> {
+    pub fn init() -> anyhow::Result<Self> {
         let mut settings = Config::new();
 
         // set defaults
@@ -50,7 +49,7 @@ impl Settings {
         // force trailing slash for log_path
         if let Ok(Some(mut path)) = settings.get::<Option<String>>("log_path") {
             if !Path::new(&path).exists() {
-                return Err(format_err!("log_path does not exists"));
+                bail!("log_path does not exists");
             }
 
             if !path.trim().ends_with(MAIN_SEPARATOR) {
@@ -70,7 +69,7 @@ impl Settings {
             let _ = settings.set("pn", None::<String>);
         }
 
-        settings.try_into().map_err(failure::Error::from)
+        settings.try_into().map_err(anyhow::Error::from)
     }
 }
 

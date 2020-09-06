@@ -1,8 +1,9 @@
 #[macro_use]
 extern crate const_cstr;
+#[macro_use]
+extern crate serial_test;
 
 use dlopen::raw::Library;
-use failure::Error;
 use std::u16::MAX;
 use std::{env, str};
 use test_server::{HttpRequest, HttpResponse};
@@ -15,7 +16,8 @@ const LIB_PATH: &str = "./target/debug/libctehxk2.so";
 const LIB_PATH: &str = "./target/debug/libctehxk2.dylib";
 
 #[test]
-fn use_ct_api_functions() -> Result<(), Error> {
+#[serial]
+fn init_data_close() -> anyhow::Result<()> {
     let lib = Library::open(LIB_PATH)?;
 
     let init: unsafe extern "system" fn(u16, u16) -> i8 =
@@ -75,5 +77,6 @@ fn use_ct_api_functions() -> Result<(), Error> {
     });
     assert_eq!(0, unsafe { close(ctn) });
 
+    env::remove_var("K2_BASE_URL");
     Ok(())
 }
