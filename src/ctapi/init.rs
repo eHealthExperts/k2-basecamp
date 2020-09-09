@@ -1,8 +1,7 @@
 use crate::ctapi::MAP;
 use crate::{http, Status, CONFIG};
-use failure::Error;
 
-pub fn init(mut ctn: u16, mut pn: u16) -> Result<Status, Error> {
+pub fn init(mut ctn: u16, mut pn: u16) -> anyhow::Result<Status> {
     if let (Some(ctn_from_cfg), Some(pn_from_cfg)) = (CONFIG.read().ctn, CONFIG.read().pn) {
         debug!(
             "Use ctn '{}' and pn '{}' from configuration.",
@@ -43,10 +42,7 @@ pub fn init(mut ctn: u16, mut pn: u16) -> Result<Status, Error> {
 mod tests {
 
     use super::init;
-    use crate::ctapi::MAP;
-    use crate::{Settings, Status, CONFIG};
-    use failure::Error;
-    use std::collections::HashMap;
+    use crate::{ctapi::MAP, Status};
     use std::env;
     use test_server::{self, HttpResponse};
 
@@ -54,7 +50,7 @@ mod tests {
     #[serial]
     fn returns_err_if_no_server() {
         env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -67,7 +63,7 @@ mod tests {
     #[test]
     #[serial]
     fn returns_err_invalid_if_already_open() {
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -79,10 +75,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
+    fn use_ctn_and_pn_in_request_path() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -99,14 +95,14 @@ mod tests {
 
     #[test]
     #[serial]
-    fn use_ctn_and_pn_from_config() -> Result<(), Error> {
+    fn use_ctn_and_pn_from_config() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         let ctn = rand::random::<u16>();
         env::set_var("K2_CTN", format!("{}", ctn));
         let pn = rand::random::<u16>();
         env::set_var("K2_PN", format!("{}", pn));
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let unused_ctn = rand::random::<u16>();
         let unused_pn = rand::random::<u16>();
@@ -125,10 +121,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
+    fn returns_err_if_server_response_is_not_200() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -143,10 +139,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_err_if_server_response_not_contains_status() -> Result<(), Error> {
+    fn returns_err_if_server_response_not_contains_status() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -161,10 +157,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_response_status_from_server() -> Result<(), Error> {
+    fn returns_response_status_from_server() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("-11"))?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -178,10 +174,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_ok_and_init_ctn_if_server_returns_ok() -> Result<(), Error> {
+    fn returns_ok_and_init_ctn_if_server_returns_ok() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("0"))?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
@@ -192,15 +188,5 @@ mod tests {
         env::remove_var("K2_BASE_URL");
 
         Ok(())
-    }
-
-    fn init_config_clear_map() {
-        let mut config_guard = CONFIG.write();
-        *config_guard = Settings::init().unwrap();
-        drop(config_guard);
-
-        let mut map_guard = MAP.write();
-        *map_guard = HashMap::new();
-        drop(map_guard);
     }
 }

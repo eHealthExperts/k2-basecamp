@@ -4,9 +4,9 @@ use std::{str::FromStr, sync::Once};
 
 static INIT: Once = Once::new();
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 const FILENAME: &str = "ctehxk2.log";
-#[cfg(not(target_os = "windows"))]
+#[cfg(unix)]
 const FILENAME: &str = "libctehxk2.log";
 
 pub fn init() {

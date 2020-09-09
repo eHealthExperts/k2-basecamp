@@ -6,7 +6,7 @@
 #![warn(unused_imports)]
 
 #[macro_use]
-extern crate failure;
+extern crate anyhow;
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -21,6 +21,8 @@ mod ctapi;
 mod http;
 mod logging;
 mod settings;
+#[cfg(test)]
+mod tests;
 
 use crate::ctapi::close::close;
 use crate::ctapi::data::data;
@@ -28,12 +30,11 @@ use crate::ctapi::init::init;
 use crate::ctapi::status::Status;
 use crate::settings::Settings;
 use antidote::RwLock;
+use once_cell::sync::Lazy;
 use std::panic;
 
-lazy_static::lazy_static! {
-    pub(crate) static ref CONFIG: RwLock<Settings> =
-        RwLock::new(Settings::init().expect("Failed to init configuration!"));
-}
+static CONFIG: Lazy<RwLock<Settings>> =
+    Lazy::new(|| RwLock::new(Settings::init().expect("Failed to init configuration!")));
 
 #[no_mangle]
 pub extern "system" fn CT_init(ctn: u16, pn: u16) -> i8 {

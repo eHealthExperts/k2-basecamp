@@ -1,8 +1,7 @@
 use crate::CONFIG;
-use failure::Error;
 use serde_json::Value;
 
-pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error> {
+pub fn request(path: &str, request_body: Option<Value>) -> anyhow::Result<String> {
     let url = format!("{}{}", CONFIG.read().base_url, path);
     debug!("Request URL: {}", url);
     let mut request = ureq::post(&url);
@@ -27,7 +26,7 @@ pub fn request(path: &str, request_body: Option<Value>) -> Result<String, Error>
     };
 
     if response.ok() {
-        response.into_string().map_err(Error::from)
+        response.into_string().map_err(anyhow::Error::from)
     } else {
         Err(format_err!(
             "Request failed with status code {}",
@@ -41,13 +40,12 @@ mod tests {
 
     use super::request;
     use crate::{Settings, CONFIG};
-    use failure::Error;
     use std::{env, time::Duration};
     use test_server::{self, helper, HttpResponse};
 
     #[test]
     #[serial]
-    fn request_with_body_is_content_type_json() -> Result<(), Error> {
+    fn request_with_body_is_content_type_json() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
@@ -67,7 +65,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn send_request_body_if_given() -> Result<(), Error> {
+    fn send_request_body_if_given() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
@@ -86,7 +84,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn if_no_json_is_given_send_empty_request_body() -> Result<(), Error> {
+    fn if_no_json_is_given_send_empty_request_body() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
         init_config();
@@ -103,7 +101,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn http_is_using_timeout_from_config() -> Result<(), Error> {
+    fn http_is_using_timeout_from_config() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || async {
             futures_timer::Delay::new(Duration::from_secs(5)).await;
             HttpResponse::Ok().body("foobar")

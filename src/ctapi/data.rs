@@ -1,7 +1,6 @@
 use crate::ctapi::MAP;
 use crate::{http, Status, CONFIG};
 use data_encoding::{BASE64, HEXLOWER};
-use failure::Error;
 use std::slice;
 
 #[allow(non_snake_case)]
@@ -24,7 +23,7 @@ pub fn data(
     command: *const u8,
     lenr: *mut u16,
     response: *mut u8,
-) -> Result<Status, Error> {
+) -> anyhow::Result<Status> {
     if let Some(ctn_from_cfg) = CONFIG.read().ctn {
         debug!("Use ctn '{}' from configuration", ctn_from_cfg);
         ctn = ctn_from_cfg;
@@ -103,12 +102,9 @@ pub fn data(
 mod tests {
 
     use super::{data, Response};
-    use crate::ctapi::MAP;
-    use crate::{Settings, Status, CONFIG};
+    use crate::{ctapi::MAP, Status};
     use data_encoding::BASE64;
-    use failure::Error;
     use serde_json::{self, Value};
-    use std::collections::HashMap;
     use std::env;
     use std::slice;
     use std::u16::MAX;
@@ -147,7 +143,7 @@ mod tests {
     #[serial]
     fn returns_err_if_no_server() {
         env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -159,10 +155,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn use_ctn_and_pn_in_request_path() -> Result<(), Error> {
+    fn use_ctn_and_pn_in_request_path() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -179,10 +175,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn post_body_contains_parameter() -> Result<(), Error> {
+    fn post_body_contains_parameter() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (command, command_ptr, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) =
             rand_params();
@@ -217,13 +213,13 @@ mod tests {
 
     #[test]
     #[serial]
-    fn response_is_mapped_to_parameter() -> Result<(), Error> {
+    fn response_is_mapped_to_parameter() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || {
             HttpResponse::Ok()
                 .body(r#"{"dad":39,"sad":63,"lenr":2,"response":"kAA=","responseCode":0}"#)
         })?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -244,10 +240,32 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_err_if_server_response_is_not_200() -> Result<(), Error> {
+    #[should_panic(expected = "Failed to extract response.")]
+    fn response_with_failure_response_field() {
+        let server = test_server::new("127.0.0.1:0", || {
+            HttpResponse::Ok()
+                .body(r#"{"dad":39,"sad":63,"lenr":2,"response":"0123456789","responseCode":0}"#)
+        })
+        .unwrap();
+        env::set_var("K2_BASE_URL", server.url());
+        crate::tests::init_config_clear_map();
+
+        let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
+        let _ = MAP.write().insert(ctn, pn);
+
+        let res = data(ctn, &mut dad, &mut sad, lenc, command, &mut lenr, response);
+
+        env::remove_var("K2_BASE_URL");
+
+        let _status = res.unwrap();
+    }
+
+    #[test]
+    #[serial]
+    fn returns_err_if_server_response_is_not_200() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -261,10 +279,10 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_err_if_server_response_not_contains_response_struct_as_json() -> Result<(), Error> {
+    fn returns_err_if_server_response_not_contains_response_struct_as_json() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -278,13 +296,13 @@ mod tests {
 
     #[test]
     #[serial]
-    fn returns_response_status_from_valid_json_response_struct() -> Result<(), Error> {
+    fn returns_response_status_from_valid_json_response_struct() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", || {
             HttpResponse::Ok()
                 .body(r#"{"dad":1,"sad":1,"lenr":1,"response":"a=","responseCode":-11}"#)
         })?;
         env::set_var("K2_BASE_URL", server.url());
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         let _ = MAP.write().insert(ctn, pn);
@@ -301,14 +319,14 @@ mod tests {
 
     #[test]
     #[serial]
-    fn use_ctn_and_pn_from_config() -> Result<(), Error> {
+    fn use_ctn_and_pn_from_config() -> anyhow::Result<()> {
         let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
         env::set_var("K2_BASE_URL", server.url());
 
         let (_, command, lenc, response, mut lenr, mut dad, mut sad, ctn, pn) = rand_params();
         env::set_var("K2_CTN", format!("{}", ctn));
         env::set_var("K2_PN", format!("{}", pn));
-        init_config_clear_map();
+        crate::tests::init_config_clear_map();
 
         let _ = MAP.write().insert(ctn, pn);
 
@@ -358,15 +376,5 @@ mod tests {
             ctn,
             pn,
         )
-    }
-
-    fn init_config_clear_map() {
-        let mut config_guard = CONFIG.write();
-        *config_guard = Settings::init().unwrap();
-        drop(config_guard);
-
-        let mut map_guard = MAP.write();
-        *map_guard = HashMap::new();
-        drop(map_guard);
     }
 }
