@@ -41,7 +41,7 @@ impl Settings {
             let _ = Url::parse(&url)?; // check url
 
             if !url.trim().ends_with('/') {
-                url.push_str("/");
+                url.push('/');
                 let _ = settings.set("base_url", url);
             }
         }

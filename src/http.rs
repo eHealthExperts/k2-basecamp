@@ -1,18 +1,17 @@
 use crate::CONFIG;
 use serde_json::Value;
+use std::time::Duration;
 
 pub fn request(path: &str, request_body: Option<Value>) -> anyhow::Result<String> {
+    let builder = ureq::builder();
+    let agent = match CONFIG.read().timeout {
+        None => builder.build(),
+        Some(timeout) => builder.timeout(Duration::from_secs(timeout)).build(),
+    };
+
     let url = format!("{}{}", CONFIG.read().base_url, path);
     debug!("Request URL: {}", url);
-    let mut request = ureq::post(&url);
-
-    request.set("Content-Type", "application/json");
-
-    if let Some(timeout) = CONFIG.read().timeout {
-        request.timeout_connect(timeout * 1000);
-        request.timeout_read(timeout * 1000);
-        request.timeout_write(timeout * 1000);
-    }
+    let request = agent.post(&url).set("Content-Type", "application/json");
 
     let response = match request_body {
         Some(json) => {
@@ -25,13 +24,16 @@ pub fn request(path: &str, request_body: Option<Value>) -> anyhow::Result<String
         }
     };
 
-    if response.ok() {
-        response.into_string().map_err(anyhow::Error::from)
-    } else {
-        Err(format_err!(
-            "Request failed with status code {}",
-            response.status()
-        ))
+    match response {
+        Ok(res) => res.into_string().map_err(anyhow::Error::from),
+        Err(ureq::Error::Status(code, response)) => {
+            debug!("{:?}", response);
+            Err(format_err!("Request failed with status code {}", code))
+        }
+        Err(why) => {
+            debug!("{:?}", why);
+            Err(format_err!("Request failed with unknown error",))
+        }
     }
 }
 
@@ -102,8 +104,8 @@ mod tests {
     #[test]
     #[serial]
     fn http_is_using_timeout_from_config() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", || async {
-            futures_timer::Delay::new(Duration::from_secs(5)).await;
+        let server = test_server::new("127.0.0.1:0", || {
+            std::thread::sleep(Duration::from_secs(5));
             HttpResponse::Ok().body("foobar")
         })?;
         env::set_var("K2_BASE_URL", server.url());
@@ -119,7 +121,7 @@ mod tests {
         let res = request("", None).err();
         assert_eq!(
             format!("{}", res.unwrap()),
-            "Request failed with status code 500"
+            "Request failed with unknown error"
         );
 
         env::remove_var("K2_BASE_URL");
