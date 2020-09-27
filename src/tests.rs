@@ -1,6 +1,10 @@
 use super::*;
 use crate::{ctapi::MAP, Settings, CONFIG};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    env::{remove_var, set_var},
+};
+use wiremock::{matchers::body_string, Mock, MockServer, ResponseTemplate};
 
 pub fn init_config_clear_map() {
     let mut config_guard = CONFIG.write();
@@ -12,30 +16,44 @@ pub fn init_config_clear_map() {
     drop(map_guard);
 }
 
-#[test]
+pub fn random_string(size: usize) -> String {
+    use rand::Rng;
+    rand::thread_rng()
+        .sample_iter(&rand::distributions::Alphanumeric)
+        .take(size)
+        .map(char::from)
+        .collect::<String>()
+}
+
+#[async_std::test]
 #[serial]
-fn init() -> anyhow::Result<()> {
-    let server = test_server::new("127.0.0.1:0", || {
-        test_server::HttpResponse::Ok().body("hello world")
-    })?;
-    std::env::set_var("K2_BASE_URL", server.url());
+async fn init() {
+    let mock_server = MockServer::start().await;
+    Mock::given(body_string("foobar"))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&mock_server)
+        .await;
+
+    set_var("K2_BASE_URL", mock_server.uri());
     init_config_clear_map();
 
     let ctn = rand::random::<u16>();
     let pn = rand::random::<u16>();
 
     assert_eq!(-128, CT_init(ctn, pn));
-
-    Ok(())
+    remove_var("K2_BASE_URL");
 }
 
-#[test]
+#[async_std::test]
 #[serial]
-fn close_with_error() -> anyhow::Result<()> {
-    let server = test_server::new("127.0.0.1:0", || {
-        test_server::HttpResponse::Ok().body("hello world")
-    })?;
-    std::env::set_var("K2_BASE_URL", server.url());
+async fn close_with_error() {
+    let mock_server = MockServer::start().await;
+    Mock::given(body_string("hello world"))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&mock_server)
+        .await;
+
+    set_var("K2_BASE_URL", mock_server.uri());
     init_config_clear_map();
 
     let ctn = rand::random::<u16>();
@@ -44,18 +62,19 @@ fn close_with_error() -> anyhow::Result<()> {
     let _ = MAP.write().insert(ctn, pn);
 
     assert_eq!(-128, CT_close(ctn));
-
-    Ok(())
+    remove_var("K2_BASE_URL");
 }
 
-#[test]
+#[async_std::test]
 #[serial]
-fn data_with_error() -> anyhow::Result<()> {
-    let server = test_server::new("127.0.0.1:0", || {
-        test_server::HttpResponse::Ok().body("hello world")
-    })?;
-    std::env::set_var("K2_BASE_URL", server.url());
+async fn data_with_error() {
+    let mock_server = MockServer::start().await;
+    Mock::given(body_string("hello world"))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&mock_server)
+        .await;
 
+    set_var("K2_BASE_URL", mock_server.uri());
     init_config_clear_map();
 
     let ctn = rand::random::<u16>();
@@ -87,7 +106,7 @@ fn data_with_error() -> anyhow::Result<()> {
         )
     );
 
-    Ok(())
+    remove_var("K2_BASE_URL");
 }
 
 #[test]

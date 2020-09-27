@@ -1,12 +1,10 @@
 #[macro_use]
-extern crate const_cstr;
-#[macro_use]
 extern crate serial_test;
 
 use dlopen::raw::Library;
-use std::u16::MAX;
-use std::{env, str};
-use test_server::{HttpRequest, HttpResponse};
+use serde_json::json;
+use std::{env, str, u16::MAX};
+use wiremock::{matchers, Mock, MockServer, ResponseTemplate};
 
 #[cfg(target_os = "windows")]
 const LIB_PATH: &str = "./target/debug/ctehxk2.dll";
@@ -15,13 +13,30 @@ const LIB_PATH: &str = "./target/debug/libctehxk2.so";
 #[cfg(target_os = "macos")]
 const LIB_PATH: &str = "./target/debug/libctehxk2.dylib";
 
-#[test]
+#[async_std::test]
 #[serial]
-fn init_data_close() -> anyhow::Result<()> {
+async fn init_data_close() -> anyhow::Result<()> {
+    let mock_server = MockServer::start().await;
+    env::set_var("K2_BASE_URL", mock_server.uri());
+
+    let data_mock = Mock::given(matchers::path_regex("^/ct_data")).respond_with(
+        ResponseTemplate::new(200).set_body_json(json!({
+            "dad":1,
+            "sad":1,
+            "lenr":5,
+            "response":"AQIDBAU=",
+            "responseCode":0
+        })),
+    );
+    let ok_mock = Mock::given(matchers::path_regex("^/ct_init|/ct_close"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(0));
+
+    mock_server.register(data_mock).await;
+    mock_server.register(ok_mock).await;
+
     let lib = Library::open(LIB_PATH)?;
 
-    let init: unsafe extern "system" fn(u16, u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }?;
+    let init: unsafe extern "system" fn(u16, u16) -> i8 = unsafe { lib.symbol("CT_init") }?;
 
     let data: unsafe extern "system" fn(
         u16,
@@ -31,10 +46,9 @@ fn init_data_close() -> anyhow::Result<()> {
         *const u8,
         *mut u16,
         *mut u8,
-    ) -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }?;
+    ) -> i8 = unsafe { lib.symbol("CT_data") }?;
 
-    let close: unsafe extern "system" fn(u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }?;
+    let close: unsafe extern "system" fn(u16) -> i8 = unsafe { lib.symbol("CT_close") }?;
 
     let ctn = rand::random::<u16>();
     let pn = rand::random::<u16>();
@@ -48,20 +62,6 @@ fn init_data_close() -> anyhow::Result<()> {
     let mut response: [u8; MAX as usize] = [rand::random::<u8>(); MAX as usize];
     let response_ptr: *mut u8 = &mut response[0];
     let mut lenr: u16 = response.len() as u16;
-
-    let server = test_server::new("127.0.0.1:0", |req: HttpRequest| {
-        let path = req.path();
-        if path.starts_with("/ct_data") {
-            return HttpResponse::Ok().body(
-                "{\"dad\":1,\"sad\":1,\"lenr\":5,\"response\":\"AQIDBAU=\",\"responseCode\":0}",
-            );
-        }
-        if path.starts_with("/ct_") {
-            return HttpResponse::Ok().body("0");
-        }
-        HttpResponse::BadRequest().into()
-    })?;
-    env::set_var("K2_BASE_URL", server.url());
 
     assert_eq!(0, unsafe { init(ctn, pn) });
     assert_eq!(0, unsafe {

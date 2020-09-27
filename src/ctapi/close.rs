@@ -43,13 +43,13 @@ mod tests {
 
     use super::close;
     use crate::{ctapi::MAP, Status};
-    use std::env;
-    use test_server::{self, HttpResponse};
+    use std::env::{remove_var, set_var};
+    use wiremock::{matchers, Mock, MockServer, ResponseTemplate};
 
     #[test]
     #[serial]
     fn returns_err_if_no_server() {
-        env::set_var("K2_BASE_URL", "http://127.0.0.1:65432");
+        set_var("K2_BASE_URL", "http://127.0.0.1:65432");
         crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
@@ -58,8 +58,7 @@ mod tests {
         let _ = MAP.write().insert(ctn, pn);
 
         assert!(close(ctn).is_err());
-
-        env::remove_var("K2_BASE_URL");
+        remove_var("K2_BASE_URL");
     }
 
     #[test]
@@ -69,59 +68,85 @@ mod tests {
         assert_eq!(Some(Status::ERR_INVALID), close(ctn).ok());
     }
 
-    #[test]
+    #[async_std::test]
     #[serial]
-    fn use_ctn_and_pn_in_request_path() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
-        env::set_var("K2_BASE_URL", server.url());
+    async fn use_ctn_and_pn_in_request_path() {
         crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
         let pn = rand::random::<u16>();
         let _ = MAP.write().insert(ctn, pn);
+
+        let mock_server = MockServer::start().await;
+        let mock = Mock::given(matchers::path(format!("/ct_close/{}/{}", ctn, pn)))
+            .respond_with(ResponseTemplate::new(200));
+        mock_server.register(mock).await;
+
+        set_var("K2_BASE_URL", mock_server.uri());
 
         let _ = close(ctn);
 
-        let req = server.requests.next().unwrap();
-        assert_eq!(req.uri().path(), &format!("/ct_close/{}/{}", ctn, pn));
-
-        env::remove_var("K2_BASE_URL");
-
-        Ok(())
+        remove_var("K2_BASE_URL");
     }
 
-    #[test]
+    #[async_std::test]
     #[serial]
-    fn use_ctn_and_pn_from_config() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
-        env::set_var("K2_BASE_URL", server.url());
+    async fn use_ctn_and_pn_from_config() {
         let ctn = rand::random::<u16>();
-        env::set_var("K2_CTN", format!("{}", ctn));
+        set_var("K2_CTN", format!("{}", ctn));
         let pn = rand::random::<u16>();
-        env::set_var("K2_PN", format!("{}", pn));
-        crate::tests::init_config_clear_map();
+        set_var("K2_PN", format!("{}", pn));
 
+        crate::tests::init_config_clear_map();
         let _ = MAP.write().insert(ctn, pn);
+
+        let mock_server = MockServer::start().await;
+        let mock = Mock::given(matchers::path(format!("/ct_close/{}/{}", ctn, pn)))
+            .respond_with(ResponseTemplate::new(200));
+        mock_server.register(mock).await;
+        set_var("K2_BASE_URL", mock_server.uri());
 
         let unused_ctn = rand::random::<u16>();
 
         let _ = close(unused_ctn);
 
-        let req = server.requests.next().unwrap();
-        assert_eq!(req.uri().path(), &format!("/ct_close/{}/{}", ctn, pn));
-
-        env::remove_var("K2_BASE_URL");
-        env::remove_var("K2_CTN");
-        env::remove_var("K2_PN");
-
-        Ok(())
+        remove_var("K2_BASE_URL");
+        remove_var("K2_CTN");
+        remove_var("K2_PN");
     }
 
-    #[test]
+    #[async_std::test]
     #[serial]
-    fn returns_err_htsi_if_server_response_is_not_200() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", HttpResponse::BadRequest)?;
-        env::set_var("K2_BASE_URL", server.url());
+    async fn returns_err_htsi_if_server_response_is_not_200() {
+        crate::tests::init_config_clear_map();
+
+        let ctn = rand::random::<u16>();
+        let pn = rand::random::<u16>();
+        let _ = MAP.write().insert(ctn, pn);
+
+        let mock_server = MockServer::start().await;
+        Mock::given(matchers::any())
+            .respond_with(ResponseTemplate::new(400))
+            .mount(&mock_server)
+            .await;
+        set_var("K2_BASE_URL", mock_server.uri());
+
+        assert!(close(ctn).is_err());
+        assert!(MAP.read().contains_key(&ctn));
+
+        remove_var("K2_BASE_URL");
+    }
+
+    #[async_std::test]
+    #[serial]
+    async fn returns_err_htsi_if_server_response_not_contains_status() {
+        let mock_server = MockServer::start().await;
+        Mock::given(matchers::any())
+            .respond_with(ResponseTemplate::new(200).set_body_string("hello world"))
+            .mount(&mock_server)
+            .await;
+        set_var("K2_BASE_URL", mock_server.uri());
+
         crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
@@ -129,37 +154,21 @@ mod tests {
         let _ = MAP.write().insert(ctn, pn);
 
         assert!(close(ctn).is_err());
-        assert_eq!(true, MAP.read().contains_key(&ctn));
+        assert!(MAP.read().contains_key(&ctn));
 
-        env::remove_var("K2_BASE_URL");
-
-        Ok(())
+        remove_var("K2_BASE_URL");
     }
 
-    #[test]
+    #[async_std::test]
     #[serial]
-    fn returns_err_htsi_if_server_response_not_contains_status() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("hello world"))?;
-        env::set_var("K2_BASE_URL", server.url());
-        crate::tests::init_config_clear_map();
+    async fn returns_response_status_from_server() {
+        let mock_server = MockServer::start().await;
+        Mock::given(matchers::any())
+            .respond_with(ResponseTemplate::new(200).set_body_json(-11))
+            .mount(&mock_server)
+            .await;
+        set_var("K2_BASE_URL", mock_server.uri());
 
-        let ctn = rand::random::<u16>();
-        let pn = rand::random::<u16>();
-        let _ = MAP.write().insert(ctn, pn);
-
-        assert!(close(ctn).is_err());
-        assert_eq!(true, MAP.read().contains_key(&ctn));
-
-        env::remove_var("K2_BASE_URL");
-
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn returns_response_status_from_server() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("-11"))?;
-        env::set_var("K2_BASE_URL", server.url());
         crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
@@ -167,18 +176,21 @@ mod tests {
         let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(Some(Status::ERR_MEMORY), close(ctn).ok());
-        assert_eq!(true, MAP.read().contains_key(&ctn));
+        assert!(MAP.read().contains_key(&ctn));
 
-        env::remove_var("K2_BASE_URL");
-
-        Ok(())
+        remove_var("K2_BASE_URL");
     }
 
-    #[test]
+    #[async_std::test]
     #[serial]
-    fn return_ok_and_close_ctn_if_server_returns_ok() -> anyhow::Result<()> {
-        let server = test_server::new("127.0.0.1:0", || HttpResponse::Ok().body("0"))?;
-        env::set_var("K2_BASE_URL", server.url());
+    async fn return_ok_and_close_ctn_if_server_returns_ok() {
+        let mock_server = MockServer::start().await;
+        Mock::given(matchers::any())
+            .respond_with(ResponseTemplate::new(200).set_body_json(0))
+            .mount(&mock_server)
+            .await;
+        set_var("K2_BASE_URL", mock_server.uri());
+
         crate::tests::init_config_clear_map();
 
         let ctn = rand::random::<u16>();
@@ -186,10 +198,8 @@ mod tests {
         let _ = MAP.write().insert(ctn, pn);
 
         assert_eq!(Some(Status::OK), close(ctn).ok());
-        assert_eq!(false, MAP.read().contains_key(&ctn));
+        assert!(!MAP.read().contains_key(&ctn));
 
-        env::remove_var("K2_BASE_URL");
-
-        Ok(())
+        remove_var("K2_BASE_URL");
     }
 }

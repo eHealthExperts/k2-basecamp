@@ -41,7 +41,7 @@ impl Settings {
             let _ = Url::parse(&url)?; // check url
 
             if !url.trim().ends_with('/') {
-                url.push_str("/");
+                url.push('/');
                 let _ = settings.set("base_url", url);
             }
         }
@@ -76,13 +76,10 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests::random_string;
     use spectral::assert_that;
-    use std::env;
-    use std::fs::File;
-    use std::io::Write;
-    use std::path::MAIN_SEPARATOR;
+    use std::{env, fs::File, io::Write, path::MAIN_SEPARATOR};
     use tempfile::tempdir;
-    use test_server::helper::random_string;
 
     #[test]
     #[serial]

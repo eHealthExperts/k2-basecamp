@@ -1,6 +1,4 @@
 #[macro_use]
-extern crate const_cstr;
-#[macro_use]
 extern crate serial_test;
 
 #[cfg(target_os = "windows")]
@@ -15,8 +13,7 @@ const LIB_PATH: &str = "./target/debug/libctehxk2.dylib";
 fn init() -> anyhow::Result<()> {
     let lib = dlopen::raw::Library::open(LIB_PATH)?;
 
-    let init: unsafe extern "system" fn(u16, u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_init").as_cstr()) }?;
+    let init: unsafe extern "system" fn(u16, u16) -> i8 = unsafe { lib.symbol("CT_init") }?;
 
     let ctn = rand::random::<u16>();
     let pn = rand::random::<u16>();
@@ -31,8 +28,7 @@ fn init() -> anyhow::Result<()> {
 fn close() -> anyhow::Result<()> {
     let lib = dlopen::raw::Library::open(LIB_PATH)?;
 
-    let close: unsafe extern "system" fn(u16) -> i8 =
-        unsafe { lib.symbol_cstr(const_cstr!("CT_close").as_cstr()) }?;
+    let close: unsafe extern "system" fn(u16) -> i8 = unsafe { lib.symbol("CT_close") }?;
 
     let ctn = rand::random::<u16>();
 
@@ -55,7 +51,7 @@ fn data_null_pointer() -> anyhow::Result<()> {
         *const u8,
         *mut u16,
         *mut u8,
-    ) -> i8 = unsafe { lib.symbol_cstr(const_cstr!("CT_data").as_cstr()) }?;
+    ) -> i8 = unsafe { lib.symbol("CT_data") }?;
 
     let ctn = rand::random::<u16>();
     let mut dad = rand::random::<u8>();

@@ -10,7 +10,7 @@ The dynamic system library *K2 basecamp* is an implementation of the [CT-API](./
 
 ## Requirements
 
-* [**K2**](http://k2.ehealthexperts.de/) from eHealth Experts GmbH
+* **K2** from eHealth Experts GmbH
 
 ## Configuration
 

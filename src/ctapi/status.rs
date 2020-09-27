@@ -1,4 +1,4 @@
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 #[repr(i8)]
 pub enum Status {

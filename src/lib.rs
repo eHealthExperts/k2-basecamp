@@ -89,14 +89,12 @@ pub extern "system" fn CT_data(
     debug!("CT_data(ctn: {})", ctn);
     let status: i8 =
         match panic::catch_unwind(|| data(ctn, dad, sad, lenc, command, lenr, response)) {
-            Ok(result) => match result {
-                Ok(status) => status.into(),
-                Err(why) => {
-                    error!("Failure during CT_data!");
-                    debug!("{}", why);
-                    Status::ERR_HTSI.into()
-                }
-            },
+            Ok(Ok(status)) => status.into(),
+            Ok(Err(why)) => {
+                error!("Failure during CT_data!");
+                debug!("{}", why);
+                Status::ERR_HTSI.into()
+            }
             Err(why) => {
                 error!("Caught panic!");
                 debug!("{:#?}", why);
